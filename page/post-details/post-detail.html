@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아무 말 대잔치 - 게시글 상세</title>
+    <link rel="stylesheet" href="post-detail.css">
+</head>
+<body>
+    <header class="header">
+        <button class="back-button" aria-label="목록으로">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <h1 class="header-title">아무 말 대잔치</h1>
+        <div class="header-icon">
+            <img src="../assets/icon.svg" alt="프로필 아이콘" class="profile-icon">
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- 게시글 상세 섹션 -->
+        <article class="post-detail">
+            <!-- 게시글 헤더 -->
+            <div class="post-header">
+                <h2 class="post-title">제목을 불러오는 중...</h2>
+                <div class="post-actions">
+                    <button class="action-btn edit-btn">수정</button>
+                    <button class="action-btn delete-btn">삭제</button>
+                </div>
+            </div>
+
+            <!-- 게시글 메타 정보 -->
+            <div class="post-meta">
+                <div class="author-info">
+                    <div class="author-avatar"></div>
+                    <div class="author-details">
+                        <span class="author-name">더미 작성자 1</span>
+                        <span class="post-date">2021-01-01 00:00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 게시글 이미지 (선택사항) -->
+            <div class="post-image-container" style="display: none;">
+                <img src="" alt="게시글 이미지" class="post-image">
+            </div>
+
+            <!-- 게시글 본문 -->
+            <div class="post-content">
+                <p>본문을 불러오는 중...</p>
+            </div>
+
+            <!-- 게시글 통계 -->
+            <div class="post-stats">
+                <div class="stat-item">
+                    <span class="stat-label">좋아요수</span>
+                    <span class="stat-value like-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">조회수</span>
+                    <span class="stat-value view-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">댓글</span>
+                    <span class="stat-value comment-count">0</span>
+                </div>
+            </div>
+        </article>
+
+        <!-- 댓글 섹션 -->
+        <section class="comment-section">
+            <!-- 댓글 입력 영역 -->
+            <div class="comment-input-container">
+                <textarea
+                    class="comment-input"
+                    placeholder="댓글을 남겨주세요!"
+                    rows="3"
+                ></textarea>
+                <button class="comment-submit-btn" disabled>댓글 등록</button>
+            </div>
+
+            <!-- 댓글 목록 -->
+            <div class="comment-list">
+                <!-- 댓글이 동적으로 생성됩니다 -->
+            </div>
+
+            <!-- 댓글 없음 메시지 -->
+            <div class="no-comments" style="display: none;">
+                <p>아직 댓글이 없습니다.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 삭제 확인 모달 -->
+    <div class="modal-overlay" id="deleteModal" style="display: none;">
+        <div class="modal-content">
+            <h3 class="modal-title">게시글을 삭제하시겠습니까?</h3>
+            <p class="modal-message">삭제한 내용은 복구할 수 없습니다.</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel-btn">취소</button>
+                <button class="modal-btn confirm-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 댓글 삭제 확인 모달 -->
+    <div class="modal-overlay" id="deleteCommentModal" style="display: none;">
+        <div class="modal-content">
+            <h3 class="modal-title">댓글을 삭제하시겠습니까?</h3>
+            <p class="modal-message">삭제한 내용은 복구할 수 없습니다.</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel-btn">취소</button>
+                <button class="modal-btn confirm-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="post-detail.js"></script>
+</body>
+</html>
