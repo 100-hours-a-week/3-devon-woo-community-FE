@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아무 말 대잔치 - 로그인</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">아무 말 대잔치</h1>
+    </header>
+
+    <main class="main-container">
+        <div class="login-wrapper">
+            <h2 class="login-title">로그인</h2>
+
+            <form class="login-form" id="loginForm">
+                <!-- 이메일 입력 -->
+                <div class="form-group">
+                    <label for="emailInput" class="form-label">
+                        이메일
+                    </label>
+                    <input
+                        type="email"
+                        id="emailInput"
+                        class="form-input"
+                        placeholder="이메일을 입력하세요"
+                        autocomplete="email"
+                    >
+                    <p class="helper-text error" id="emailHelperText">* helper text</p>
+                </div>
+
+                <!-- 비밀번호 입력 -->
+                <div class="form-group">
+                    <label for="passwordInput" class="form-label">
+                        비밀번호
+                    </label>
+                    <input
+                        type="password"
+                        id="passwordInput"
+                        class="form-input"
+                        placeholder="비밀번호를 입력하세요"
+                        autocomplete="current-password"
+                    >
+                    <p class="helper-text error" id="passwordHelperText">* helper text</p>
+                </div>
+
+                <!-- 로그인 버튼 -->
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    로그인
+                </button>
+
+                <!-- 회원가입 링크 -->
+                <div class="signup-link-section">
+                    <a href="/signup" class="signup-link">회원가입</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="login.js"></script>
+</body>
+</html>
