@@ -5,11 +5,15 @@ class Axioxs{
     this.headers = config.headers || {};
   }
 
-  async request(method, url, body) {
+  async request(method, url, body, options = {}) {
     const config = {
       method,
-      headers: { "Content-Type": "application/json", ...this.headers },
-      body: body ? JSON.stringify(body) : null,
+      headers: {
+        "Content-Type": "application/json",
+        ...this.headers,
+        ...options.headers,
+      },
+      body: this.prepareBody(body, options.headers),
     };
 
     try {
@@ -21,24 +25,39 @@ class Axioxs{
     }
   }
 
-  async get(url) {
-    return this.request("GET", url);
+  prepareBody(body, headers = {}) {
+    if (!body) return null;
+
+    if (body instanceof FormData) {
+      return body;
+    }
+
+    const contentType = headers["Content-Type"] || headers["content-type"];
+    if (contentType && contentType.includes("multipart/form-data")) {
+      return body;
+    }
+
+    return JSON.stringify(body);
   }
 
-  async post(url, body) {
-    return this.request("POST", url, body);
+  async get(url, options = {}) {
+    return this.request("GET", url, null, options);
   }
 
-  async put(url, body) {
-    return this.request("PUT", url, body);
+  async post(url, body, options = {}) {
+    return this.request("POST", url, body, options);
   }
 
-  async patch(url, body) {
-    return this.request("PATCH", url, body);
+  async put(url, body, options = {}) {
+    return this.request("PUT", url, body, options);
   }
 
-  async delete(url) {
-    return this.request("DELETE", url);
+  async patch(url, body, options = {}) {
+    return this.request("PATCH", url, body, options);
+  }
+
+  async delete(url, options = {}) {
+    return this.request("DELETE", url, null, options);
   }
 }
 
