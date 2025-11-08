@@ -1,24 +1,12 @@
 import Component from '../../core/Component.js';
 
-// 스타일 동적 로드
-const loadStyle = () => {
-  const linkId = 'header-component-style';
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = '/src/components/Header/style.css';
-    document.head.appendChild(link);
-  }
-};
-
 class Header extends Component {
   constructor(props) {
     super(props);
     this.state = {
       showBackButton: props.showBackButton || false
     };
-    loadStyle();
+    this.loadStyle('/src/components/Header/style.css');
   }
 
   render() {

@@ -6,6 +6,18 @@ class Component {
     this.$el = null;
   }
 
+  // 스타일 동적 로드 (자식 클래스에서 호출)
+  loadStyle(cssPath) {
+    const linkId = `${this.constructor.name.toLowerCase()}-style`;
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = cssPath;
+      document.head.appendChild(link);
+    }
+  }
+
   // HTML 문자열 반환 (자식 클래스에서 구현)
   render() {
     return '';

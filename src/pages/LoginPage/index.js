@@ -1,17 +1,5 @@
 import Component from '../../core/Component.js';
 
-// 스타일 동적 로드
-const loadStyle = () => {
-  const linkId = 'login-page-style';
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = '/src/pages/LoginPage/style.css';
-    document.head.appendChild(link);
-  }
-};
-
 class LoginPage extends Component {
   constructor(props) {
     super(props);
@@ -19,7 +7,7 @@ class LoginPage extends Component {
       email: '',
       password: ''
     };
-    loadStyle();
+    this.loadStyle('/src/pages/LoginPage/style.css');
   }
 
   render() {

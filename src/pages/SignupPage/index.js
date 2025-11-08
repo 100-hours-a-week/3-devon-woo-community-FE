@@ -1,17 +1,5 @@
 import Component from '../../core/Component.js';
 
-// 스타일 동적 로드
-const loadStyle = () => {
-  const linkId = 'signup-page-style';
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = '/src/pages/SignupPage/style.css';
-    document.head.appendChild(link);
-  }
-};
-
 class SignupPage extends Component {
   constructor(props) {
     super(props);
@@ -22,7 +10,7 @@ class SignupPage extends Component {
       passwordConfirm: '',
       nickname: ''
     };
-    loadStyle();
+    this.loadStyle('/src/pages/SignupPage/style.css');
   }
 
   render() {
