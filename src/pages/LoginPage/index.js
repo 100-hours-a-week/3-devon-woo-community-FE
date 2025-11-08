@@ -95,7 +95,12 @@ class LoginPage extends Component {
       email: this.state.email,
       password: this.state.password
     });
-    alert('로그인 기능은 아직 구현되지 않았습니다.');
+
+    // TODO: API 호출로 교체
+    // const response = await apiPost('/api/v1/auth/login', { email, password });
+
+    // 임시: 로그인 성공으로 간주하고 게시글 목록으로 이동
+    window.router.navigate('/posts');
   }
 }
 

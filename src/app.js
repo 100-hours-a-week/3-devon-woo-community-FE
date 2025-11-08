@@ -3,6 +3,8 @@ import Router from './core/Router.js';
 import Header from './components/Header/index.js';
 import LoginPage from './pages/LoginPage/index.js';
 import SignupPage from './pages/SignupPage/index.js';
+import PostListPage from './pages/PostListPage/index.js';
+import PostCreatePage from './pages/PostCreatePage/index.js';
 
 // App 초기화
 function initApp() {
@@ -27,6 +29,8 @@ function initApp() {
   router.addRoute('/', LoginPage);
   router.addRoute('/login', LoginPage);
   router.addRoute('/signup', SignupPage);
+  router.addRoute('/posts', PostListPage);
+  router.addRoute('/posts/create', PostCreatePage);
 
   // 라우터 초기화
   router.init();
