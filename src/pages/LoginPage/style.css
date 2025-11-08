@@ -1,3 +1,9 @@
+/* 로그인 페이지 레이아웃 */
+#main .main-container {
+  justify-content: center;
+  align-items: center;
+}
+
 /* 로그인 페이지 스타일 */
 .login-wrapper {
   width: 100%;

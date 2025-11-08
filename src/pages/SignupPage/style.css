@@ -1,3 +1,9 @@
+/* 회원가입 페이지 레이아웃 */
+#main .main-container {
+  justify-content: center;
+  align-items: center;
+}
+
 /* 회원가입 페이지 스타일 */
 .header-spacer {
   width: 40px;
