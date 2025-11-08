@@ -36,6 +36,11 @@ class Router {
   navigate(path) {
     window.history.pushState({}, '', path);
     this.loadPage(path);
+
+    // 헤더 상태 업데이트 (드롭다운 상태 등)
+    if (window.updateHeaderState) {
+      window.updateHeaderState();
+    }
   }
 
   // 페이지 로드 (main 영역만 업데이트)

@@ -7,6 +7,8 @@ import PostListPage from './pages/PostListPage/index.js';
 import PostCreatePage from './pages/PostCreatePage/index.js';
 import PostDetailPage from './pages/PostDetailPage/index.js';
 import PostEditPage from './pages/PostEditPage/index.js';
+import ProfilePage from './pages/ProfilePage/index.js';
+import PasswordChangePage from './pages/PasswordChangePage/index.js';
 
 // App 초기화
 function initApp() {
@@ -35,12 +37,34 @@ function initApp() {
   router.addRoute('/posts/create', PostCreatePage);
   router.addRoute('/posts/:id', PostDetailPage); // 동적 라우트
   router.addRoute('/posts/:id/edit', PostEditPage); // 동적 라우트
+  router.addRoute('/profile', ProfilePage);
+  router.addRoute('/password-change', PasswordChangePage);
 
   // 라우터 초기화
   router.init();
 
   // 전역 라우터 참조 (컴포넌트에서 사용)
   window.router = router;
+
+  // 라우트 변경 시 헤더 상태 업데이트
+  window.updateHeaderState = updateHeaderState;
+  updateHeaderState();
+  window.addEventListener('popstate', updateHeaderState);
+}
+
+// 헤더 상태 업데이트 함수
+function updateHeaderState() {
+  const path = window.location.pathname;
+  const headerComponent = window.headerComponent;
+
+  if (!headerComponent) return;
+
+  // 로그인/회원가입 페이지에서는 프로필 아이콘 숨김
+  const authPages = ['/', '/login', '/signup'];
+  const showProfileIcon = !authPages.includes(path);
+
+  headerComponent.showProfileIcon(showProfileIcon);
+  headerComponent.setCurrentPage(path);
 }
 
 // DOM 로드 후 앱 초기화
