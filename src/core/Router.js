@@ -40,7 +40,17 @@ class Router {
 
   // 페이지 로드 (main 영역만 업데이트)
   loadPage(path) {
-    const PageComponent = this.routes[path] || this.routes['/'];
+    let PageComponent = this.routes[path];
+
+    // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
+    if (!PageComponent) {
+      PageComponent = this.matchDynamicRoute(path);
+    }
+
+    // 그래도 없으면 기본 페이지
+    if (!PageComponent) {
+      PageComponent = this.routes['/'];
+    }
 
     if (!PageComponent) {
       console.error('Page not found:', path);
@@ -59,6 +69,20 @@ class Router {
       this.currentPage = new PageComponent();
       this.currentPage.mount(main);
     }
+  }
+
+  // 동적 라우트 매칭
+  matchDynamicRoute(path) {
+    for (const routePath in this.routes) {
+      // :id 같은 동적 파라미터를 정규식으로 변환
+      const pattern = routePath.replace(/:\w+/g, '(\\d+)');
+      const regex = new RegExp(`^${pattern}$`);
+
+      if (regex.test(path)) {
+        return this.routes[routePath];
+      }
+    }
+    return null;
   }
 }
 

@@ -5,6 +5,8 @@ import LoginPage from './pages/LoginPage/index.js';
 import SignupPage from './pages/SignupPage/index.js';
 import PostListPage from './pages/PostListPage/index.js';
 import PostCreatePage from './pages/PostCreatePage/index.js';
+import PostDetailPage from './pages/PostDetailPage/index.js';
+import PostEditPage from './pages/PostEditPage/index.js';
 
 // App 초기화
 function initApp() {
@@ -31,6 +33,8 @@ function initApp() {
   router.addRoute('/signup', SignupPage);
   router.addRoute('/posts', PostListPage);
   router.addRoute('/posts/create', PostCreatePage);
+  router.addRoute('/posts/:id', PostDetailPage); // 동적 라우트
+  router.addRoute('/posts/:id/edit', PostEditPage); // 동적 라우트
 
   // 라우터 초기화
   router.init();
