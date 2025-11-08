@@ -38,7 +38,7 @@ class Router {
     this.loadPage(path);
   }
 
-  // 페이지 로드
+  // 페이지 로드 (main 영역만 업데이트)
   loadPage(path) {
     const PageComponent = this.routes[path] || this.routes['/'];
 
@@ -52,12 +52,13 @@ class Router {
       this.currentPage.beforeUnmount();
     }
 
-    // 새 페이지 마운트
-    const app = document.getElementById('app');
-    app.innerHTML = '';
-
-    this.currentPage = new PageComponent();
-    this.currentPage.mount(app);
+    // main 영역에만 새 페이지 마운트
+    const main = document.getElementById('main');
+    if (main) {
+      main.innerHTML = '';
+      this.currentPage = new PageComponent();
+      this.currentPage.mount(main);
+    }
   }
 }
 
