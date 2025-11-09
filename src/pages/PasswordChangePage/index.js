@@ -272,9 +272,9 @@ class PasswordChangePage extends Component {
 
       this.showToast();
 
-      // 선택: 로그인 페이지로 이동
+      // 선택: 로그인 페이지로 이동 (히스토리 스택에 비밀번호 변경 페이지를 남기지 않음)
       // setTimeout(() => {
-      //   window.router.navigate('/login');
+      //   window.router.navigateReplace('/login');
       // }, 1500);
     } catch (error) {
       console.error('비밀번호 변경 실패:', error);

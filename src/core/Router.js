@@ -43,6 +43,17 @@ class Router {
     }
   }
 
+  // 페이지 이동 (히스토리 스택에 추가하지 않고 현재 항목 대체)
+  navigateReplace(path) {
+    window.history.replaceState({}, '', path);
+    this.loadPage(path);
+
+    // 헤더 상태 업데이트 (드롭다운 상태 등)
+    if (window.updateHeaderState) {
+      window.updateHeaderState();
+    }
+  }
+
   // 페이지 로드 (main 영역만 업데이트)
   loadPage(path) {
     let PageComponent = this.routes[path];

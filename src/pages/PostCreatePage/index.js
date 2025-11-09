@@ -271,8 +271,8 @@ class PostCreatePage extends Component {
 
     alert('게시글 작성 기능은 아직 구현되지 않았습니다.');
 
-    // 작성 완료 후 리스트로 이동
-    // window.router.navigate('/posts');
+    // 작성 완료 후 리스트로 이동 (히스토리 스택에 작성 페이지를 남기지 않음)
+    // window.router.navigateReplace('/posts');
   }
 }
 

@@ -329,8 +329,8 @@ class PostEditPage extends Component {
 
       alert('게시글이 수정되었습니다.');
 
-      // 수정 완료 후 상세 페이지로 이동
-      window.router.navigate(`/posts/${this.postId}`);
+      // 수정 완료 후 상세 페이지로 이동 (히스토리 스택에 수정 페이지를 남기지 않음)
+      window.router.navigateReplace(`/posts/${this.postId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
       alert('게시글 수정에 실패했습니다.');
