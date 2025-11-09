@@ -82,17 +82,17 @@ class PostDetailPage extends Component {
             <button
               class="like-button ${this.state.isLiked ? 'active' : ''}"
               id="likeBtn"
-            >
-              <span class="like-button-label">좋아요</span>
-              <span class="like-button-count">${formatCount(post.likeCount)}</span>
+            >  
+              <span class="stat-value">${formatCount(post.likeCount)}</span>
+              <span class="stat-label">좋아요수</span>
             </button>
             <div class="stat-item">
-              <span class="stat-label">조회수</span>
               <span class="stat-value">${formatCount(post.viewCount)}</span>
+              <span class="stat-label">조회수</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">댓글</span>
               <span class="stat-value">${formatCount(post.commentCount)}</span>
+              <span class="stat-label">댓글</span>
             </div>
           </div>
         </article>
