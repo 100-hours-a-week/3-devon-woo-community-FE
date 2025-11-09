@@ -119,6 +119,14 @@ class SignupPage extends Component {
       window.headerComponent.showBackButton(true);
     }
 
+    this.setupEventListeners();
+  }
+
+  updated() {
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
     const profileImageContainer = this.$el.querySelector('#profileImageContainer');
     const profileInput = this.$el.querySelector('#profileInput');
     const profileImage = this.$el.querySelector('#profileImage');
@@ -132,62 +140,78 @@ class SignupPage extends Component {
     const form = this.$el.querySelector('#signupForm');
 
     // 프로필 이미지 클릭
-    profileImageContainer.addEventListener('click', () => {
-      profileInput.click();
-    });
+    if (profileImageContainer) {
+      profileImageContainer.addEventListener('click', () => {
+        profileInput.click();
+      });
+    }
 
     // 프로필 이미지 선택
-    profileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          profileImage.src = e.target.result;
-          profileImage.style.display = 'block';
-          profilePlaceholder.style.display = 'none';
-          profileDeleteBtn.style.display = 'block';
-          this.state.profileImage = file;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    if (profileInput) {
+      profileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            profileImage.src = e.target.result;
+            profileImage.style.display = 'block';
+            profilePlaceholder.style.display = 'none';
+            profileDeleteBtn.style.display = 'block';
+            this.state.profileImage = file;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
 
     // 프로필 이미지 삭제
-    profileDeleteBtn.addEventListener('click', () => {
-      profileImage.src = '';
-      profileImage.style.display = 'none';
-      profilePlaceholder.style.display = 'flex';
-      profileDeleteBtn.style.display = 'none';
-      profileInput.value = '';
-      this.state.profileImage = null;
-    });
+    if (profileDeleteBtn) {
+      profileDeleteBtn.addEventListener('click', () => {
+        profileImage.src = '';
+        profileImage.style.display = 'none';
+        profilePlaceholder.style.display = 'flex';
+        profileDeleteBtn.style.display = 'none';
+        profileInput.value = '';
+        this.state.profileImage = null;
+      });
+    }
 
     // 입력 이벤트
-    emailInput.addEventListener('input', (e) => {
-      this.state.email = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (emailInput) {
+      emailInput.addEventListener('input', (e) => {
+        this.state.email = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
-    passwordInput.addEventListener('input', (e) => {
-      this.state.password = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (passwordInput) {
+      passwordInput.addEventListener('input', (e) => {
+        this.state.password = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
-    passwordConfirmInput.addEventListener('input', (e) => {
-      this.state.passwordConfirm = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (passwordConfirmInput) {
+      passwordConfirmInput.addEventListener('input', (e) => {
+        this.state.passwordConfirm = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
-    nicknameInput.addEventListener('input', (e) => {
-      this.state.nickname = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (nicknameInput) {
+      nicknameInput.addEventListener('input', (e) => {
+        this.state.nickname = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
     // 폼 제출
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+    }
   }
 
   beforeUnmount() {

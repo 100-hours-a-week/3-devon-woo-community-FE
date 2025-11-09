@@ -59,27 +59,41 @@ class LoginPage extends Component {
   }
 
   mounted() {
+    this.setupEventListeners();
+  }
+
+  updated() {
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
     const emailInput = this.$el.querySelector('#emailInput');
     const passwordInput = this.$el.querySelector('#passwordInput');
     const submitBtn = this.$el.querySelector('#submitBtn');
     const form = this.$el.querySelector('#loginForm');
 
     // 입력 이벤트
-    emailInput.addEventListener('input', (e) => {
-      this.state.email = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (emailInput) {
+      emailInput.addEventListener('input', (e) => {
+        this.state.email = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
-    passwordInput.addEventListener('input', (e) => {
-      this.state.password = e.target.value;
-      this.checkFormValid(submitBtn);
-    });
+    if (passwordInput) {
+      passwordInput.addEventListener('input', (e) => {
+        this.state.password = e.target.value;
+        this.checkFormValid(submitBtn);
+      });
+    }
 
     // 폼 제출
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+    }
   }
 
   checkFormValid(submitBtn) {
