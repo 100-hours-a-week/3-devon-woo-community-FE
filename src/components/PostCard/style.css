@@ -46,11 +46,17 @@
   color: var(--color-text-secondary);
 }
 
-.post-card-stat {
+.post-card-stats {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-xs);
 }
+
+.post-card-stats-left {
+  display: flex;
+  gap: 10px;
+}
+
 
 .post-card-footer {
   margin-top: var(--spacing-md);
