@@ -50,10 +50,7 @@ class PostDetailPage extends Component {
           <!-- 게시글 헤더 -->
           <div class="post-header">
             <h2 class="post-title">${post.title}</h2>
-            <div class="post-actions">
-              <button class="action-btn edit-btn" id="editBtn">수정</button>
-              <button class="action-btn delete-btn" id="deleteBtn">삭제</button>
-            </div>
+
           </div>
 
           <!-- 게시글 메타 정보 -->
@@ -64,6 +61,10 @@ class PostDetailPage extends Component {
                 <span class="author-name">${post.author || '작성자'}</span>
                 <span class="post-date">${formatDate(post.createdAt)}</span>
               </div>
+            </div>
+            <div class="post-actions">
+              <button class="action-btn edit-btn" id="editBtn">수정</button>
+              <button class="action-btn delete-btn" id="deleteBtn">삭제</button>
             </div>
           </div>
 
