@@ -177,17 +177,3 @@
   background-color: var(--color-background-secondary);
   border-color: var(--color-primary);
 }
-
-/* 스무스 전환 효과 */
-* {
-  transition: background-color var(--transition-normal),
-              color var(--transition-normal),
-              border-color var(--transition-normal);
-}
-
-/* 애니메이션이나 transform은 제외 */
-*,
-*::before,
-*::after {
-  transition-property: background-color, color, border-color;
-}
