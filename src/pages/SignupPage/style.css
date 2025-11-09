@@ -10,7 +10,8 @@
 }
 
 .signup-wrapper {
-  max-width: 480px;
+  width: 100%;
+  max-width: 500px;
   background-color: white;
   border-radius: 12px;
   padding: 48px 40px;
