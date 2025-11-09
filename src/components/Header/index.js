@@ -62,6 +62,10 @@ class Header extends Component {
     this.setupEventListeners();
   }
 
+  updated() {
+    this.setupEventListeners();
+  }
+
   setupEventListeners() {
     const backButton = this.$el.querySelector('#backButton');
     const profileIconBtn = this.$el.querySelector('#profileIconBtn');
