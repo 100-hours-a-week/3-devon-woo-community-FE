@@ -28,8 +28,13 @@ body {
 .main-container {
   flex: 1;
   display: flex;
+  max-width: 600px;
   flex-direction: column;
   padding: var(--spacing-2xl) var(--spacing-lg);
+}
+
+.form-wrapper{
+  width: 100%;
 }
 
 /* 반응형 */

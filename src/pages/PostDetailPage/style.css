@@ -1,9 +1,7 @@
 /* 메인 컨테이너 */
 #main .main-container {
-  max-width: 800px;
   margin: 0 auto;
   padding: var(--spacing-2xl) var(--spacing-lg);
-  width: 100%;
 }
 
 /* 게시글 상세 */

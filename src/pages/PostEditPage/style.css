@@ -1,14 +1,11 @@
 /* 메인 컨테이너 */
 #main .main-container {
-  max-width: 800px;
   margin: 0 auto;
   padding: 40px 20px;
-  width: 100%;
 }
 
 /* 폼 래퍼 */
 .form-wrapper {
-  width: 100%;
   background-color: white;
   border-radius: 12px;
   padding: 40px;
