@@ -85,7 +85,7 @@ class PostListPage extends Component {
     // 게시글 작성 버튼 클릭
     if (createPostBtn) {
       createPostBtn.addEventListener('click', () => {
-        window.router.navigate('/posts/create');
+        window.router.navigateReplace('/posts/create');
       });
     }
 

@@ -190,7 +190,7 @@ class PostDetailPage extends Component {
     const editBtn = this.$el.querySelector('#editBtn');
     if (editBtn) {
       editBtn.addEventListener('click', () => {
-        window.router.navigate(`/posts/${this.postId}/edit`);
+        window.router.navigateReplace(`/posts/${this.postId}/edit`);
       });
     }
 
