@@ -1,5 +1,9 @@
 import Component from '../../core/Component.js';
 import { formatDate, formatCount } from '../../utils/formatters.js';
+import LoadingSpinner from '../../components/LoadingSpinner/index.js';
+import Modal from '../../components/Modal/index.js';
+import CommentInput from '../../components/CommentInput/index.js';
+import CommentItem from '../../components/CommentItem/index.js';
 
 class PostDetailPage extends Component {
   constructor(props) {
@@ -18,15 +22,15 @@ class PostDetailPage extends Component {
     };
     this.loadStyle('/src/pages/PostDetailPage/style.css');
     this.postId = null;
+    this.isInitialized = false; // 초기화 플래그
   }
 
   render() {
     if (this.state.isLoading) {
+      const loadingSpinner = new LoadingSpinner({ show: true });
       return `
         <div class="main-container">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
-          </div>
+          ${loadingSpinner.render()}
         </div>
       `;
     }
@@ -96,22 +100,7 @@ class PostDetailPage extends Component {
 
         <!-- 댓글 섹션 -->
         <section class="comment-section">
-          <!-- 댓글 입력 영역 -->
-          <div class="comment-input-container">
-            <textarea
-              class="comment-input"
-              id="commentInput"
-              placeholder="댓글을 남겨주세요!"
-              rows="3"
-            >${this.state.commentInput}</textarea>
-            <button
-              class="comment-submit-btn"
-              id="commentSubmitBtn"
-              ${this.state.commentInput.trim() === '' ? 'disabled' : ''}
-            >
-              댓글 등록
-            </button>
-          </div>
+          ${this.renderCommentInput()}
 
           <!-- 댓글 목록 -->
           <div class="comment-list" id="commentList">
@@ -126,61 +115,48 @@ class PostDetailPage extends Component {
           ` : ''}
         </section>
 
-        <!-- 삭제 확인 모달 -->
-        <div class="modal-overlay" id="deleteModal" style="display: ${this.state.showDeleteModal ? 'flex' : 'none'};">
-          <div class="modal-content">
-            <h3 class="modal-title">게시글을 삭제하시겠습니까?</h3>
-            <p class="modal-message">삭제한 내용은 복구할 수 없습니다.</p>
-            <div class="modal-actions">
-              <button class="modal-btn cancel-btn" id="cancelDeleteBtn">취소</button>
-              <button class="modal-btn confirm-btn" id="confirmDeleteBtn">확인</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 댓글 삭제 확인 모달 -->
-        <div class="modal-overlay" id="deleteCommentModal" style="display: ${this.state.showDeleteCommentModal ? 'flex' : 'none'};">
-          <div class="modal-content">
-            <h3 class="modal-title">댓글을 삭제하시겠습니까?</h3>
-            <p class="modal-message">삭제한 내용은 복구할 수 없습니다.</p>
-            <div class="modal-actions">
-              <button class="modal-btn cancel-btn" id="cancelDeleteCommentBtn">취소</button>
-              <button class="modal-btn confirm-btn" id="confirmDeleteCommentBtn">확인</button>
-            </div>
-          </div>
-        </div>
+        ${this.renderDeleteModal()}
+        ${this.renderDeleteCommentModal()}
       </div>
     `;
   }
 
-  renderComments() {
-    return this.state.comments.map(comment => `
-      <div class="comment-item ${this.state.editingCommentId === comment.id ? 'editing' : ''}" data-comment-id="${comment.id}">
-        <div class="comment-header">
-          <div class="comment-author-info">
-            <div class="comment-avatar"></div>
-            <div class="comment-author-details">
-              <span class="comment-author-name">${comment.author || '댓글 작성자'}</span>
-              <span class="comment-date">${formatDate(comment.createdAt)}</span>
-            </div>
-          </div>
-          <div class="comment-actions">
-            <button class="comment-action-btn edit-comment-btn" data-comment-id="${comment.id}">수정</button>
-            <button class="comment-action-btn delete-comment-btn" data-comment-id="${comment.id}">삭제</button>
-          </div>
-        </div>
-        <div class="comment-content">${comment.content}</div>
+  renderCommentInput() {
+    const commentInput = new CommentInput({
+      value: this.state.commentInput
+    });
+    return commentInput.render();
+  }
 
-        <!-- 댓글 수정 모드 -->
-        <div class="comment-edit-container">
-          <textarea class="comment-edit-input" data-comment-id="${comment.id}">${this.state.editingCommentId === comment.id ? this.state.editingCommentText : comment.content}</textarea>
-          <div class="comment-edit-actions">
-            <button class="comment-edit-btn cancel" data-comment-id="${comment.id}">취소</button>
-            <button class="comment-edit-btn save" data-comment-id="${comment.id}">댓글 수정</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
+  renderComments() {
+    return this.state.comments.map(comment => {
+      const commentItem = new CommentItem({
+        comment,
+        isEditing: this.state.editingCommentId === comment.id,
+        editingText: this.state.editingCommentText
+      });
+      return commentItem.render();
+    }).join('');
+  }
+
+  renderDeleteModal() {
+    const deleteModal = new Modal({
+      show: this.state.showDeleteModal,
+      title: '게시글을 삭제하시겠습니까?',
+      message: '삭제한 내용은 복구할 수 없습니다.',
+      id: 'deleteModal'
+    });
+    return deleteModal.render();
+  }
+
+  renderDeleteCommentModal() {
+    const deleteCommentModal = new Modal({
+      show: this.state.showDeleteCommentModal,
+      title: '댓글을 삭제하시겠습니까?',
+      message: '삭제한 내용은 복구할 수 없습니다.',
+      id: 'deleteCommentModal'
+    });
+    return deleteCommentModal.render();
   }
 
   mounted() {
@@ -189,15 +165,20 @@ class PostDetailPage extends Component {
       window.headerComponent.showBackButton(true);
     }
 
-    // URL에서 postId 추출
-    const path = window.location.pathname;
-    const match = path.match(/\/posts\/(\d+)/);
-    if (match) {
-      this.postId = match[1];
-      this.loadPost();
-      this.loadComments();
+    // 초기화가 되지 않았을 때만 데이터 로딩
+    if (!this.isInitialized) {
+      // URL에서 postId 추출
+      const path = window.location.pathname;
+      const match = path.match(/\/posts\/(\d+)/);
+      if (match) {
+        this.postId = match[1];
+        this.loadPost();
+        this.loadComments();
+      }
+      this.isInitialized = true; // 초기화 완료 표시
     }
 
+    // 이벤트 리스너는 매번 재등록 (DOM이 교체되므로)
     this.setupEventListeners();
   }
 
@@ -271,38 +252,40 @@ class PostDetailPage extends Component {
       });
     }
 
-    // 모달 취소/확인 버튼
-    const cancelDeleteBtn = this.$el.querySelector('#cancelDeleteBtn');
-    const confirmDeleteBtn = this.$el.querySelector('#confirmDeleteBtn');
-    const cancelDeleteCommentBtn = this.$el.querySelector('#cancelDeleteCommentBtn');
-    const confirmDeleteCommentBtn = this.$el.querySelector('#confirmDeleteCommentBtn');
+    // 게시글 삭제 모달 버튼
+    const deleteModal = this.$el.querySelector('#deleteModal');
+    if (deleteModal) {
+      deleteModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
 
-    if (cancelDeleteBtn) {
-      cancelDeleteBtn.addEventListener('click', () => {
-        this.setState({ showDeleteModal: false });
-        document.body.classList.remove('modal-active');
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({ showDeleteModal: false });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          this.deletePost();
+        }
       });
     }
 
-    if (confirmDeleteBtn) {
-      confirmDeleteBtn.addEventListener('click', () => {
-        this.deletePost();
-      });
-    }
+    // 댓글 삭제 모달 버튼
+    const deleteCommentModal = this.$el.querySelector('#deleteCommentModal');
+    if (deleteCommentModal) {
+      deleteCommentModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
 
-    if (cancelDeleteCommentBtn) {
-      cancelDeleteCommentBtn.addEventListener('click', () => {
-        this.setState({
-          showDeleteCommentModal: false,
-          deleteTargetCommentId: null
-        });
-        document.body.classList.remove('modal-active');
-      });
-    }
-
-    if (confirmDeleteCommentBtn) {
-      confirmDeleteCommentBtn.addEventListener('click', () => {
-        this.deleteComment(this.state.deleteTargetCommentId);
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({
+            showDeleteCommentModal: false,
+            deleteTargetCommentId: null
+          });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          this.deleteComment(this.state.deleteTargetCommentId);
+        }
       });
     }
   }
@@ -314,6 +297,8 @@ class PostDetailPage extends Component {
     }
     // 모달 스크롤 잠금 해제
     document.body.classList.remove('modal-active');
+    // 초기화 플래그 리셋 (다음에 다시 방문 시 정상 작동)
+    this.isInitialized = false;
   }
 
   // 게시글 로드
