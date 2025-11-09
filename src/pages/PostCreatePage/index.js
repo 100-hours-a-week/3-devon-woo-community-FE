@@ -99,12 +99,25 @@ class PostCreatePage extends Component {
     `;
   }
 
+  // 최초 마운트 시에만 1회 호출
   mounted() {
     // 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
     }
 
+    // 이벤트 리스너 등록
+    this.setupEventListeners();
+  }
+
+  // 업데이트 시마다 호출
+  updated() {
+    // DOM이 교체되므로 이벤트 리스너 재등록
+    this.setupEventListeners();
+  }
+
+  // 이벤트 리스너 설정
+  setupEventListeners() {
     const titleInput = this.$el.querySelector('#titleInput');
     const contentInput = this.$el.querySelector('#contentInput');
     const imageUploadBtn = this.$el.querySelector('#imageUploadBtn');
@@ -112,43 +125,51 @@ class PostCreatePage extends Component {
     const form = this.$el.querySelector('#postForm');
 
     // 제목 입력
-    titleInput.addEventListener('input', (e) => {
-      this.setState({ title: e.target.value });
-    });
+    if (titleInput) {
+      titleInput.addEventListener('input', (e) => {
+        this.setState({ title: e.target.value });
+      });
+    }
 
     // 내용 입력
-    contentInput.addEventListener('input', (e) => {
-      this.setState({ content: e.target.value });
-    });
+    if (contentInput) {
+      contentInput.addEventListener('input', (e) => {
+        this.setState({ content: e.target.value });
+      });
+    }
 
     // 이미지 업로드 버튼 클릭
-    imageUploadBtn.addEventListener('click', () => {
-      imageInput.click();
-    });
+    if (imageUploadBtn && imageInput) {
+      imageUploadBtn.addEventListener('click', () => {
+        imageInput.click();
+      });
+    }
 
     // 이미지 파일 선택
-    imageInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        // 이미지 파일 형식 검증
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-        if (!validTypes.includes(file.type)) {
-          alert('이미지 파일만 업로드 가능합니다. (jpg, png, gif)');
-          imageInput.value = '';
-          return;
-        }
+    if (imageInput) {
+      imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // 이미지 파일 형식 검증
+          const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+          if (!validTypes.includes(file.type)) {
+            alert('이미지 파일만 업로드 가능합니다. (jpg, png, gif)');
+            imageInput.value = '';
+            return;
+          }
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.setState({
-            image: file,
-            imageUrl: e.target.result,
-            showImagePreview: true
-          });
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.setState({
+              image: file,
+              imageUrl: e.target.result,
+              showImagePreview: true
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
 
     // 이미지 삭제 버튼 (이벤트 위임)
     this.$el.addEventListener('click', (e) => {
@@ -159,15 +180,19 @@ class PostCreatePage extends Component {
           imageUrl: '',
           showImagePreview: false
         });
-        imageInput.value = '';
+        if (imageInput) {
+          imageInput.value = '';
+        }
       }
     });
 
     // 폼 제출
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+    }
   }
 
   beforeUnmount() {

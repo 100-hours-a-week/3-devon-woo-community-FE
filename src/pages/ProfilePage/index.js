@@ -132,13 +132,23 @@ class ProfilePage extends Component {
     `;
   }
 
+  // 최초 마운트 시에만 1회 호출
   mounted() {
     // 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
     }
 
+    // 사용자 프로필 데이터 로딩 (1회만 실행됨)
     this.loadUserProfile();
+
+    // 이벤트 리스너 등록
+    this.setupEventListeners();
+  }
+
+  // 업데이트 시마다 호출
+  updated() {
+    // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
   }
 

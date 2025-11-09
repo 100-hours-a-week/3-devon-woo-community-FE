@@ -117,13 +117,14 @@ class PostEditPage extends Component {
     `;
   }
 
+  // 최초 마운트 시에만 1회 호출
   mounted() {
     // 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
     }
 
-    // URL에서 postId 추출
+    // URL에서 postId 추출 및 게시글 데이터 로딩 (1회만 실행됨)
     const path = window.location.pathname;
     const match = path.match(/\/posts\/(\d+)\/edit/);
     if (match) {
@@ -131,6 +132,13 @@ class PostEditPage extends Component {
       this.loadPost();
     }
 
+    // 이벤트 리스너 등록
+    this.setupEventListeners();
+  }
+
+  // 업데이트 시마다 호출
+  updated() {
+    // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
   }
 

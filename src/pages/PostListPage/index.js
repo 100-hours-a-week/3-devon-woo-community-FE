@@ -52,34 +52,53 @@ class PostListPage extends Component {
     }).join('');
   }
 
+  // 최초 마운트 시에만 1회 호출
   mounted() {
     // Header 뒤로가기 버튼 숨김
     if (window.headerComponent) {
       window.headerComponent.showBackButton(false);
     }
 
-    const createPostBtn = this.$el.querySelector('#createPostBtn');
-    const postListContainer = this.$el.querySelector('#postListContainer');
+    // 이벤트 리스너 등록
+    this.setupEventListeners();
 
-    // 게시글 작성 버튼 클릭
-    createPostBtn.addEventListener('click', () => {
-      window.router.navigate('/posts/create');
-    });
-
-    // 게시글 카드 클릭 (이벤트 위임)
-    postListContainer.addEventListener('click', (e) => {
-      const postCard = e.target.closest('.post-card');
-      if (postCard) {
-        const postId = postCard.dataset.postId;
-        window.router.navigate(`/posts/${postId}`);
-      }
-    });
-
-    // 무한 스크롤 설정
+    // 무한 스크롤 설정 (1회만)
     this.setupInfiniteScroll();
 
     // 초기 데이터 로드
     this.loadPosts();
+  }
+
+  // 업데이트 시마다 호출
+  updated() {
+    // DOM이 교체되므로 이벤트 리스너 재등록
+    this.setupEventListeners();
+
+    // IntersectionObserver는 재설정 필요 없음 (scrollObserver 요소가 유지됨)
+  }
+
+  // 이벤트 리스너 설정
+  setupEventListeners() {
+    const createPostBtn = this.$el.querySelector('#createPostBtn');
+    const postListContainer = this.$el.querySelector('#postListContainer');
+
+    // 게시글 작성 버튼 클릭
+    if (createPostBtn) {
+      createPostBtn.addEventListener('click', () => {
+        window.router.navigate('/posts/create');
+      });
+    }
+
+    // 게시글 카드 클릭 (이벤트 위임)
+    if (postListContainer) {
+      postListContainer.addEventListener('click', (e) => {
+        const postCard = e.target.closest('.post-card');
+        if (postCard) {
+          const postId = postCard.dataset.postId;
+          window.router.navigate(`/posts/${postId}`);
+        }
+      });
+    }
   }
 
   beforeUnmount() {

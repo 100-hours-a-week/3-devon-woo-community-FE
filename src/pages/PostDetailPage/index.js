@@ -22,7 +22,6 @@ class PostDetailPage extends Component {
     };
     this.loadStyle('/src/pages/PostDetailPage/style.css');
     this.postId = null;
-    this.isInitialized = false; // 초기화 플래그
   }
 
   render() {
@@ -159,26 +158,29 @@ class PostDetailPage extends Component {
     return deleteCommentModal.render();
   }
 
+  // 최초 마운트 시에만 1회 호출 (React의 componentDidMount와 동일)
   mounted() {
     // 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
     }
 
-    // 초기화가 되지 않았을 때만 데이터 로딩
-    if (!this.isInitialized) {
-      // URL에서 postId 추출
-      const path = window.location.pathname;
-      const match = path.match(/\/posts\/(\d+)/);
-      if (match) {
-        this.postId = match[1];
-        this.loadPost();
-        this.loadComments();
-      }
-      this.isInitialized = true; // 초기화 완료 표시
+    // URL에서 postId 추출 및 데이터 로딩 (1회만 실행됨)
+    const path = window.location.pathname;
+    const match = path.match(/\/posts\/(\d+)/);
+    if (match) {
+      this.postId = match[1];
+      this.loadPost();
+      this.loadComments();
     }
 
-    // 이벤트 리스너는 매번 재등록 (DOM이 교체되므로)
+    // 이벤트 리스너 등록
+    this.setupEventListeners();
+  }
+
+  // 업데이트 시마다 호출 (React의 componentDidUpdate와 동일)
+  updated() {
+    // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
   }
 
@@ -297,8 +299,6 @@ class PostDetailPage extends Component {
     }
     // 모달 스크롤 잠금 해제
     document.body.classList.remove('modal-active');
-    // 초기화 플래그 리셋 (다음에 다시 방문 시 정상 작동)
-    this.isInitialized = false;
   }
 
   // 게시글 로드
