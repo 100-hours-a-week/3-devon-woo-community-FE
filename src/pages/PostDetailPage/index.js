@@ -161,9 +161,10 @@ class PostDetailPage extends Component {
 
   // 최초 마운트 시에만 1회 호출 (React의 componentDidMount와 동일)
   mounted() {
-    // 뒤로가기 버튼 표시
+    // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
+      window.headerComponent.showProfileIcon(true);
     }
 
     // URL에서 postId 추출 및 데이터 로딩 (1회만 실행됨)

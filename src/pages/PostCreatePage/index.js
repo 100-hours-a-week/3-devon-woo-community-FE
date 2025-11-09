@@ -101,9 +101,10 @@ class PostCreatePage extends Component {
 
   // 최초 마운트 시에만 1회 호출
   mounted() {
-    // 뒤로가기 버튼 표시
+    // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
+      window.headerComponent.showProfileIcon(true);
     }
 
     // 이벤트 리스너 등록

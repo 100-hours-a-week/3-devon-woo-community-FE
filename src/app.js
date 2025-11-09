@@ -62,11 +62,7 @@ function updateHeaderState() {
 
   if (!headerComponent) return;
 
-  // 로그인/회원가입 페이지에서는 프로필 아이콘 숨김
-  const authPages = ['/', '/login', '/signup'];
-  const showProfileIcon = !authPages.includes(path);
-
-  headerComponent.showProfileIcon(showProfileIcon);
+  // 현재 페이지 경로만 업데이트 (드롭다운 활성화 상태용)
   headerComponent.setCurrentPage(path);
 }
 

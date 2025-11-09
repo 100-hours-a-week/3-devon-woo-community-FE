@@ -54,9 +54,10 @@ class PostListPage extends Component {
 
   // 최초 마운트 시에만 1회 호출
   mounted() {
-    // Header 뒤로가기 버튼 숨김
+    // Header 설정: 뒤로가기 숨김, 프로필 아이콘 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(false);
+      window.headerComponent.showProfileIcon(true);
     }
 
     // 이벤트 리스너 등록
