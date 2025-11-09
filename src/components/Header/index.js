@@ -16,39 +16,45 @@ class Header extends Component {
   render() {
     return `
       <header class="header">
-        ${this.state.showBackButton ? `
-          <button class="back-button" id="backButton">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        ` : ''}
-        <h1 class="header-title">아무 말 대잔치</h1>
-
-        ${this.state.showProfileIcon ? `
-          <div class="profile-icon-wrapper">
-            <button class="profile-icon-btn" id="profileIconBtn">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="19.5" stroke="#333" stroke-width="1"/>
-                <path d="M20 20C23.3137 20 26 17.3137 26 14C26 10.6863 23.3137 8 20 8C16.6863 8 14 10.6863 14 14C14 17.3137 16.6863 20 20 20ZM20 23C15.5817 23 7 25.2091 7 29.5V32H33V29.5C33 25.2091 24.4183 23 20 23Z" fill="#333"/>
+        <div class="header-inner">
+          <!-- back button -->
+          ${this.state.showBackButton ? `
+            <button class="back-button" id="backButton">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
+          ` : ''}
 
-            <!-- 드롭다운 메뉴 -->
-            <div class="dropdown-menu" id="dropdownMenu" style="display: ${this.state.isDropdownOpen ? 'block' : 'none'}">
-              <a href="/profile" class="dropdown-item ${this.state.currentPage === '/profile' ? 'active' : ''}">
-                회원정보수정
-              </a>
-              <a href="/password-change" class="dropdown-item ${this.state.currentPage === '/password-change' ? 'active' : ''}">
-                비밀번호수정
-              </a>
-              <button class="dropdown-item logout-item" id="logoutBtn">
-                로그아웃
+          <h1 class="header-title">아무 말 대잔치</h1>
+
+          <!-- profile icon -->
+          ${this.state.showProfileIcon ? `
+            <div class="profile-icon-wrapper">
+              <button class="profile-icon-btn" id="profileIconBtn">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <circle cx="20" cy="20" r="19.5" stroke="#333" stroke-width="1"/>
+                  <path d="M20 20C23.3137 20 26 17.3137 26 14C26 10.6863 23.3137 8 20 8C16.6863 8 14 10.6863 14 14C14 17.3137 16.6863 20 20 20ZM20 23C15.5817 23 7 25.2091 7 29.5V32H33V29.5C33 25.2091 24.4183 23 20 23Z" fill="#333"/>
+                </svg>
               </button>
+
+              <div class="dropdown-menu" id="dropdownMenu"
+                  style="display: ${this.state.isDropdownOpen ? 'block' : 'none'}">
+                <a href="/profile" class="dropdown-item ${this.state.currentPage === '/profile' ? 'active' : ''}">
+                  회원정보수정
+                </a>
+                <a href="/password-change" class="dropdown-item ${this.state.currentPage === '/password-change' ? 'active' : ''}">
+                  비밀번호수정
+                </a>
+                <button class="dropdown-item logout-item" id="logoutBtn">
+                  로그아웃
+                </button>
+              </div>
             </div>
-          </div>
-        ` : ''}
+          ` : ''}
+        </div>
       </header>
+
     `;
   }
 
