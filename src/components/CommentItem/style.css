@@ -33,8 +33,9 @@
 
 .comment-author-details {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .comment-author-name {
