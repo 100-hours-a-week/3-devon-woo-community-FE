@@ -159,15 +159,19 @@ class PostListPage extends Component {
     const authors = ['김철수', '이영희', '박민수', '정수진', '최동욱'];
 
     for (let i = 0; i < count; i++) {
+      const postId = baseId + i + 1;
+      const authorIndex = Math.floor(Math.random() * authors.length);
+
       posts.push({
-        id: baseId + i + 1,
-        title: `게시글 제목 ${baseId + i + 1} - 이것은 테스트 게시글입니다`,
+        id: postId,
+        title: `게시글 제목 ${postId} - 이것은 테스트 게시글입니다`,
         createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
         viewCount: Math.floor(Math.random() * 100000),
         commentCount: Math.floor(Math.random() * 1000),
         likeCount: Math.floor(Math.random() * 5000),
-        author: authors[Math.floor(Math.random() * authors.length)],
-        authorProfileImage: null // 프로필 이미지는 임시로 null
+        author: authors[authorIndex],
+        authorProfileImage: `https://picsum.photos/seed/user${authorIndex}/40/40`,
+        imageUrl: Math.random() > 0.3 ? `https://picsum.photos/seed/post${postId}/400/300` : null
       });
     }
 

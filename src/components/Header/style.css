@@ -79,6 +79,14 @@
   opacity: 0.8;
 }
 
+.profile-icon-btn .profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e0e0e0;
+}
+
 /* 드롭다운 메뉴 */
 .dropdown-menu {
   position: absolute;

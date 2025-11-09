@@ -3,11 +3,17 @@ import Component from '../../core/Component.js';
 class Header extends Component {
   constructor(props) {
     super(props);
+
+    // localStorage에서 사용자 정보 가져오기
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
     this.state = {
       showBackButton: props.showBackButton || false,
       isDropdownOpen: false,
       showProfileIcon: props.showProfileIcon || false,
-      currentPage: props.currentPage || ''
+      currentPage: props.currentPage || '',
+      user: user
     };
     this.loadStyle('/src/components/Header/style.css');
     this.outsideClickHandler = null;
@@ -32,10 +38,14 @@ class Header extends Component {
           ${this.state.showProfileIcon ? `
             <div class="profile-icon-wrapper">
               <button class="profile-icon-btn" id="profileIconBtn">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <circle cx="20" cy="20" r="19.5" stroke="#333" stroke-width="1"/>
-                  <path d="M20 20C23.3137 20 26 17.3137 26 14C26 10.6863 23.3137 8 20 8C16.6863 8 14 10.6863 14 14C14 17.3137 16.6863 20 20 20ZM20 23C15.5817 23 7 25.2091 7 29.5V32H33V29.5C33 25.2091 24.4183 23 20 23Z" fill="#333"/>
-                </svg>
+                ${this.state.user && this.state.user.profileImage ? `
+                  <img src="${this.state.user.profileImage}" alt="프로필" class="profile-image" />
+                ` : `
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19.5" stroke="#333" stroke-width="1"/>
+                    <path d="M20 20C23.3137 20 26 17.3137 26 14C26 10.6863 23.3137 8 20 8C16.6863 8 14 10.6863 14 14C14 17.3137 16.6863 20 20 20ZM20 23C15.5817 23 7 25.2091 7 29.5V32H33V29.5C33 25.2091 24.4183 23 20 23Z" fill="#333"/>
+                  </svg>
+                `}
               </button>
 
               <div class="dropdown-menu" id="dropdownMenu"

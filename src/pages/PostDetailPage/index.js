@@ -321,10 +321,10 @@ class PostDetailPage extends Component {
       const dummyPost = {
         id: this.postId,
         title: `게시글 제목 ${this.postId}`,
-        content: `이것은 게시글 ${this.postId}의 본문입니다.\n\n바닐라 JavaScript로 만든 SPA입니다.`,
+        content: `이것은 게시글 ${this.postId}의 본문입니다.\n\n바닐라 JavaScript로 만든 SPA입니다.\n\n더미 이미지와 함께 게시글의 실제 모습을 확인할 수 있습니다.`,
         author: '작성자 이름',
         createdAt: new Date().toISOString(),
-        imageUrl: null,
+        imageUrl: `https://picsum.photos/seed/post${this.postId}/800/400`,
         viewCount: 1234,
         likeCount: 56,
         commentCount: 0

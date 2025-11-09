@@ -21,7 +21,10 @@ function initApp() {
   `;
 
   // Header 렌더링 (한 번만)
-  const header = new Header({ showBackButton: false });
+  const header = new Header({
+    showBackButton: false,
+    showProfileIcon: false  // 초기값을 명시적으로 false로 설정
+  });
   const headerContainer = document.getElementById('header');
   header.mount(headerContainer);
 

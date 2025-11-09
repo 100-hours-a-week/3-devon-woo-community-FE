@@ -113,7 +113,19 @@ class LoginPage extends Component {
     // TODO: API 호출로 교체
     // const response = await apiPost('/api/v1/auth/login', { email, password });
 
-    // 임시: 로그인 성공으로 간주하고 게시글 목록으로 이동
+    // 임시: 로그인 성공으로 간주하고 사용자 정보 저장
+    const dummyUser = {
+      id: 1,
+      email: this.state.email,
+      nickname: '테스트유저',
+      profileImage: 'https://picsum.photos/seed/user1/200/200'
+    };
+
+    // localStorage에 사용자 정보 저장
+    localStorage.setItem('user', JSON.stringify(dummyUser));
+    localStorage.setItem('token', 'dummy-token-12345');
+
+    // 게시글 목록으로 이동
     window.router.navigate('/posts');
   }
 }
