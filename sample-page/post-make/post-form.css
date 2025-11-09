@@ -64,6 +64,7 @@ body {
 
 /* 폼 래퍼 */
 .form-wrapper {
+    width: 100%;
     background-color: white;
     border-radius: 12px;
     padding: 40px;
