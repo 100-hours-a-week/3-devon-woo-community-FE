@@ -1,4 +1,5 @@
 import Component from '../../core/Component.js';
+import { formatDate, formatCount } from '../../utils/formatters.js';
 
 class PostDetailPage extends Component {
   constructor(props) {
@@ -58,7 +59,7 @@ class PostDetailPage extends Component {
               <div class="author-avatar"></div>
               <div class="author-details">
                 <span class="author-name">${post.author || '작성자'}</span>
-                <span class="post-date">${this.formatDate(post.createdAt)}</span>
+                <span class="post-date">${formatDate(post.createdAt)}</span>
               </div>
             </div>
           </div>
@@ -80,15 +81,15 @@ class PostDetailPage extends Component {
               id="likeBtn"
             >
               <span class="like-button-label">좋아요</span>
-              <span class="like-button-count">${this.formatCount(post.likeCount)}</span>
+              <span class="like-button-count">${formatCount(post.likeCount)}</span>
             </button>
             <div class="stat-item">
               <span class="stat-label">조회수</span>
-              <span class="stat-value">${this.formatCount(post.viewCount)}</span>
+              <span class="stat-value">${formatCount(post.viewCount)}</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">댓글</span>
-              <span class="stat-value">${this.formatCount(post.commentCount)}</span>
+              <span class="stat-value">${formatCount(post.commentCount)}</span>
             </div>
           </div>
         </article>
@@ -160,7 +161,7 @@ class PostDetailPage extends Component {
             <div class="comment-avatar"></div>
             <div class="comment-author-details">
               <span class="comment-author-name">${comment.author || '댓글 작성자'}</span>
-              <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
+              <span class="comment-date">${formatDate(comment.createdAt)}</span>
             </div>
           </div>
           <div class="comment-actions">
@@ -526,30 +527,6 @@ class PostDetailPage extends Component {
     }
   }
 
-  // 날짜 포맷
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
-
-  // 카운트 포맷
-  formatCount(count) {
-    if (count >= 100000) {
-      return Math.floor(count / 1000) + 'k';
-    } else if (count >= 10000) {
-      return Math.floor(count / 1000) + 'k';
-    } else if (count >= 1000) {
-      return (count / 1000).toFixed(1) + 'k';
-    }
-    return count.toString();
-  }
 }
 
 export default PostDetailPage;

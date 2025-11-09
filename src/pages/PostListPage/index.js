@@ -1,4 +1,6 @@
 import Component from '../../core/Component.js';
+import PostCard from '../../components/PostCard/index.js';
+import LoadingSpinner from '../../components/LoadingSpinner/index.js';
 
 class PostListPage extends Component {
   constructor(props) {
@@ -14,6 +16,8 @@ class PostListPage extends Component {
   }
 
   render() {
+    const loadingSpinner = new LoadingSpinner({ show: this.state.isLoading });
+
     return `
       <div class="main-container">
         <div class="welcome-section">
@@ -29,10 +33,7 @@ class PostListPage extends Component {
         <!-- 무한 스크롤 감지 요소 -->
         <div class="scroll-observer" id="scrollObserver"></div>
 
-        <!-- 로딩 스피너 -->
-        <div class="loading-spinner" style="display: ${this.state.isLoading ? 'flex' : 'none'};">
-          <div class="spinner"></div>
-        </div>
+        ${loadingSpinner.render()}
 
         <!-- 빈 목록 메시지 -->
         ${this.state.posts.length === 0 && !this.state.isLoading ? `
@@ -45,23 +46,10 @@ class PostListPage extends Component {
   }
 
   renderPosts() {
-    return this.state.posts.map(post => `
-      <div class="post-card" data-post-id="${post.id}">
-        <div class="post-card-header">
-          <h3 class="post-card-title">${this.truncateTitle(post.title)}</h3>
-          <span class="post-card-date">${this.formatDate(post.createdAt)}</span>
-        </div>
-        <div class="post-card-stats">
-          <span class="post-card-stat">조회수 ${this.formatCount(post.viewCount)}</span>
-          <span class="post-card-stat">댓글 ${this.formatCount(post.commentCount)}</span>
-          <span class="post-card-stat">좋아요 ${this.formatCount(post.likeCount)}</span>
-        </div>
-        <div class="post-card-footer">
-          <div class="dummy-profile"></div>
-          <span class="dummy-comment">댓글 미리보기...</span>
-        </div>
-      </div>
-    `).join('');
+    return this.state.posts.map(post => {
+      const postCard = new PostCard({ post });
+      return postCard.render();
+    }).join('');
   }
 
   mounted() {
@@ -128,7 +116,7 @@ class PostListPage extends Component {
       // const response = await apiGet(`/api/v1/posts?page=${this.state.page}&size=10`);
 
       // 임시 데이터 (데모용)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       const newPosts = this.generateDummyPosts(10);
 
@@ -149,6 +137,7 @@ class PostListPage extends Component {
   generateDummyPosts(count) {
     const posts = [];
     const baseId = (this.state.page - 1) * 10;
+    const authors = ['김철수', '이영희', '박민수', '정수진', '최동욱'];
 
     for (let i = 0; i < count; i++) {
       posts.push({
@@ -157,44 +146,13 @@ class PostListPage extends Component {
         createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
         viewCount: Math.floor(Math.random() * 100000),
         commentCount: Math.floor(Math.random() * 1000),
-        likeCount: Math.floor(Math.random() * 5000)
+        likeCount: Math.floor(Math.random() * 5000),
+        author: authors[Math.floor(Math.random() * authors.length)],
+        authorProfileImage: null // 프로필 이미지는 임시로 null
       });
     }
 
     return posts;
-  }
-
-  // 제목 26자 제한
-  truncateTitle(title) {
-    if (title.length > 26) {
-      return title.substring(0, 26) + '...';
-    }
-    return title;
-  }
-
-  // 날짜 포맷: yyyy-MM-dd hh:mm:ss
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
-
-  // 카운트 포맷: 1,000 → 1k / 10,000 → 10k / 100,000 → 100k
-  formatCount(count) {
-    if (count >= 100000) {
-      return Math.floor(count / 1000) + 'k';
-    } else if (count >= 10000) {
-      return Math.floor(count / 1000) + 'k';
-    } else if (count >= 1000) {
-      return (count / 1000).toFixed(1) + 'k';
-    }
-    return count.toString();
   }
 }
 
