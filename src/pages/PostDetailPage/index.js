@@ -211,16 +211,23 @@ class PostDetailPage extends Component {
       });
     }
 
-    // 댓글 입력 - setState 없이 직접 업데이트
+    // 댓글 입력 - 상태 업데이트 및 버튼 활성화 (re-render 없이)
     const commentInput = this.$el.querySelector('#commentInput');
-    if (commentInput) {
+    const commentSubmitBtn = this.$el.querySelector('#commentSubmitBtn');
+
+    if (commentInput && commentSubmitBtn) {
       commentInput.addEventListener('input', (e) => {
         this.state.commentInput = e.target.value;
+
+        if (e.target.value.trim() === '') {
+          commentSubmitBtn.disabled = true;
+        } else {
+          commentSubmitBtn.disabled = false;
+        }
       });
     }
 
     // 댓글 등록
-    const commentSubmitBtn = this.$el.querySelector('#commentSubmitBtn');
     if (commentSubmitBtn) {
       commentSubmitBtn.addEventListener('click', () => {
         this.submitComment();
