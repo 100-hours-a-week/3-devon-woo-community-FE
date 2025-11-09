@@ -97,7 +97,7 @@ class ProfilePage extends Component {
                 type="submit"
                 class="submit-btn"
                 id="submitBtn"
-                ${this.isFormValid() ? '' : 'disabled'}
+                disabled
               >
                 수정하기
               </button>
@@ -144,12 +144,20 @@ class ProfilePage extends Component {
 
     // 이벤트 리스너 등록
     this.setupEventListeners();
+
+    // 초기 버튼 상태 체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   // 업데이트 시마다 호출
   updated() {
     // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
+
+    // 버튼 상태 재체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
@@ -158,6 +166,7 @@ class ProfilePage extends Component {
     const nicknameInput = this.$el.querySelector('#nicknameInput');
     const form = this.$el.querySelector('#profileForm');
     const deleteAccountBtn = this.$el.querySelector('#deleteAccountBtn');
+    const submitBtn = this.$el.querySelector('#submitBtn');
 
     // 프로필 이미지 클릭
     if (profileImageContainer) {
@@ -199,14 +208,24 @@ class ProfilePage extends Component {
       });
     }
 
-    // 닉네임 입력
+    // 닉네임 입력 - setState 없이 직접 업데이트
     if (nicknameInput) {
       nicknameInput.addEventListener('input', (e) => {
-        this.setState({
-          nickname: e.target.value,
-          nicknameError: '',
-          isNicknameValid: true
-        });
+        this.state.nickname = e.target.value;
+        this.state.nicknameError = '';
+        this.state.isNicknameValid = true;
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#nicknameHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        nicknameInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
       });
 
       nicknameInput.addEventListener('blur', () => {
@@ -347,6 +366,17 @@ class ProfilePage extends Component {
   // 폼 유효성 검사
   isFormValid() {
     return this.state.nickname.trim() !== '' && this.state.isNicknameValid;
+  }
+
+  // 제출 버튼 활성화 상태 업데이트
+  updateSubmitButton(submitBtn) {
+    if (submitBtn) {
+      if (this.isFormValid()) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    }
   }
 
   // 폼 제출 처리

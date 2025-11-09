@@ -210,11 +210,11 @@ class PostDetailPage extends Component {
       });
     }
 
-    // 댓글 입력
+    // 댓글 입력 - setState 없이 직접 업데이트
     const commentInput = this.$el.querySelector('#commentInput');
     if (commentInput) {
       commentInput.addEventListener('input', (e) => {
-        this.setState({ commentInput: e.target.value });
+        this.state.commentInput = e.target.value;
       });
     }
 

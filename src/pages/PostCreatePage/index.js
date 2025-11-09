@@ -89,7 +89,7 @@ class PostCreatePage extends Component {
               type="submit"
               class="submit-btn"
               id="submitBtn"
-              ${this.isFormValid() ? '' : 'disabled'}
+              disabled
             >
               완료
             </button>
@@ -108,12 +108,20 @@ class PostCreatePage extends Component {
 
     // 이벤트 리스너 등록
     this.setupEventListeners();
+
+    // 초기 버튼 상태 체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   // 업데이트 시마다 호출
   updated() {
     // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
+
+    // 버튼 상태 재체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   // 이벤트 리스너 설정
@@ -123,18 +131,39 @@ class PostCreatePage extends Component {
     const imageUploadBtn = this.$el.querySelector('#imageUploadBtn');
     const imageInput = this.$el.querySelector('#imageInput');
     const form = this.$el.querySelector('#postForm');
+    const submitBtn = this.$el.querySelector('#submitBtn');
 
-    // 제목 입력
+    // 제목 입력 - setState 없이 직접 업데이트
     if (titleInput) {
       titleInput.addEventListener('input', (e) => {
-        this.setState({ title: e.target.value });
+        this.state.title = e.target.value;
+
+        // 글자 수 카운터 업데이트
+        const charCount = this.$el.querySelector('.current-count');
+        const charCountSpan = this.$el.querySelector('.char-count');
+        if (charCount) {
+          charCount.textContent = this.state.title.length;
+        }
+        if (charCountSpan) {
+          if (this.state.title.length >= 26) {
+            charCountSpan.classList.add('warning');
+          } else {
+            charCountSpan.classList.remove('warning');
+          }
+        }
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
       });
     }
 
-    // 내용 입력
+    // 내용 입력 - setState 없이 직접 업데이트
     if (contentInput) {
       contentInput.addEventListener('input', (e) => {
-        this.setState({ content: e.target.value });
+        this.state.content = e.target.value;
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
       });
     }
 
@@ -205,6 +234,17 @@ class PostCreatePage extends Component {
   // 폼 유효성 검사
   isFormValid() {
     return this.state.title.trim() !== '' && this.state.content.trim() !== '';
+  }
+
+  // 제출 버튼 활성화 상태 업데이트
+  updateSubmitButton(submitBtn) {
+    if (submitBtn) {
+      if (this.isFormValid()) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    }
   }
 
   // 폼 제출 처리

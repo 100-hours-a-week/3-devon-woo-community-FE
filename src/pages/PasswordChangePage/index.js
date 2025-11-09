@@ -56,7 +56,7 @@ class PasswordChangePage extends Component {
               type="submit"
               class="submit-btn ${this.state.isLoading ? 'loading' : ''}"
               id="submitBtn"
-              ${this.isFormValid() ? '' : 'disabled'}
+              disabled
             >
               ${this.state.isLoading ? '<div class="button-spinner"></div>' : ''}
               <span class="button-text">수정하기</span>
@@ -80,26 +80,45 @@ class PasswordChangePage extends Component {
     }
 
     this.setupEventListeners();
+
+    // 초기 버튼 상태 체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   // 업데이트 시마다 호출
   updated() {
     // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
+
+    // 버튼 상태 재체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
     const passwordInput = this.$el.querySelector('#passwordInput');
     const passwordConfirmInput = this.$el.querySelector('#passwordConfirmInput');
     const form = this.$el.querySelector('#passwordForm');
+    const submitBtn = this.$el.querySelector('#submitBtn');
 
-    // 비밀번호 입력
+    // 비밀번호 입력 - setState 없이 직접 업데이트
     if (passwordInput) {
       passwordInput.addEventListener('input', (e) => {
-        this.setState({
-          password: e.target.value,
-          passwordError: ''
-        });
+        this.state.password = e.target.value;
+        this.state.passwordError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
       });
 
       passwordInput.addEventListener('blur', () => {
@@ -107,13 +126,23 @@ class PasswordChangePage extends Component {
       });
     }
 
-    // 비밀번호 확인 입력
+    // 비밀번호 확인 입력 - setState 없이 직접 업데이트
     if (passwordConfirmInput) {
       passwordConfirmInput.addEventListener('input', (e) => {
-        this.setState({
-          passwordConfirm: e.target.value,
-          passwordConfirmError: ''
-        });
+        this.state.passwordConfirm = e.target.value;
+        this.state.passwordConfirmError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordConfirmHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordConfirmInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
       });
 
       passwordConfirmInput.addEventListener('blur', () => {
@@ -189,6 +218,17 @@ class PasswordChangePage extends Component {
     const noErrors = !this.state.passwordError && !this.state.passwordConfirmError;
 
     return hasPassword && hasPasswordConfirm && noErrors;
+  }
+
+  // 제출 버튼 활성화 상태 업데이트
+  updateSubmitButton(submitBtn) {
+    if (submitBtn) {
+      if (this.isFormValid()) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    }
   }
 
   // 폼 제출 처리
