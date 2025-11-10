@@ -96,7 +96,7 @@ class PostDetailPage extends Component {
               <span class="stat-label">좋아요수</span>
             </button>
             <div class="stat-item">
-              <span class="stat-value">${formatCount(post.viewCount)}</span>
+              <span class="stat-value">${formatCount(post.viewCount + 1)}</span>
               <span class="stat-label">조회수</span>
             </div>
             <div class="stat-item">
