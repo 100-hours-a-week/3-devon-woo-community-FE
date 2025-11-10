@@ -68,7 +68,12 @@ class PostDetailPage extends Component {
           <!-- 게시글 메타 정보 -->
           <div class="post-meta">
             <div class="author-info">
-              <div class="author-avatar"></div>
+              <div class="author-avatar">
+                ${post.member?.profileImage ?
+                  `<img src="${post.member.profileImage}" alt="${post.member.nickname}" class="avatar-image" />` :
+                  `<div class="avatar-placeholder"></div>`
+                }
+              </div>
               <div class="author-details">
                 <span class="author-name">${post.member?.nickname || '작성자'}</span>
                 <span class="post-date">${formatDate(post.createdAt)}</span>

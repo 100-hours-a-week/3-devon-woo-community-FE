@@ -29,6 +29,21 @@
   height: 40px;
   border-radius: var(--radius-full);
   background-color: var(--color-border-primary);
+  overflow: hidden;
+}
+
+.comment-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+}
+
+.comment-avatar .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-border-primary);
+  border-radius: var(--radius-full);
 }
 
 .comment-author-details {

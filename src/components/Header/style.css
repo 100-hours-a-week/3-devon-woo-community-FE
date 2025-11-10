@@ -163,6 +163,11 @@
     height: 36px;
   }
 
+  .profile-icon-btn .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+
   .dropdown-menu {
     min-width: 140px;
   }

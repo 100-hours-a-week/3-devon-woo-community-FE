@@ -28,7 +28,12 @@ class CommentItem extends Component {
       <div class="comment-item ${isEditing ? 'editing' : ''}" data-comment-id="${commentId}">
         <div class="comment-header">
           <div class="comment-author-info">
-            <div class="comment-avatar"></div>
+            <div class="comment-avatar">
+              ${comment.member?.profileImage ?
+                `<img src="${comment.member.profileImage}" alt="${comment.member.nickname}" class="avatar-image" />` :
+                `<div class="avatar-placeholder"></div>`
+              }
+            </div>
             <div class="comment-author-details">
               <span class="comment-author-name">${comment.member?.nickname || '댓글 작성자'}</span>
               <span class="comment-date">${formatDate(comment.createdAt)}</span>
