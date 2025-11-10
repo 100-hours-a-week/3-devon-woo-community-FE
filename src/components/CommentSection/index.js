@@ -300,8 +300,8 @@ class CommentSection extends Component {
 
       // 댓글 목록 업데이트
       const updatedComments = this.state.comments.map(comment => {
-        const cId = comment.commentId || comment.id;
-        return cId === commentId ? updatedComment : comment;
+        const cId = String(comment.commentId || comment.id);
+        return cId === String(commentId) ? updatedComment : comment;
       });
 
       this.setState({
@@ -330,8 +330,8 @@ class CommentSection extends Component {
 
       // 댓글 목록에서 제거
       const updatedComments = this.state.comments.filter(c => {
-        const cId = c.commentId || c.id;
-        return cId !== commentId;
+        const cId = String(c.commentId || c.id);
+        return cId !== String(commentId);
       });
 
       this.setState({
