@@ -70,7 +70,7 @@ class CommentSection extends Component {
 
       const commentItem = new CommentItem({
         comment,
-        isEditing: this.state.editingCommentId === commentId,
+        isEditing: String(this.state.editingCommentId) === String(commentId),
         editingText: this.state.editingCommentText,
         isOwner
       });
@@ -147,7 +147,10 @@ class CommentSection extends Component {
           this.cancelEditComment();
         } else if (saveBtn) {
           const commentId = saveBtn.dataset.commentId;
-          this.saveEditComment(commentId);
+          const textarea = this.$el.querySelector(`.comment-edit-input[data-comment-id="${commentId}"]`);
+          if (textarea) {
+            this.saveEditCommentWithContent(commentId, textarea.value);
+          }
         }
       });
     }
@@ -231,13 +234,16 @@ class CommentSection extends Component {
       // API 호출
       const newComment = await createComment(this.postId, commentData);
 
-      // 댓글 목록에 새 댓글 추가 (setState 대신 직접 수정)
-      this.state.comments = [newComment, ...this.state.comments];
-      this.state.commentInput = '';
+      // 댓글 목록에 새 댓글 추가
+      const updatedComments = [newComment, ...this.state.comments];
+      this.setState({
+        comments: updatedComments,
+        commentInput: ''
+      });
 
       // 부모에게 댓글 개수 전달
       if (this.props.onCommentCountChange) {
-        this.props.onCommentCountChange(this.state.comments.length);
+        this.props.onCommentCountChange(updatedComments.length);
       }
     } catch (error) {
       console.error('댓글 작성 실패:', error);
@@ -248,21 +254,24 @@ class CommentSection extends Component {
   // 댓글 수정 시작
   startEditComment(commentId) {
     const comment = this.state.comments.find(c => {
-      const cId = c.commentId || c.id;
-      return cId === commentId;
+      const cId = String(c.commentId || c.id);
+      return cId === String(commentId);
     });
+
     if (comment) {
-      // setState 대신 직접 수정
-      this.state.editingCommentId = commentId;
-      this.state.editingCommentText = comment.content;
+      this.setState({
+        editingCommentId: String(commentId),
+        editingCommentText: comment.content
+      });
     }
   }
 
   // 댓글 수정 취소
   cancelEditComment() {
-    // setState 대신 직접 수정
-    this.state.editingCommentId = null;
-    this.state.editingCommentText = '';
+    this.setState({
+      editingCommentId: null,
+      editingCommentText: ''
+    });
   }
 
   // 댓글 수정 저장 (content를 인자로 받음)
@@ -289,14 +298,17 @@ class CommentSection extends Component {
       // API 호출
       const updatedComment = await updateComment(commentId, updateData);
 
-      // 댓글 목록 업데이트 (setState 대신 직접 수정)
-      this.state.comments = this.state.comments.map(comment => {
+      // 댓글 목록 업데이트
+      const updatedComments = this.state.comments.map(comment => {
         const cId = comment.commentId || comment.id;
         return cId === commentId ? updatedComment : comment;
       });
 
-      this.state.editingCommentId = null;
-      this.state.editingCommentText = '';
+      this.setState({
+        comments: updatedComments,
+        editingCommentId: null,
+        editingCommentText: ''
+      });
     } catch (error) {
       console.error('댓글 수정 실패:', error);
       alert('댓글 수정에 실패했습니다.');
@@ -316,20 +328,23 @@ class CommentSection extends Component {
       // API 호출
       await deleteCommentAPI(commentId, memberId);
 
-      // 댓글 목록에서 제거 (setState 대신 직접 수정)
-      this.state.comments = this.state.comments.filter(c => {
+      // 댓글 목록에서 제거
+      const updatedComments = this.state.comments.filter(c => {
         const cId = c.commentId || c.id;
         return cId !== commentId;
       });
 
-      this.state.showDeleteCommentModal = false;
-      this.state.deleteTargetCommentId = null;
+      this.setState({
+        comments: updatedComments,
+        showDeleteCommentModal: false,
+        deleteTargetCommentId: null
+      });
 
       document.body.classList.remove('modal-active');
 
       // 부모에게 댓글 개수 전달
       if (this.props.onCommentCountChange) {
-        this.props.onCommentCountChange(this.state.comments.length);
+        this.props.onCommentCountChange(updatedComments.length);
       }
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
