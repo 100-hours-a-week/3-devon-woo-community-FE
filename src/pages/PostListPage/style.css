@@ -6,6 +6,8 @@
 
 /* 환영 섹션 */
 .welcome-section {
+  width: 100%;
+  padding: 0px 10px;
   text-align: center;
   margin-bottom: var(--spacing-xl);
   display: flex;
