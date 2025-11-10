@@ -46,7 +46,7 @@ class PostCreateRequest {
       memberId,
       title: `${titles[index]} #${seed}`,
       content: contents[index],
-      image: `https://via.placeholder.com/800x400?text=Post${seed}`,
+      image: `https://picsum.photos/seed/createpost${seed}/800/400`,
     });
   }
 
@@ -59,7 +59,7 @@ class PostCreateRequest {
       memberId: 1,
       title: "My First Post",
       content: "This is the content of my first post.",
-      image: "https://via.placeholder.com/800x400?text=MyFirstPost",
+      image: "https://picsum.photos/seed/createpost1/800/400",
     });
   }
 }
