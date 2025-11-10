@@ -1,4 +1,4 @@
-const MemberResponse = require("../member/MemberResponse");
+import MemberResponse from "../member/MemberResponse.js";
 
 /**
  * 게시글 상세 응답 DTO
@@ -99,4 +99,4 @@ class PostResponse {
   }
 }
 
-module.exports = PostResponse;
+export default PostResponse;

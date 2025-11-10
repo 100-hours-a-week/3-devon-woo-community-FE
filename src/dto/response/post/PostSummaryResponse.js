@@ -1,4 +1,4 @@
-const MemberResponse = require("../member/MemberResponse");
+import MemberResponse from "../member/MemberResponse.js";
 
 /**
  * 게시글 요약 응답 DTO (목록용)
@@ -97,4 +97,4 @@ class PostSummaryResponse {
   }
 }
 
-module.exports = PostSummaryResponse;
+export default PostSummaryResponse;

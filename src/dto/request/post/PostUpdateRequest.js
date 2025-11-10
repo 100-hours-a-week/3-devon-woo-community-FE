@@ -46,4 +46,4 @@ class PostUpdateRequest {
   }
 }
 
-module.exports = PostUpdateRequest;
+export default PostUpdateRequest;

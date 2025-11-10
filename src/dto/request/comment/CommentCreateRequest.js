@@ -51,4 +51,4 @@ class CommentCreateRequest {
   }
 }
 
-module.exports = CommentCreateRequest;
+export default CommentCreateRequest;

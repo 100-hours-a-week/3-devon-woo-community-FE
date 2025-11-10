@@ -78,41 +78,41 @@ class ApiResponse {
 
   /**
    * 로그인 성공 더미 응답
-   * @returns {ApiResponse}
+   * @returns {Promise<ApiResponse>}
    */
-  static createLoginSuccess() {
-    const LoginResponse = require("../auth/LoginResponse");
+  static async createLoginSuccess() {
+    const LoginResponse = (await import("../auth/LoginResponse.js")).default;
     return ApiResponse.successWithData(LoginResponse.createDefault());
   }
 
   /**
    * 회원가입 성공 더미 응답
-   * @returns {ApiResponse}
+   * @returns {Promise<ApiResponse>}
    */
-  static createSignupSuccess() {
-    const SignupResponse = require("../auth/SignupResponse");
+  static async createSignupSuccess() {
+    const SignupResponse = (await import("../auth/SignupResponse.js")).default;
     return ApiResponse.successWithData(SignupResponse.createDefault());
   }
 
   /**
    * 게시글 목록 더미 응답
    * @param {number} count - 생성할 게시글 개수
-   * @returns {ApiResponse}
+   * @returns {Promise<ApiResponse>}
    */
-  static createPostListSuccess(count = 20) {
-    const PageResponse = require("./PageResponse");
+  static async createPostListSuccess(count = 20) {
+    const PageResponse = (await import("./PageResponse.js")).default;
     return ApiResponse.successWithData(
-      PageResponse.createPostSummaryPage(count)
+      await PageResponse.createPostSummaryPage(count)
     );
   }
 
   /**
    * 게시글 상세 더미 응답
    * @param {number} postId - 게시글 ID
-   * @returns {ApiResponse}
+   * @returns {Promise<ApiResponse>}
    */
-  static createPostDetailSuccess(postId = 1) {
-    const PostResponse = require("../post/PostResponse");
+  static async createPostDetailSuccess(postId = 1) {
+    const PostResponse = (await import("../post/PostResponse.js")).default;
     return ApiResponse.successWithData(PostResponse.createDummy(postId));
   }
 
@@ -120,12 +120,12 @@ class ApiResponse {
    * 댓글 목록 더미 응답
    * @param {number} count - 생성할 댓글 개수
    * @param {number} postId - 게시글 ID
-   * @returns {ApiResponse}
+   * @returns {Promise<ApiResponse>}
    */
-  static createCommentListSuccess(count = 10, postId = 1) {
-    const PageResponse = require("./PageResponse");
+  static async createCommentListSuccess(count = 10, postId = 1) {
+    const PageResponse = (await import("./PageResponse.js")).default;
     return ApiResponse.successWithData(
-      PageResponse.createCommentPage(count, postId)
+      await PageResponse.createCommentPage(count, postId)
     );
   }
 
@@ -163,4 +163,4 @@ class ApiResponse {
   }
 }
 
-module.exports = ApiResponse;
+export default ApiResponse;

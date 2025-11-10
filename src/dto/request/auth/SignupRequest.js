@@ -45,4 +45,4 @@ class SignupRequest {
   }
 }
 
-module.exports = SignupRequest;
+export default SignupRequest;

@@ -29,4 +29,4 @@ class SignupResponse {
   }
 }
 
-module.exports = SignupResponse;
+export default SignupResponse;

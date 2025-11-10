@@ -54,4 +54,4 @@ class MemberResponse {
   }
 }
 
-module.exports = MemberResponse;
+export default MemberResponse;

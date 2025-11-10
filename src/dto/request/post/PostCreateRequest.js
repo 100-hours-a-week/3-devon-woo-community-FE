@@ -64,4 +64,4 @@ class PostCreateRequest {
   }
 }
 
-module.exports = PostCreateRequest;
+export default PostCreateRequest;
