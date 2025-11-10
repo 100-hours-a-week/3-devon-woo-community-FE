@@ -1,4 +1,7 @@
 import Component from '../../core/Component.js';
+import { getPostById, updatePost } from '../../api/posts.js';
+import PostUpdateRequest from '../../dto/request/post/PostUpdateRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class PostEditPage extends Component {
   constructor(props) {
@@ -259,30 +262,33 @@ class PostEditPage extends Component {
 
   // 게시글 데이터 로드
   async loadPost() {
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
     try {
-      // TODO: API 호출
-      // const response = await apiGet(`/api/v1/posts/${this.postId}`);
+      const memberId = AuthService.getCurrentUserId();
+      const post = await getPostById(this.postId, memberId);
 
-      // 임시 더미 데이터
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const dummyPost = {
-        id: this.postId,
-        title: `게시글 제목 ${this.postId}`,
-        content: `이것은 게시글 ${this.postId}의 본문입니다.\n\n수정할 수 있습니다.`,
-        imageUrl: null // 또는 기존 이미지 URL
-      };
+      // 작성자 확인 - 본인 게시글만 수정 가능
+      if (post.member.memberId !== memberId) {
+        alert('본인의 게시글만 수정할 수 있습니다.');
+        window.router.navigate(`/posts/${this.postId}`);
+        return;
+      }
 
       this.setState({
-        title: dummyPost.title,
-        content: dummyPost.content,
-        existingImageUrl: dummyPost.imageUrl || '',
+        title: post.title,
+        content: post.content,
+        existingImageUrl: post.imageUrl || '',
         isLoading: false
       });
     } catch (error) {
       console.error('게시글 로드 실패:', error);
       this.setState({ isLoading: false });
       alert('게시글을 불러오는데 실패했습니다.');
+      window.router.navigate('/posts');
     }
   }
 
@@ -309,32 +315,37 @@ class PostEditPage extends Component {
       return;
     }
 
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
     try {
-      console.log('게시글 수정:', {
+      const memberId = AuthService.getCurrentUserId();
+
+      // PostUpdateRequest DTO 생성
+      const updateData = new PostUpdateRequest({
+        memberId,
         title: this.state.title,
         content: this.state.content,
-        image: this.state.image,
-        existingImageUrl: this.state.existingImageUrl
+        image: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
       });
 
-      // TODO: API 호출
-      // const formData = new FormData();
-      // formData.append('title', this.state.title);
-      // formData.append('content', this.state.content);
-      // if (this.state.image) {
-      //   formData.append('image', this.state.image);
-      // } else if (this.state.existingImageUrl) {
-      //   // 기존 이미지 유지
-      // }
-      // await apiPut(`/api/v1/posts/${this.postId}`, formData);
+      // API 호출
+      await updatePost(this.postId, updateData);
 
       alert('게시글이 수정되었습니다.');
 
-      // 수정 완료 후 상세 페이지로 이동 (히스토리 스택에 수정 페이지를 남기지 않음)
-      window.router.navigateReplace(`/posts/${this.postId}`);
+      // 수정 완료 후 상세 페이지로 이동
+      window.router.navigate(`/posts/${this.postId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
-      alert('게시글 수정에 실패했습니다.');
+
+      if (error.response?.status === 403) {
+        alert('본인의 게시글만 수정할 수 있습니다.');
+      } else {
+        alert('게시글 수정에 실패했습니다.');
+      }
     }
   }
 }
