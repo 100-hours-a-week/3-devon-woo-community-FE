@@ -232,6 +232,7 @@ class PostCreatePage extends Component {
     // 뒤로가기 버튼 숨김
     if (window.headerComponent) {
       window.headerComponent.showBackButton(false);
+      window.headerComponent.showProfileIcon(false);
     }
   }
 

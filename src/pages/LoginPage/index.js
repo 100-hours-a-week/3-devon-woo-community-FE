@@ -62,6 +62,12 @@ class LoginPage extends Component {
   }
 
   mounted() {
+
+    if (window.headerComponent) {
+      window.headerComponent.showBackButton(false);
+      window.headerComponent.showProfileIcon(false);
+    }
+
     this.setupEventListeners();
   }
 
