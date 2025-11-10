@@ -1,19 +1,17 @@
 import Component from '../../core/Component.js';
+import AuthService from '../../utils/AuthService.js';
+import { getMemberProfile } from '../../api/members.js';
 
 class Header extends Component {
   constructor(props) {
     super(props);
-
-    // localStorage에서 사용자 정보 가져오기
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
 
     this.state = {
       showBackButton: props.showBackButton || false,
       isDropdownOpen: false,
       showProfileIcon: props.showProfileIcon || false,
       currentPage: props.currentPage || '',
-      user: user
+      profileImage: null
     };
     this.loadStyle('/src/components/Header/style.css');
     this.outsideClickHandler = null;
@@ -38,8 +36,8 @@ class Header extends Component {
           ${this.state.showProfileIcon ? `
             <div class="profile-icon-wrapper">
               <button class="profile-icon-btn" id="profileIconBtn">
-                ${this.state.user && this.state.user.profileImage ? `
-                  <img src="${this.state.user.profileImage}" alt="프로필" class="profile-image" />
+                ${this.state.profileImage ? `
+                  <img src="${this.state.profileImage}" alt="프로필" class="profile-image" />
                 ` : `
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                     <circle cx="20" cy="20" r="19.5" stroke="#333" stroke-width="1"/>
@@ -70,6 +68,7 @@ class Header extends Component {
 
   mounted() {
     this.setupEventListeners();
+    this.loadProfileImage();
   }
 
   updated() {
@@ -142,12 +141,26 @@ class Header extends Component {
     }
   }
 
+  // 프로필 이미지 로드
+  async loadProfileImage() {
+    if (!this.state.showProfileIcon) return;
+
+    const memberId = AuthService.getCurrentUserId();
+    if (!memberId) return;
+
+    try {
+      const profile = await getMemberProfile(memberId);
+      this.setState({ profileImage: profile.profileImage });
+    } catch (error) {
+      console.error('프로필 이미지 로드 실패:', error);
+    }
+  }
+
   // 로그아웃 처리
   handleLogout() {
     this.closeDropdown();
 
-    // localStorage 정리
-    localStorage.removeItem('token');
+    AuthService.logout();
 
     alert('로그아웃되었습니다.');
 

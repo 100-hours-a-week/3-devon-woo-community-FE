@@ -57,10 +57,10 @@ class PageResponse {
   /**
    * PostSummaryResponse 더미 페이지 생성
    * @param {number} count - 생성할 아이템 개수
-   * @returns {PageResponse}
+   * @returns {Promise<PageResponse>}
    */
-  static createPostSummaryPage(count = 20) {
-    const PostSummaryResponse = require("../post/PostSummaryResponse");
+  static async createPostSummaryPage(count = 20) {
+    const PostSummaryResponse = (await import("../post/PostSummaryResponse.js")).default;
     const items = PostSummaryResponse.createDummyList(count);
     return PageResponse.createDummy(items, 0, count, 100);
   }
@@ -69,10 +69,10 @@ class PageResponse {
    * CommentResponse 더미 페이지 생성
    * @param {number} count - 생성할 아이템 개수
    * @param {number} postId - 게시글 ID
-   * @returns {PageResponse}
+   * @returns {Promise<PageResponse>}
    */
-  static createCommentPage(count = 10, postId = 1) {
-    const CommentResponse = require("../comment/CommentResponse");
+  static async createCommentPage(count = 10, postId = 1) {
+    const CommentResponse = (await import("../comment/CommentResponse.js")).default;
     const items = CommentResponse.createDummyList(count, postId);
     return PageResponse.createDummy(items, 0, count, 50);
   }
@@ -110,4 +110,4 @@ class PageResponse {
   }
 }
 
-module.exports = PageResponse;
+export default PageResponse;

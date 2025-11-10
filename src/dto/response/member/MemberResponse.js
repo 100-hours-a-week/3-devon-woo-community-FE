@@ -37,7 +37,7 @@ class MemberResponse {
     return new MemberResponse({
       memberId: seed,
       nickname: nicknames[index],
-      profileImage: `https://via.placeholder.com/150?text=${nicknames[index]}`,
+      profileImage: `https://picsum.photos/seed/user${seed}/200/200`,
     });
   }
 
@@ -49,9 +49,9 @@ class MemberResponse {
     return new MemberResponse({
       memberId: 1,
       nickname: "DevUser",
-      profileImage: "https://via.placeholder.com/150?text=DevUser",
+      profileImage: "https://picsum.photos/seed/user1/200/200",
     });
   }
 }
 
-module.exports = MemberResponse;
+export default MemberResponse;

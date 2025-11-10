@@ -37,4 +37,4 @@ class MemberUpdateResponse {
   }
 }
 
-module.exports = MemberUpdateResponse;
+export default MemberUpdateResponse;

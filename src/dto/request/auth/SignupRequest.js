@@ -27,7 +27,7 @@ class SignupRequest {
       email: `newuser${seed}@example.com`,
       password: `securepass${seed}23`,
       nickname: `DevUser${seed}`,
-      profileImage: `https://via.placeholder.com/150?text=User${seed}`,
+      profileImage: `https://picsum.photos/seed/newuser${seed}/200/200`,
     });
   }
 
@@ -40,9 +40,9 @@ class SignupRequest {
       email: "newuser@example.com",
       password: "securepass123",
       nickname: "DevUser",
-      profileImage: "https://via.placeholder.com/150?text=DevUser",
+      profileImage: "https://picsum.photos/seed/newuser1/200/200",
     });
   }
 }
 
-module.exports = SignupRequest;
+export default SignupRequest;

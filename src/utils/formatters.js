@@ -23,6 +23,11 @@ export function formatDate(dateString) {
  * @returns {string} 포맷된 숫자 문자열
  */
 export function formatCount(count) {
+  // undefined, null, NaN 처리
+  if (count == null || isNaN(count)) {
+    return '0';
+  }
+
   if (count >= 100000) {
     return Math.floor(count / 1000) + 'k';
   } else if (count >= 10000) {

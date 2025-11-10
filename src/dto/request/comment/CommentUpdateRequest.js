@@ -38,4 +38,4 @@ class CommentUpdateRequest {
   }
 }
 
-module.exports = CommentUpdateRequest;
+export default CommentUpdateRequest;

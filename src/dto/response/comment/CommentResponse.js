@@ -1,4 +1,4 @@
-const MemberResponse = require("../member/MemberResponse");
+import MemberResponse from "../member/MemberResponse.js";
 
 /**
  * 댓글 응답 DTO
@@ -88,4 +88,4 @@ class CommentResponse {
   }
 }
 
-module.exports = CommentResponse;
+export default CommentResponse;

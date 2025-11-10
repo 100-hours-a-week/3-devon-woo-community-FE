@@ -1,4 +1,7 @@
 import Component from '../../core/Component.js';
+import { createPost } from '../../api/posts.js';
+import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class PostCreatePage extends Component {
   constructor(props) {
@@ -249,31 +252,39 @@ class PostCreatePage extends Component {
   }
 
   // 폼 제출 처리
-  handleSubmit() {
+  async handleSubmit() {
     if (!this.isFormValid()) {
       alert('제목, 내용을 모두 작성해주세요.');
       return;
     }
 
-    console.log('게시글 작성:', {
-      title: this.state.title,
-      content: this.state.content,
-      image: this.state.image
-    });
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-    // TODO: API 호출
-    // const formData = new FormData();
-    // formData.append('title', this.state.title);
-    // formData.append('content', this.state.content);
-    // if (this.state.image) {
-    //   formData.append('image', this.state.image);
-    // }
-    // await apiPost('/api/v1/posts', formData);
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
-    alert('게시글 작성 기능은 아직 구현되지 않았습니다.');
+      // PostCreateRequest DTO 생성
+      const postData = new PostCreateRequest({
+        memberId,
+        title: this.state.title,
+        content: this.state.content,
+        image: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
+      });
 
-    // 작성 완료 후 리스트로 이동 (히스토리 스택에 작성 페이지를 남기지 않음)
-    // window.router.navigateReplace('/posts');
+      // API 호출
+      const response = await createPost(postData);
+
+      alert('게시글이 작성되었습니다.');
+
+      // 작성 완료 후 게시글 상세 페이지로 이동
+      window.router.navigate(`/posts/${response.postId}`);
+    } catch (error) {
+      console.error('게시글 작성 실패:', error);
+      alert('게시글 작성에 실패했습니다.');
+    }
   }
 }
 

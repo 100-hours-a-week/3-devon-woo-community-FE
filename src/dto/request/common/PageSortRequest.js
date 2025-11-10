@@ -83,4 +83,4 @@ class PageSortRequest {
   }
 }
 
-module.exports = PageSortRequest;
+export default PageSortRequest;
