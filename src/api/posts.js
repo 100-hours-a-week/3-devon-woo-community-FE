@@ -64,11 +64,11 @@ export const updatePost = async (postId, updateData) => {
 /**
  * 게시글 삭제
  * @param {number} postId - 게시글 ID
- * @param {PostUpdateRequest} deleteData - 삭제 요청 데이터 (memberId 필요)
+ * @param {number} memberId - 회원 ID
  * @returns {Promise<void>} 응답 없음 (204 No Content)
  */
-export const deletePost = async (postId, deleteData) => {
-  await api.delete(`/api/v1/posts/${postId}`, deleteData);
+export const deletePost = async (postId, memberId) => {
+  await api.delete(`/api/v1/posts/${postId}?memberId=${memberId}`);
 };
 
 /**
