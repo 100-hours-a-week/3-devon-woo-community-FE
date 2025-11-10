@@ -5,6 +5,15 @@ import Modal from '../../components/Modal/index.js';
 import CommentInput from '../../components/CommentInput/index.js';
 import CommentItem from '../../components/CommentItem/index.js';
 
+// API imports
+import { getPostById, deletePost as deletePostAPI, likePost, unlikePost } from '../../api/posts.js';
+import { getComments, createComment, updateComment, deleteComment as deleteCommentAPI } from '../../api/comments.js';
+
+// DTO imports
+import CommentCreateRequest from '../../dto/request/comment/CommentCreateRequest.js';
+import CommentUpdateRequest from '../../dto/request/comment/CommentUpdateRequest.js';
+import PostUpdateRequest from '../../dto/request/post/PostUpdateRequest.js';
+
 class PostDetailPage extends Component {
   constructor(props) {
     super(props);
@@ -313,26 +322,14 @@ class PostDetailPage extends Component {
   // 게시글 로드
   async loadPost() {
     try {
-      // TODO: API 호출
-      // const response = await apiGet(`/api/v1/posts/${this.postId}`);
+      // TODO: 로그인한 사용자 ID 가져오기 (현재는 null로 처리)
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
 
-      // 임시 더미 데이터
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const dummyPost = {
-        id: this.postId,
-        title: `게시글 제목 ${this.postId}`,
-        content: `이것은 게시글 ${this.postId}의 본문입니다.\n\n바닐라 JavaScript로 만든 SPA입니다.\n\n더미 이미지와 함께 게시글의 실제 모습을 확인할 수 있습니다.`,
-        author: '작성자 이름',
-        createdAt: new Date().toISOString(),
-        imageUrl: `https://picsum.photos/seed/post${this.postId}/800/400`,
-        viewCount: 1234,
-        likeCount: 56,
-        commentCount: 0
-      };
+      const postData = await getPostById(this.postId, memberId);
 
       this.setState({
-        post: dummyPost,
+        post: postData,
+        isLiked: postData.isLiked || false, // 좋아요 여부 설정
         isLoading: false
       });
     } catch (error) {
@@ -345,43 +342,43 @@ class PostDetailPage extends Component {
   // 댓글 로드
   async loadComments() {
     try {
-      // TODO: API 호출
-      // const response = await apiGet(`/api/v1/posts/${this.postId}/comments`);
+      const commentsData = await getComments(this.postId, {
+        page: 0,
+        size: 100, // 한 번에 많이 로드 (페이지네이션 추후 구현)
+        sort: 'createdAt,desc' // 최신순 정렬
+      });
 
-      // 임시 더미 데이터
-      const dummyComments = [
-        {
-          id: '1',
-          content: '첫 번째 댓글입니다!',
-          author: '댓글 작성자 1',
-          createdAt: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: '2',
-          content: '좋은 글 감사합니다.',
-          author: '댓글 작성자 2',
-          createdAt: new Date(Date.now() - 7200000).toISOString()
-        }
-      ];
+      // PageResponse에서 content 추출
+      const comments = commentsData.content || commentsData;
 
-      this.setState({ comments: dummyComments });
+      this.setState({ comments });
     } catch (error) {
       console.error('댓글 로드 실패:', error);
+      // 에러 발생 시 빈 배열로 설정
+      this.setState({ comments: [] });
     }
   }
 
   // 좋아요 토글
   async toggleLike() {
     try {
+      // TODO: 로그인한 사용자 ID 가져오기
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+
+      if (!memberId) {
+        alert('로그인이 필요한 기능입니다.');
+        return;
+      }
+
       const newIsLiked = !this.state.isLiked;
       const likeCountDelta = newIsLiked ? 1 : -1;
 
-      // TODO: API 호출
-      // if (newIsLiked) {
-      //   await apiPost(`/api/v1/posts/${this.postId}/like`);
-      // } else {
-      //   await apiDelete(`/api/v1/posts/${this.postId}/like`);
-      // }
+      // API 호출
+      if (newIsLiked) {
+        await likePost(this.postId, memberId);
+      } else {
+        await unlikePost(this.postId, memberId);
+      }
 
       this.setState({
         isLiked: newIsLiked,
@@ -403,19 +400,24 @@ class PostDetailPage extends Component {
     }
 
     try {
-      // TODO: API 호출
-      // const response = await apiPost(`/api/v1/posts/${this.postId}/comments`, {
-      //   content: this.state.commentInput
-      // });
+      // TODO: 로그인한 사용자 ID 가져오기
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
 
-      // 임시: 새 댓글 추가
-      const newComment = {
-        id: Date.now().toString(),
-        content: this.state.commentInput,
-        author: '현재 사용자',
-        createdAt: new Date().toISOString()
-      };
+      if (!memberId) {
+        alert('로그인이 필요한 기능입니다.');
+        return;
+      }
 
+      // DTO 생성
+      const commentData = new CommentCreateRequest({
+        memberId,
+        content: this.state.commentInput
+      });
+
+      // API 호출
+      const newComment = await createComment(this.postId, commentData);
+
+      // 댓글 목록 새로고침 (또는 새 댓글을 목록 맨 앞에 추가)
       this.setState({
         comments: [newComment, ...this.state.comments],
         commentInput: '',
@@ -460,14 +462,26 @@ class PostDetailPage extends Component {
     }
 
     try {
-      // TODO: API 호출
-      // await apiPut(`/api/v1/comments/${commentId}`, { content: newContent });
+      // TODO: 로그인한 사용자 ID 가져오기
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
 
-      // 임시: 댓글 업데이트
+      if (!memberId) {
+        alert('로그인이 필요한 기능입니다.');
+        return;
+      }
+
+      // DTO 생성
+      const updateData = new CommentUpdateRequest({
+        memberId,
+        content: newContent
+      });
+
+      // API 호출
+      const updatedComment = await updateComment(commentId, updateData);
+
+      // 댓글 목록 업데이트
       const updatedComments = this.state.comments.map(comment =>
-        comment.id === commentId
-          ? { ...comment, content: newContent }
-          : comment
+        comment.id === commentId ? updatedComment : comment
       );
 
       this.setState({
@@ -484,10 +498,24 @@ class PostDetailPage extends Component {
   // 댓글 삭제
   async deleteComment(commentId) {
     try {
-      // TODO: API 호출
-      // await apiDelete(`/api/v1/comments/${commentId}`);
+      // TODO: 로그인한 사용자 ID 가져오기
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
 
-      // 임시: 댓글 제거
+      if (!memberId) {
+        alert('로그인이 필요한 기능입니다.');
+        return;
+      }
+
+      // DTO 생성 (삭제 시에도 memberId 필요)
+      const deleteData = new CommentUpdateRequest({
+        memberId,
+        content: '' // 삭제 시에는 content가 사용되지 않지만 DTO 구조상 필요
+      });
+
+      // API 호출
+      await deleteCommentAPI(commentId, deleteData);
+
+      // 댓글 목록에서 제거
       const filteredComments = this.state.comments.filter(c => c.id !== commentId);
 
       this.setState({
@@ -510,8 +538,23 @@ class PostDetailPage extends Component {
   // 게시글 삭제
   async deletePost() {
     try {
-      // TODO: API 호출
-      // await apiDelete(`/api/v1/posts/${this.postId}`);
+      // TODO: 로그인한 사용자 ID 가져오기
+      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+
+      if (!memberId) {
+        alert('로그인이 필요한 기능입니다.');
+        return;
+      }
+
+      // DTO 생성 (삭제 시에도 memberId 필요)
+      const deleteData = new PostUpdateRequest({
+        memberId,
+        title: '', // 삭제 시에는 사용되지 않지만 DTO 구조상 필요
+        content: ''
+      });
+
+      // API 호출
+      await deletePostAPI(this.postId, deleteData);
 
       alert('게시글이 삭제되었습니다.');
       window.router.navigate('/posts');
