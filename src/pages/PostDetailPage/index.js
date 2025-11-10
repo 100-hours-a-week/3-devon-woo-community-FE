@@ -79,10 +79,12 @@ class PostDetailPage extends Component {
                 <span class="post-date">${formatDate(post.createdAt)}</span>
               </div>
             </div>
-            <div class="post-actions">
-              <button class="action-btn edit-btn" id="editBtn">수정</button>
-              <button class="action-btn delete-btn" id="deleteBtn">삭제</button>
-            </div>
+            ${this.isPostOwner() ? `
+              <div class="post-actions">
+                <button class="action-btn edit-btn" id="editBtn">수정</button>
+                <button class="action-btn delete-btn" id="deleteBtn">삭제</button>
+              </div>
+            ` : ''}
           </div>
 
           <!-- 게시글 이미지 -->
@@ -146,12 +148,17 @@ class PostDetailPage extends Component {
   }
 
   renderComments() {
+    const currentUserId = AuthService.getCurrentUserId();
+
     return this.state.comments.map(comment => {
       const commentId = comment.commentId || comment.id;
+      const isOwner = currentUserId && comment.member?.memberId === currentUserId;
+
       const commentItem = new CommentItem({
         comment,
         isEditing: this.state.editingCommentId === commentId,
-        editingText: this.state.editingCommentText
+        editingText: this.state.editingCommentText,
+        isOwner
       });
       return commentItem.render();
     }).join('');
@@ -326,6 +333,14 @@ class PostDetailPage extends Component {
     }
     // 모달 스크롤 잠금 해제
     document.body.classList.remove('modal-active');
+  }
+
+  // 게시글 작성자 확인
+  isPostOwner() {
+    if (!this.state.post || !this.state.post.member) return false;
+    const currentUserId = AuthService.getCurrentUserId();
+    if (!currentUserId) return false;
+    return this.state.post.member.memberId === currentUserId;
   }
 
   // 게시글 로드
@@ -522,14 +537,8 @@ class PostDetailPage extends Component {
     try {
       const memberId = AuthService.getCurrentUserId();
 
-      // DTO 생성 (삭제 시에도 memberId 필요)
-      const deleteData = new CommentUpdateRequest({
-        memberId,
-        content: '' // 삭제 시에는 content가 사용되지 않지만 DTO 구조상 필요
-      });
-
       // API 호출
-      await deleteCommentAPI(commentId, deleteData);
+      await deleteCommentAPI(commentId, memberId);
 
       // 댓글 목록에서 제거
       const filteredComments = this.state.comments.filter(c => {
@@ -564,15 +573,8 @@ class PostDetailPage extends Component {
     try {
       const memberId = AuthService.getCurrentUserId();
 
-      // DTO 생성 (삭제 시에도 memberId 필요)
-      const deleteData = new PostUpdateRequest({
-        memberId,
-        title: '', // 삭제 시에는 사용되지 않지만 DTO 구조상 필요
-        content: ''
-      });
-
       // API 호출
-      await deletePostAPI(this.postId, deleteData);
+      await deletePostAPI(this.postId, memberId);
 
       alert('게시글이 삭제되었습니다.');
       window.router.navigate('/posts');
