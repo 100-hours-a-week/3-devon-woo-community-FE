@@ -1,4 +1,7 @@
 import Component from '../../core/Component.js';
+import { getMemberProfile, updateMemberProfile, deleteMember } from '../../api/members.js';
+import MemberUpdateRequest from '../../dto/request/member/MemberUpdateRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -277,25 +280,21 @@ class ProfilePage extends Component {
 
   // 사용자 프로필 로드
   async loadUserProfile() {
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
     try {
-      // TODO: API 호출
-      // const response = await apiGet('/api/v1/users/profile');
+      const memberId = AuthService.getCurrentUserId();
+      const profile = await getMemberProfile(memberId);
 
-      // 임시 더미 데이터
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const dummyUser = {
-        email: 'user@example.com',
-        nickname: '사용자닉네임',
-        profileImageUrl: null
-      };
-
-      this.originalNickname = dummyUser.nickname;
+      this.originalNickname = profile.nickname;
 
       this.setState({
-        email: dummyUser.email,
-        nickname: dummyUser.nickname,
-        existingProfileImageUrl: dummyUser.profileImageUrl || '',
+        email: profile.email || '',
+        nickname: profile.nickname,
+        existingProfileImageUrl: profile.profileImage || '',
         isLoading: false
       });
     } catch (error) {
@@ -393,18 +392,16 @@ class ProfilePage extends Component {
     }
 
     try {
-      console.log('프로필 수정:', {
+      const memberId = AuthService.getCurrentUserId();
+
+      // MemberUpdateRequest DTO 생성
+      const updateData = new MemberUpdateRequest({
         nickname: this.state.nickname,
-        profileImage: this.state.profileImage
+        profileImage: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
       });
 
-      // TODO: API 호출
-      // const formData = new FormData();
-      // formData.append('nickname', this.state.nickname);
-      // if (this.state.profileImage) {
-      //   formData.append('profileImage', this.state.profileImage);
-      // }
-      // await apiPut('/api/v1/users/profile', formData);
+      // API 호출
+      await updateMemberProfile(memberId, updateData);
 
       // 성공 시 토스트 메시지 표시
       this.showToast();
@@ -420,16 +417,16 @@ class ProfilePage extends Component {
   // 회원 탈퇴 처리
   async handleDeleteAccount() {
     try {
-      console.log('회원 탈퇴 처리');
+      const memberId = AuthService.getCurrentUserId();
 
-      // TODO: API 호출
-      // await apiDelete('/api/v1/users/account');
+      // API 호출
+      await deleteMember(memberId);
 
       // 성공 시
       alert('회원 탈퇴가 완료되었습니다.');
 
-      // localStorage 정리
-      localStorage.removeItem('token');
+      // 로그아웃 처리
+      AuthService.logout();
 
       // 로그인 페이지로 이동
       window.router.navigate('/login');

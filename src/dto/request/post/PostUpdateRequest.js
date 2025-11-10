@@ -28,7 +28,7 @@ class PostUpdateRequest {
       memberId,
       title: `Updated Post Title #${seed}`,
       content: `This is the updated content for post #${seed}. The content has been modified with new information.`,
-      image: `https://via.placeholder.com/800x400?text=UpdatedPost${seed}`,
+      image: `https://picsum.photos/seed/updatepost${seed}/800/400`,
     });
   }
 
@@ -41,9 +41,9 @@ class PostUpdateRequest {
       memberId: 1,
       title: "Updated Post Title",
       content: "Updated content.",
-      image: "https://via.placeholder.com/800x400?text=UpdatedPost",
+      image: "https://picsum.photos/seed/updatepost1/800/400",
     });
   }
 }
 
-module.exports = PostUpdateRequest;
+export default PostUpdateRequest;

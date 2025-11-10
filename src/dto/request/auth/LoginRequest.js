@@ -37,4 +37,4 @@ class LoginRequest {
   }
 }
 
-module.exports = LoginRequest;
+export default LoginRequest;

@@ -1,6 +1,7 @@
 import Component from '../../core/Component.js';
 import PostCard from '../../components/PostCard/index.js';
 import LoadingSpinner from '../../components/LoadingSpinner/index.js';
+import { getPosts } from '../../api/posts.js';
 
 class PostListPage extends Component {
   constructor(props) {
@@ -9,10 +10,11 @@ class PostListPage extends Component {
       posts: [],
       isLoading: false,
       hasMore: true,
-      page: 1
+      page: 0  // API는 0부터 시작
     };
     this.loadStyle('/src/pages/PostListPage/style.css');
     this.observer = null;
+    this.pageSize = 10;
   }
 
   render() {
@@ -132,51 +134,36 @@ class PostListPage extends Component {
     this.setState({ isLoading: true });
 
     try {
-      // TODO: API 호출로 교체
-      // const response = await apiGet(`/api/v1/posts?page=${this.state.page}&size=10`);
+      // API 호출
+      const response = await getPosts({
+        page: this.state.page,
+        size: this.pageSize
+      });
 
-      // 임시 데이터 (데모용)
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      const newPosts = this.generateDummyPosts(10);
+      // DTO 데이터를 PostCard가 기대하는 형식으로 변환
+      const transformedPosts = response.items.map(post => ({
+        id: post.postId,
+        title: post.title,
+        createdAt: post.createdAt,
+        viewCount: post.viewCount,
+        commentCount: post.commentCount,
+        likeCount: post.likeCount,
+        author: post.member?.nickname || '익명',
+        authorProfileImage: post.member?.profileImage || null,
+        imageUrl: post.imageUrl || null
+      }));
 
       this.setState({
-        posts: [...this.state.posts, ...newPosts],
+        posts: [...this.state.posts, ...transformedPosts],
         page: this.state.page + 1,
         isLoading: false,
-        hasMore: this.state.page < 3 // 데모: 3페이지까지만
+        hasMore: true
       });
     } catch (error) {
       console.error('게시글 로드 실패:', error);
       this.setState({ isLoading: false });
       alert('게시글을 불러오는데 실패했습니다.');
     }
-  }
-
-  // 임시 더미 데이터 생성 (데모용)
-  generateDummyPosts(count) {
-    const posts = [];
-    const baseId = (this.state.page - 1) * 10;
-    const authors = ['김철수', '이영희', '박민수', '정수진', '최동욱'];
-
-    for (let i = 0; i < count; i++) {
-      const postId = baseId + i + 1;
-      const authorIndex = Math.floor(Math.random() * authors.length);
-
-      posts.push({
-        id: postId,
-        title: `게시글 제목 ${postId} - 이것은 테스트 게시글입니다`,
-        createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-        viewCount: Math.floor(Math.random() * 100000),
-        commentCount: Math.floor(Math.random() * 1000),
-        likeCount: Math.floor(Math.random() * 5000),
-        author: authors[authorIndex],
-        authorProfileImage: `https://picsum.photos/seed/user${authorIndex}/40/40`,
-        imageUrl: Math.random() > 0.3 ? `https://picsum.photos/seed/post${postId}/400/300` : null
-      });
-    }
-
-    return posts;
   }
 }
 

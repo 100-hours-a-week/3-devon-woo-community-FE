@@ -77,6 +77,21 @@
   height: 48px;
   border-radius: var(--radius-full);
   background-color: var(--color-border-primary);
+  overflow: hidden;
+}
+
+.author-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+}
+
+.author-avatar .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-border-primary);
+  border-radius: var(--radius-full);
 }
 
 .author-details {

@@ -22,29 +22,36 @@ class CommentItem extends Component {
       return '<div></div>';
     }
 
+    const commentId = comment.commentId || comment.id;
+
     return `
-      <div class="comment-item ${isEditing ? 'editing' : ''}" data-comment-id="${comment.id}">
+      <div class="comment-item ${isEditing ? 'editing' : ''}" data-comment-id="${commentId}">
         <div class="comment-header">
           <div class="comment-author-info">
-            <div class="comment-avatar"></div>
+            <div class="comment-avatar">
+              ${comment.member?.profileImage ?
+                `<img src="${comment.member.profileImage}" alt="${comment.member.nickname}" class="avatar-image" />` :
+                `<div class="avatar-placeholder"></div>`
+              }
+            </div>
             <div class="comment-author-details">
-              <span class="comment-author-name">${comment.author || '댓글 작성자'}</span>
+              <span class="comment-author-name">${comment.member?.nickname || '댓글 작성자'}</span>
               <span class="comment-date">${formatDate(comment.createdAt)}</span>
             </div>
           </div>
           <div class="comment-actions">
-            <button class="comment-action-btn edit-comment-btn" data-comment-id="${comment.id}">수정</button>
-            <button class="comment-action-btn delete-comment-btn" data-comment-id="${comment.id}">삭제</button>
+            <button class="comment-action-btn edit-comment-btn" data-comment-id="${commentId}">수정</button>
+            <button class="comment-action-btn delete-comment-btn" data-comment-id="${commentId}">삭제</button>
           </div>
         </div>
         <div class="comment-content">${comment.content}</div>
 
         <!-- 댓글 수정 모드 -->
         <div class="comment-edit-container">
-          <textarea class="comment-edit-input" data-comment-id="${comment.id}">${isEditing ? editingText : comment.content}</textarea>
+          <textarea class="comment-edit-input" data-comment-id="${commentId}">${isEditing ? editingText : comment.content}</textarea>
           <div class="comment-edit-actions">
-            <button class="comment-edit-btn cancel" data-comment-id="${comment.id}">취소</button>
-            <button class="comment-edit-btn save" data-comment-id="${comment.id}">댓글 수정</button>
+            <button class="comment-edit-btn cancel" data-comment-id="${commentId}">취소</button>
+            <button class="comment-edit-btn save" data-comment-id="${commentId}">댓글 수정</button>
           </div>
         </div>
       </div>

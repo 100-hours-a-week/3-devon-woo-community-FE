@@ -29,4 +29,4 @@ class LoginResponse {
   }
 }
 
-module.exports = LoginResponse;
+export default LoginResponse;

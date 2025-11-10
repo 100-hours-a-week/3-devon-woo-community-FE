@@ -1,11 +1,16 @@
 import Component from '../../core/Component.js';
+import { updatePassword } from '../../api/members.js';
+import PasswordUpdateRequest from '../../dto/request/member/PasswordUpdateRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class PasswordChangePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      currentPassword: '',
       password: '',
       passwordConfirm: '',
+      currentPasswordError: '',
       passwordError: '',
       passwordConfirmError: '',
       isLoading: false,
@@ -21,14 +26,29 @@ class PasswordChangePage extends Component {
           <h2 class="password-title">비밀번호수정</h2>
 
           <form class="password-form" id="passwordForm">
-            <!-- 비밀번호 입력 -->
+            <!-- 현재 비밀번호 입력 -->
             <div class="form-group">
-              <label for="passwordInput" class="form-label">비밀번호</label>
+              <label for="currentPasswordInput" class="form-label">현재 비밀번호</label>
+              <input
+                type="password"
+                id="currentPasswordInput"
+                class="form-input ${this.state.currentPasswordError ? 'error' : ''}"
+                placeholder="현재 비밀번호를 입력해주세요"
+                value="${this.state.currentPassword}"
+              >
+              <p class="helper-text ${this.state.currentPasswordError ? 'show' : ''}" id="currentPasswordHelper">
+                *현재 비밀번호를 입력해주세요.
+              </p>
+            </div>
+
+            <!-- 새 비밀번호 입력 -->
+            <div class="form-group">
+              <label for="passwordInput" class="form-label">새 비밀번호</label>
               <input
                 type="password"
                 id="passwordInput"
                 class="form-input ${this.state.passwordError ? 'error' : ''}"
-                placeholder="비밀번호를 입력해주세요"
+                placeholder="새 비밀번호를 입력해주세요"
                 value="${this.state.password}"
               >
               <p class="helper-text ${this.state.passwordError ? 'show' : ''}" id="passwordHelper">
@@ -97,12 +117,33 @@ class PasswordChangePage extends Component {
   }
 
   setupEventListeners() {
+    const currentPasswordInput = this.$el.querySelector('#currentPasswordInput');
     const passwordInput = this.$el.querySelector('#passwordInput');
     const passwordConfirmInput = this.$el.querySelector('#passwordConfirmInput');
     const form = this.$el.querySelector('#passwordForm');
     const submitBtn = this.$el.querySelector('#submitBtn');
 
-    // 비밀번호 입력 - setState 없이 직접 업데이트
+    // 현재 비밀번호 입력
+    if (currentPasswordInput) {
+      currentPasswordInput.addEventListener('input', (e) => {
+        this.state.currentPassword = e.target.value;
+        this.state.currentPasswordError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#currentPasswordHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        currentPasswordInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+    }
+
+    // 새 비밀번호 입력 - setState 없이 직접 업데이트
     if (passwordInput) {
       passwordInput.addEventListener('input', (e) => {
         this.state.password = e.target.value;
@@ -213,11 +254,12 @@ class PasswordChangePage extends Component {
       return false;
     }
 
+    const hasCurrentPassword = this.state.currentPassword.trim() !== '';
     const hasPassword = this.state.password.trim() !== '';
     const hasPasswordConfirm = this.state.passwordConfirm.trim() !== '';
-    const noErrors = !this.state.passwordError && !this.state.passwordConfirmError;
+    const noErrors = !this.state.currentPasswordError && !this.state.passwordError && !this.state.passwordConfirmError;
 
-    return hasPassword && hasPasswordConfirm && noErrors;
+    return hasCurrentPassword && hasPassword && hasPasswordConfirm && noErrors;
   }
 
   // 제출 버튼 활성화 상태 업데이트
@@ -237,6 +279,11 @@ class PasswordChangePage extends Component {
       return;
     }
 
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
     // 최종 유효성 검사
     const isPasswordValid = this.validatePassword();
     const isPasswordConfirmValid = this.validatePasswordConfirm();
@@ -249,37 +296,44 @@ class PasswordChangePage extends Component {
     this.setState({ isLoading: true });
 
     try {
-      console.log('비밀번호 변경:', {
-        password: this.state.password
+      const memberId = AuthService.getCurrentUserId();
+
+      // PasswordUpdateRequest DTO 생성
+      const passwordData = new PasswordUpdateRequest({
+        currentPassword: this.state.currentPassword,
+        newPassword: this.state.password
       });
 
-      // TODO: API 호출
-      // await apiPut('/api/v1/users/password', {
-      //   password: this.state.password
-      // });
-
-      // 임시: 1초 대기
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // API 호출
+      await updatePassword(memberId, passwordData);
 
       // 성공 시 토스트 메시지 표시
       this.setState({
         isLoading: false,
+        currentPassword: '',
         password: '',
         passwordConfirm: '',
+        currentPasswordError: '',
         passwordError: '',
         passwordConfirmError: ''
       });
 
       this.showToast();
 
-      // 선택: 로그인 페이지로 이동 (히스토리 스택에 비밀번호 변경 페이지를 남기지 않음)
-      // setTimeout(() => {
-      //   window.router.navigateReplace('/login');
-      // }, 1500);
+      // 선택: 프로필 페이지로 돌아가기
+      setTimeout(() => {
+        window.router.navigate('/profile');
+      }, 1500);
     } catch (error) {
       console.error('비밀번호 변경 실패:', error);
       this.setState({ isLoading: false });
-      alert('비밀번호 변경에 실패했습니다.');
+
+      // 현재 비밀번호 오류 처리
+      if (error.response?.status === 401 || error.response?.status === 400) {
+        this.setState({ currentPasswordError: '*현재 비밀번호가 일치하지 않습니다.' });
+      } else {
+        alert('비밀번호 변경에 실패했습니다.');
+      }
     }
   }
 

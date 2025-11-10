@@ -1,4 +1,7 @@
 import Component from '../../core/Component.js';
+import { signup } from '../../api/auth.js';
+import SignupRequest from '../../dto/request/auth/SignupRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class SignupPage extends Component {
   constructor(props) {
@@ -230,15 +233,40 @@ class SignupPage extends Component {
     }
   }
 
-  handleSubmit() {
-    console.log('회원가입 시도:', {
-      email: this.state.email,
-      password: this.state.password,
-      passwordConfirm: this.state.passwordConfirm,
-      nickname: this.state.nickname,
-      profileImage: this.state.profileImage
-    });
-    alert('회원가입 기능은 아직 구현되지 않았습니다.');
+  async handleSubmit() {
+    // 비밀번호 확인 검증
+    if (this.state.password !== this.state.passwordConfirm) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    try {
+      // TODO: 프로필 이미지 업로드 처리 (추후 구현)
+      // 현재는 이미지 URL을 null로 전달
+      const profileImageUrl = null;
+
+      // DTO 생성
+      const signupData = new SignupRequest({
+        email: this.state.email,
+        password: this.state.password,
+        nickname: this.state.nickname,
+        profileImage: profileImageUrl
+      });
+
+      // API 호출
+      const response = await signup(signupData);
+
+      // 회원가입 성공 - 자동 로그인 처리
+      AuthService.login(response.userId);
+
+      alert('회원가입이 완료되었습니다!');
+
+      // 게시글 목록으로 이동
+      window.router.navigate('/posts');
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+    }
   }
 }
 

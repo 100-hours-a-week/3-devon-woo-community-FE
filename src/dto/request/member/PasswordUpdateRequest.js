@@ -37,4 +37,4 @@ class PasswordUpdateRequest {
   }
 }
 
-module.exports = PasswordUpdateRequest;
+export default PasswordUpdateRequest;

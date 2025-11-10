@@ -37,4 +37,4 @@ class MemberUpdateRequest {
   }
 }
 
-module.exports = MemberUpdateRequest;
+export default MemberUpdateRequest;
