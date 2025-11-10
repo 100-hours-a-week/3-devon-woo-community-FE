@@ -1,54 +1,74 @@
-import Router from './router/router.js';
-import Header from './components/Header.js';
-import Footer from './components/Footer.js';
-import LoginPage, { initLoginPage } from './pages/LoginPage.js';
-import PostListPage, { initPostListPage } from './pages/PostListPage.js';
-import PostDetailPage, { initPostDetailPage } from './pages/PostDetailPage.js';
-import ProfilePage, { initProfilePage } from './pages/ProfilePage.js';
+// 앱 초기화 및 라우트 설정
+import Router from './core/Router.js';
+import Header from './components/Header/index.js';
+import LoginPage from './pages/LoginPage/index.js';
+import SignupPage from './pages/SignupPage/index.js';
+import PostListPage from './pages/PostListPage/index.js';
+import PostCreatePage from './pages/PostCreatePage/index.js';
+import PostDetailPage from './pages/PostDetailPage/index.js';
+import PostEditPage from './pages/PostEditPage/index.js';
+import ProfilePage from './pages/ProfilePage/index.js';
+import PasswordChangePage from './pages/PasswordChangePage/index.js';
 
-// 앱 초기화
-class App {
-  constructor() {
-    this.app = document.getElementById('app');
-    this.router = null;
-    this.init();
-  }
+// App 초기화
+function initApp() {
+  const app = document.getElementById('app');
 
-  init() {
-    this.setupRouter();
-  }
+  // App 구조 생성
+  app.innerHTML = `
+    <div id="header"></div>
+    <main id="main"></main>
+  `;
 
-  setupRouter() {
-    const routes = {
-      '/': () => this.render(PostListPage, initPostListPage),
-      '/login': () => this.render(LoginPage, initLoginPage),
-      '/posts': () => this.render(PostListPage, initPostListPage),
-      '/posts/:id': () => this.render(PostDetailPage, initPostDetailPage),
-      '/profile': () => this.render(ProfilePage, initProfilePage),
-    };
+  // Header 렌더링 (한 번만)
+  const header = new Header({
+    showBackButton: false,
+    showProfileIcon: false  // 초기값을 명시적으로 false로 설정
+  });
+  const headerContainer = document.getElementById('header');
+  header.mount(headerContainer);
 
-    this.router = new Router(routes);
-  }
+  // 전역 Header 참조 (페이지에서 사용)
+  window.headerComponent = header;
 
-  render(PageComponent, initFunction) {
-    const header = Header();
-    const page = PageComponent();
-    const footer = Footer();
+  // 라우터 생성 및 라우트 등록
+  const router = new Router();
+  router.addRoute('/', LoginPage);
+  router.addRoute('/login', LoginPage);
+  router.addRoute('/signup', SignupPage);
+  router.addRoute('/posts', PostListPage);
+  router.addRoute('/posts/create', PostCreatePage);
+  router.addRoute('/posts/:id', PostDetailPage); // 동적 라우트
+  router.addRoute('/posts/:id/edit', PostEditPage); // 동적 라우트
+  router.addRoute('/profile', ProfilePage);
+  router.addRoute('/password-change', PasswordChangePage);
 
-    this.app.innerHTML = `
-      ${header}
-      <main>
-        ${page}
-      </main>
-      ${footer}
-    `;
+  // 라우터 초기화
+  router.init();
 
-    // 페이지 로드 후 이벤트 리스너 등록
-    if (initFunction) {
-      initFunction();
-    }
-  }
+  // 전역 라우터 참조 (컴포넌트에서 사용)
+  window.router = router;
+
+  // 라우트 변경 시 헤더 상태 업데이트
+  window.updateHeaderState = updateHeaderState;
+  updateHeaderState();
+  window.addEventListener('popstate', updateHeaderState);
 }
 
-// 앱 실행
-new App();
+// 헤더 상태 업데이트 함수
+function updateHeaderState() {
+  const path = window.location.pathname;
+  const headerComponent = window.headerComponent;
+
+  if (!headerComponent) return;
+
+  // 현재 페이지 경로만 업데이트 (드롭다운 활성화 상태용)
+  headerComponent.setCurrentPage(path);
+}
+
+// DOM 로드 후 앱 초기화
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}

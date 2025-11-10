@@ -60,12 +60,10 @@ python -m http.server 8000
 
 ## 라우팅
 
-해시 기반 라우팅을 사용합니다:
+History API 기반 SPA 라우팅을 사용합니다:
 
-- `#/login` - 로그인 페이지
-- `#/posts` - 게시글 리스트
-- `#/posts/:id` - 게시글 상세 (예: `#/posts/1`)
-- `#/profile` - 개인정보 페이지
+- `/` 또는 `/login` - 로그인 페이지
+- `/signup` - 회원가입 페이지
 
 ## 향후 작업 (TODO)
 
