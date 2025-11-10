@@ -28,6 +28,9 @@ class Axioxs{
 
     try {
       const res = await fetch(this.baseURL + url, config);
+      if (res.status === 204 || res.headers.get("Content-Length") === "0") {
+        return null;
+      }
       const data = await res.json();
       return data;
     } catch (e) {
