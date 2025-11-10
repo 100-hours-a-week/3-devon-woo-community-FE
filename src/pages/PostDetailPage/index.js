@@ -358,7 +358,7 @@ class PostDetailPage extends Component {
       });
 
       // PageResponse에서 content 추출
-      const comments = commentsData.content || commentsData;
+      const comments = commentsData.items || commentsData;
 
       // 댓글 개수를 post에 반영
       this.setState({

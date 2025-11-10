@@ -1,5 +1,5 @@
 // Mock 모드 설정 (개발 중에는 true, 실제 API 사용 시 false)
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 class Axioxs{
   constructor(config = {}) {

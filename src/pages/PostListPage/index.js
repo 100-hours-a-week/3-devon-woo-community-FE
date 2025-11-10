@@ -157,7 +157,7 @@ class PostListPage extends Component {
         posts: [...this.state.posts, ...transformedPosts],
         page: this.state.page + 1,
         isLoading: false,
-        hasMore: !response.isLast()  // 마지막 페이지가 아니면 더 있음
+        hasMore: true
       });
     } catch (error) {
       console.error('게시글 로드 실패:', error);
