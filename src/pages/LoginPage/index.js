@@ -1,4 +1,7 @@
 import Component from '../../core/Component.js';
+import { login } from '../../api/auth.js';
+import LoginRequest from '../../dto/request/auth/LoginRequest.js';
+import AuthService from '../../utils/AuthService.js';
 
 class LoginPage extends Component {
   constructor(props) {
@@ -104,29 +107,26 @@ class LoginPage extends Component {
     }
   }
 
-  handleSubmit() {
-    console.log('로그인 시도:', {
-      email: this.state.email,
-      password: this.state.password
-    });
+  async handleSubmit() {
+    try {
+      // DTO 생성
+      const loginData = new LoginRequest({
+        email: this.state.email,
+        password: this.state.password
+      });
 
-    // TODO: API 호출로 교체
-    // const response = await apiPost('/api/v1/auth/login', { email, password });
+      // API 호출
+      const response = await login(loginData);
 
-    // 임시: 로그인 성공으로 간주하고 사용자 정보 저장
-    const dummyUser = {
-      id: 1,
-      email: this.state.email,
-      nickname: '테스트유저',
-      profileImage: 'https://picsum.photos/seed/user1/200/200'
-    };
+      // 로그인 성공 - userId를 localStorage에 저장
+      AuthService.login(response.userId);
 
-    // localStorage에 사용자 정보 저장
-    localStorage.setItem('user', JSON.stringify(dummyUser));
-    localStorage.setItem('token', 'dummy-token-12345');
-
-    // 게시글 목록으로 이동
-    window.router.navigate('/posts');
+      // 게시글 목록으로 이동
+      window.router.navigate('/posts');
+    } catch (error) {
+      console.error('로그인 실패:', error);
+      alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+    }
   }
 }
 

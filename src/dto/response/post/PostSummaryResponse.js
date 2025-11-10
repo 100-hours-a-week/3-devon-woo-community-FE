@@ -11,26 +11,26 @@ class PostSummaryResponse {
    * @param {string} params.title - 제목
    * @param {MemberResponse} params.member - 작성자 정보
    * @param {string} params.createdAt - 생성 시각 (ISO 8601 형식)
-   * @param {number} params.views - 조회수
-   * @param {number} params.likes - 좋아요 수
-   * @param {number} params.commentsCount - 댓글 수
+   * @param {number} params.viewCount - 조회수
+   * @param {number} params.likeCount - 좋아요 수
+   * @param {number} params.commentCount - 댓글 수
    */
   constructor({
     postId,
     title,
     member,
     createdAt,
-    views,
-    likes,
-    commentsCount,
+    viewCount,
+    likeCount,
+    commentCount,
   }) {
     this.postId = postId;
     this.title = title;
     this.member = member;
     this.createdAt = createdAt;
-    this.views = views;
-    this.likes = likes;
-    this.commentsCount = commentsCount;
+    this.viewCount = viewCount;
+    this.likeCount = likeCount;
+    this.commentCount = commentCount;
   }
 
   /**
@@ -63,9 +63,9 @@ class PostSummaryResponse {
       title: titles[index],
       member: MemberResponse.createDummy((seed % 8) + 1),
       createdAt,
-      views: Math.floor(Math.random() * 1000) + 10,
-      likes: Math.floor(Math.random() * 100) + 1,
-      commentsCount: Math.floor(Math.random() * 50),
+      viewCount: Math.floor(Math.random() * 1000) + 10,
+      likeCount: Math.floor(Math.random() * 100) + 1,
+      commentCount: Math.floor(Math.random() * 50),
     });
   }
 
@@ -79,9 +79,9 @@ class PostSummaryResponse {
       title: "My First Post",
       member: MemberResponse.createDefault(),
       createdAt: new Date().toISOString(),
-      views: 42,
-      likes: 5,
-      commentsCount: 3,
+      viewCount: 42,
+      likeCount: 5,
+      commentCount: 3,
     });
   }
 

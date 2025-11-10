@@ -14,8 +14,10 @@ class PostResponse {
    * @param {string} params.imageUrl - 이미지 URL
    * @param {string} params.createdAt - 생성 시각 (ISO 8601 형식)
    * @param {string} params.updatedAt - 수정 시각 (ISO 8601 형식)
-   * @param {number} params.views - 조회수
-   * @param {number} params.likes - 좋아요 수
+   * @param {number} params.viewCount - 조회수
+   * @param {number} params.likeCount - 좋아요 수
+   * @param {number} params.commentCount - 댓글 수
+   * @param {boolean} [params.isLiked=false] - 현재 사용자의 좋아요 여부
    */
   constructor({
     postId,
@@ -25,8 +27,10 @@ class PostResponse {
     imageUrl,
     createdAt,
     updatedAt,
-    views,
-    likes,
+    viewCount,
+    likeCount,
+    commentCount,
+    isLiked = false,
   }) {
     this.postId = postId;
     this.member = member;
@@ -35,8 +39,10 @@ class PostResponse {
     this.imageUrl = imageUrl;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
-    this.views = views;
-    this.likes = likes;
+    this.viewCount = viewCount;
+    this.likeCount = likeCount;
+    this.commentCount = commentCount;
+    this.isLiked = isLiked;
   }
 
   /**
@@ -72,11 +78,13 @@ class PostResponse {
       member: MemberResponse.createDummy((seed % 8) + 1),
       title: titles[index],
       content: contents[index],
-      imageUrl: `https://via.placeholder.com/800x400?text=Post${seed}`,
+      imageUrl: `https://picsum.photos/seed/post${seed}/800/400`,
       createdAt,
       updatedAt: createdAt,
-      views: Math.floor(Math.random() * 1000) + 10,
-      likes: Math.floor(Math.random() * 100) + 1,
+      viewCount: Math.floor(Math.random() * 1000) + 10,
+      likeCount: Math.floor(Math.random() * 100) + 1,
+      commentCount: Math.floor(Math.random() * 50),
+      isLiked: false,
     });
   }
 
@@ -90,11 +98,13 @@ class PostResponse {
       member: MemberResponse.createDefault(),
       title: "My First Post",
       content: "This is the content of my first post.",
-      imageUrl: "https://via.placeholder.com/800x400?text=MyFirstPost",
+      imageUrl: "https://picsum.photos/seed/post1/800/400",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      views: 42,
-      likes: 5,
+      viewCount: 42,
+      likeCount: 5,
+      commentCount: 3,
+      isLiked: false,
     });
   }
 }

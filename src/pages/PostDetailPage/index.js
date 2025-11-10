@@ -14,6 +14,9 @@ import CommentCreateRequest from '../../dto/request/comment/CommentCreateRequest
 import CommentUpdateRequest from '../../dto/request/comment/CommentUpdateRequest.js';
 import PostUpdateRequest from '../../dto/request/post/PostUpdateRequest.js';
 
+// Utils imports
+import AuthService from '../../utils/AuthService.js';
+
 class PostDetailPage extends Component {
   constructor(props) {
     super(props);
@@ -67,7 +70,7 @@ class PostDetailPage extends Component {
             <div class="author-info">
               <div class="author-avatar"></div>
               <div class="author-details">
-                <span class="author-name">${post.author || '작성자'}</span>
+                <span class="author-name">${post.member?.nickname || '작성자'}</span>
                 <span class="post-date">${formatDate(post.createdAt)}</span>
               </div>
             </div>
@@ -139,9 +142,10 @@ class PostDetailPage extends Component {
 
   renderComments() {
     return this.state.comments.map(comment => {
+      const commentId = comment.commentId || comment.id;
       const commentItem = new CommentItem({
         comment,
-        isEditing: this.state.editingCommentId === comment.id,
+        isEditing: this.state.editingCommentId === commentId,
         editingText: this.state.editingCommentText
       });
       return commentItem.render();
@@ -322,8 +326,8 @@ class PostDetailPage extends Component {
   // 게시글 로드
   async loadPost() {
     try {
-      // TODO: 로그인한 사용자 ID 가져오기 (현재는 null로 처리)
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+      // 현재 로그인한 사용자 ID 가져오기
+      const memberId = AuthService.getCurrentUserId();
 
       const postData = await getPostById(this.postId, memberId);
 
@@ -351,7 +355,14 @@ class PostDetailPage extends Component {
       // PageResponse에서 content 추출
       const comments = commentsData.content || commentsData;
 
-      this.setState({ comments });
+      // 댓글 개수를 post에 반영
+      this.setState({
+        comments,
+        post: this.state.post ? {
+          ...this.state.post,
+          commentCount: comments.length
+        } : null
+      });
     } catch (error) {
       console.error('댓글 로드 실패:', error);
       // 에러 발생 시 빈 배열로 설정
@@ -361,14 +372,13 @@ class PostDetailPage extends Component {
 
   // 좋아요 토글
   async toggleLike() {
-    try {
-      // TODO: 로그인한 사용자 ID 가져오기
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-      if (!memberId) {
-        alert('로그인이 필요한 기능입니다.');
-        return;
-      }
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
       const newIsLiked = !this.state.isLiked;
       const likeCountDelta = newIsLiked ? 1 : -1;
@@ -399,14 +409,13 @@ class PostDetailPage extends Component {
       return;
     }
 
-    try {
-      // TODO: 로그인한 사용자 ID 가져오기
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-      if (!memberId) {
-        alert('로그인이 필요한 기능입니다.');
-        return;
-      }
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
       // DTO 생성
       const commentData = new CommentCreateRequest({
@@ -434,7 +443,10 @@ class PostDetailPage extends Component {
 
   // 댓글 수정 시작
   startEditComment(commentId) {
-    const comment = this.state.comments.find(c => c.id === commentId);
+    const comment = this.state.comments.find(c => {
+      const cId = c.commentId || c.id;
+      return cId === commentId;
+    });
     if (comment) {
       this.setState({
         editingCommentId: commentId,
@@ -461,14 +473,13 @@ class PostDetailPage extends Component {
       return;
     }
 
-    try {
-      // TODO: 로그인한 사용자 ID 가져오기
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-      if (!memberId) {
-        alert('로그인이 필요한 기능입니다.');
-        return;
-      }
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
       // DTO 생성
       const updateData = new CommentUpdateRequest({
@@ -480,9 +491,10 @@ class PostDetailPage extends Component {
       const updatedComment = await updateComment(commentId, updateData);
 
       // 댓글 목록 업데이트
-      const updatedComments = this.state.comments.map(comment =>
-        comment.id === commentId ? updatedComment : comment
-      );
+      const updatedComments = this.state.comments.map(comment => {
+        const cId = comment.commentId || comment.id;
+        return cId === commentId ? updatedComment : comment;
+      });
 
       this.setState({
         comments: updatedComments,
@@ -497,14 +509,13 @@ class PostDetailPage extends Component {
 
   // 댓글 삭제
   async deleteComment(commentId) {
-    try {
-      // TODO: 로그인한 사용자 ID 가져오기
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-      if (!memberId) {
-        alert('로그인이 필요한 기능입니다.');
-        return;
-      }
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
       // DTO 생성 (삭제 시에도 memberId 필요)
       const deleteData = new CommentUpdateRequest({
@@ -516,7 +527,10 @@ class PostDetailPage extends Component {
       await deleteCommentAPI(commentId, deleteData);
 
       // 댓글 목록에서 제거
-      const filteredComments = this.state.comments.filter(c => c.id !== commentId);
+      const filteredComments = this.state.comments.filter(c => {
+        const cId = c.commentId || c.id;
+        return cId !== commentId;
+      });
 
       this.setState({
         comments: filteredComments,
@@ -537,14 +551,13 @@ class PostDetailPage extends Component {
 
   // 게시글 삭제
   async deletePost() {
-    try {
-      // TODO: 로그인한 사용자 ID 가져오기
-      const memberId = null; // 추후 로그인 기능 구현 시 실제 값 사용
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
 
-      if (!memberId) {
-        alert('로그인이 필요한 기능입니다.');
-        return;
-      }
+    try {
+      const memberId = AuthService.getCurrentUserId();
 
       // DTO 생성 (삭제 시에도 memberId 필요)
       const deleteData = new PostUpdateRequest({
