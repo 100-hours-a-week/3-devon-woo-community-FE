@@ -219,7 +219,7 @@ class ProfilePage extends Component {
       });
 
       nicknameInput.addEventListener('blur', () => {
-        this.validateNickname();
+        this.checkNicknameValidity();
       });
     }
 
@@ -292,8 +292,8 @@ class ProfilePage extends Component {
     }
   }
 
-  // 닉네임 유효성 검사
-  async validateNickname() {
+  // 닉네임 유효성 검사 (blur 이벤트용)
+  checkNicknameValidity() {
     const nickname = this.state.nickname.trim();
 
     // 빈 값 검사
@@ -314,12 +314,24 @@ class ProfilePage extends Component {
       return false;
     }
 
-    // 닉네임이 변경되지 않았으면 중복 체크 생략
-    if (nickname === this.originalNickname) {
+    // 에러가 있었거나 유효하지 않은 상태였을 때만 setState 호출
+    // (불필요한 리렌더링 방지)
+    if (this.state.nicknameError || !this.state.isNicknameValid) {
       this.setState({
         nicknameError: '',
         isNicknameValid: true
       });
+    }
+
+    return true;
+  }
+
+  // 닉네임 중복 체크 (제출 시에만 수행)
+  async checkNicknameDuplicate() {
+    const nickname = this.state.nickname.trim();
+
+    // 닉네임이 변경되지 않았으면 중복 체크 생략
+    if (nickname === this.originalNickname) {
       return true;
     }
 
@@ -329,8 +341,8 @@ class ProfilePage extends Component {
       // const response = await apiGet(`/api/v1/users/check-nickname?nickname=${nickname}`);
       // const isDuplicate = response.isDuplicate;
 
-      // 임시: 랜덤으로 중복 체크 (실제로는 API 응답 사용)
-      const isDuplicate = Math.random() < 0.3;
+      // 임시: 중복 체크 (실제로는 API 응답 사용)
+      const isDuplicate = false;
 
       if (isDuplicate) {
         this.setState({
@@ -340,10 +352,6 @@ class ProfilePage extends Component {
         return false;
       }
 
-      this.setState({
-        nicknameError: '',
-        isNicknameValid: true
-      });
       return true;
     } catch (error) {
       console.error('닉네임 중복 체크 실패:', error);
@@ -353,7 +361,9 @@ class ProfilePage extends Component {
 
   // 폼 유효성 검사
   isFormValid() {
-    return this.state.nickname.trim() !== '' && this.state.isNicknameValid;
+    const hasValidNickname = this.state.nickname.trim() !== '' && this.state.isNicknameValid;
+    const nicknameChanged = this.state.nickname.trim() !== this.originalNickname;
+    return hasValidNickname && nicknameChanged;
   }
 
   // 제출 버튼 활성화 상태 업데이트
@@ -373,9 +383,14 @@ class ProfilePage extends Component {
       return;
     }
 
-    // 최종 유효성 검사
-    const isValid = await this.validateNickname();
-    if (!isValid) {
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
+    // 중복 체크 (닉네임이 변경된 경우에만)
+    const isDuplicateValid = await this.checkNicknameDuplicate();
+    if (!isDuplicateValid) {
       return;
     }
 
@@ -394,8 +409,12 @@ class ProfilePage extends Component {
       // 성공 시 토스트 메시지 표시
       this.showToast();
 
-      // originalNickname 업데이트
+      // originalNickname 업데이트 (다음 변경 감지를 위해)
       this.originalNickname = this.state.nickname;
+
+      // 버튼 비활성화 (변경사항이 없으므로)
+      const submitBtn = this.$el.querySelector('#submitBtn');
+      this.updateSubmitButton(submitBtn);
     } catch (error) {
       console.error('프로필 수정 실패:', error);
       alert('프로필 수정에 실패했습니다.');
