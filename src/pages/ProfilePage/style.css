@@ -29,73 +29,6 @@
   gap: var(--spacing-lg);
 }
 
-/* 프로필 이미지 섹션 */
-.profile-image-group {
-  gap: var(--spacing-xs);
-}
-
-.profile-upload-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.profile-image-container {
-  width: 140px;
-  height: 140px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-background-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-  transition: all var(--transition-fast);
-}
-
-.profile-image-container:hover .profile-overlay {
-  opacity: 1;
-}
-
-.profile-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-placeholder {
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profile-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--color-overlay-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.profile-overlay-text {
-  color: var(--color-text-white);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.profile-input-hidden {
-  display: none;
-}
-
 /* 이메일 필드 (비활성화) */
 .form-input:disabled {
   background-color: var(--color-background);
@@ -281,11 +214,6 @@ body.modal-active {
 
   .profile-form {
     gap: 20px;
-  }
-
-  .profile-image-container {
-    width: 120px;
-    height: 120px;
   }
 
   .submit-btn,
