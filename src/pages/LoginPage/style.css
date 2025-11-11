@@ -8,17 +8,17 @@
 .login-wrapper {
   width: 100%;
   max-width: 500px;
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-background-white);
+  border-radius: var(--radius-xl);
   padding: 48px 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .login-title {
   font-size: 28px;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 32px;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
@@ -26,55 +26,55 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 /* 폼 그룹 */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 /* 입력 필드 */
 .form-input {
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 14px var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #7F6AEE;
+  border-color: var(--color-primary);
 }
 
 .form-input::placeholder {
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 /* 에러 상태 */
 .form-input.error {
-  border-color: #ff4444;
+  border-color: var(--color-error);
 }
 
 .form-input.error:focus {
-  border-color: #ff4444;
+  border-color: var(--color-error);
 }
 
 /* Helper Text */
 .helper-text {
   font-size: 12px;
-  color: #ff4444;
+  color: var(--color-error);
   display: none;
   min-height: 16px;
 }
@@ -86,66 +86,66 @@
 /* 제출 버튼 */
 .submit-btn {
   width: 100%;
-  padding: 16px;
+  padding: var(--spacing-md);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 8px;
+  transition: background-color var(--transition-normal);
+  margin-top: var(--spacing-sm);
 }
 
 /* 버튼 비활성화 상태 */
 .submit-btn:disabled {
-  background-color: #ACA0EB;
-  color: white;
+  background-color: var(--color-primary-disabled);
+  color: var(--color-text-white);
   cursor: not-allowed;
   opacity: 0.8;
 }
 
 /* 버튼 활성화 상태 */
 .submit-btn:not(:disabled) {
-  background-color: #7F6AEE;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
 }
 
 .submit-btn:not(:disabled):hover {
-  background-color: #6B5ED6;
+  background-color: var(--color-primary-hover);
 }
 
 /* 회원가입 링크 섹션 */
 .signup-link-section {
   text-align: center;
-  margin-top: 8px;
+  margin-top: var(--spacing-sm);
 }
 
 .signup-link {
   font-size: 14px;
-  color: #333;
+  color: var(--color-text-primary);
   text-decoration: none;
-  padding: 8px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
   display: inline-block;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .signup-link:hover {
-  background-color: #f5f5f5;
-  border-color: #7F6AEE;
-  color: #7F6AEE;
+  background-color: var(--color-background);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .login-wrapper {
-    padding: 32px 24px;
+    padding: var(--spacing-xl) var(--spacing-lg);
   }
 
   .login-title {
     font-size: 24px;
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-lg);
   }
 
   .login-form {
@@ -153,7 +153,7 @@
   }
 
   .form-input {
-    padding: 12px 14px;
+    padding: var(--spacing-xs) 14px;
     font-size: 14px;
   }
 
@@ -165,15 +165,15 @@
 
 /* 포커스 시 애니메이션 */
 .form-input:focus {
-  animation: focusPulse 0.3s ease;
+  animation: focusPulse var(--transition-normal);
 }
 
 @keyframes focusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(127, 106, 238, 0.4);
+    box-shadow: 0 0 0 0 var(--color-focus-ring);
   }
   100% {
-    box-shadow: 0 0 0 4px rgba(127, 106, 238, 0);
+    box-shadow: 0 0 0 4px transparent;
   }
 }
 

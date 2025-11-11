@@ -6,17 +6,17 @@
 
 /* 폼 래퍼 */
 .form-wrapper {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-background-white);
+  border-radius: var(--radius-xl);
   padding: 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .form-title {
   font-size: 28px;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 32px;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
@@ -24,40 +24,40 @@
 .post-form {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: var(--spacing-xl);
 }
 
 /* 폼 그룹 */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .form-label {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 /* 제목 입력 */
 .form-input {
   width: 100%;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
   font-size: 16px;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #7F6AEE;
+  border-color: var(--color-primary);
 }
 
 .form-input::placeholder {
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 /* 입력 헬퍼 */
@@ -68,68 +68,68 @@
 
 .char-count {
   font-size: 14px;
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 .current-count {
-  color: #7F6AEE;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 /* 내용 입력 */
 .form-textarea {
   width: 100%;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
   font-size: 16px;
   font-family: inherit;
   resize: vertical;
   min-height: 200px;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #7F6AEE;
+  border-color: var(--color-primary);
 }
 
 .form-textarea::placeholder {
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 .helper-text {
   font-size: 14px;
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 /* 이미지 업로드 섹션 */
 .image-upload-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-xs);
 }
 
 .image-upload-btn {
   padding: 10px 20px;
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  background-color: var(--color-background-white);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .image-upload-btn:hover {
-  background-color: #f5f5f5;
-  border-color: #7F6AEE;
-  color: #7F6AEE;
+  background-color: var(--color-background);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .image-upload-text {
   font-size: 14px;
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 .image-input-hidden {
@@ -138,11 +138,11 @@
 
 /* 이미지 미리보기 */
 .image-preview-container {
-  margin-top: 16px;
+  margin-top: var(--spacing-md);
   position: relative;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
   max-width: 100%;
 }
 
@@ -154,54 +154,54 @@
 
 .image-remove-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
   width: 36px;
   height: 36px;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--color-overlay-medium);
   border: none;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  transition: background-color 0.2s ease;
+  color: var(--color-text-white);
+  transition: background-color var(--transition-fast);
 }
 
 .image-remove-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--color-overlay-dark);
 }
 
 /* 제출 버튼 */
 .submit-btn {
   width: 100%;
-  padding: 16px;
+  padding: var(--spacing-md);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 16px;
+  transition: background-color var(--transition-normal);
+  margin-top: var(--spacing-md);
 }
 
 /* 버튼 비활성화 상태 (제목 또는 내용 미입력) */
 .submit-btn:disabled {
-  background-color: #ACA0EB;
-  color: white;
+  background-color: var(--color-primary-disabled);
+  color: var(--color-text-white);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 /* 버튼 활성화 상태 (제목 + 내용 모두 입력) */
 .submit-btn:not(:disabled) {
-  background-color: #ACA0EB;
-  color: white;
+  background-color: var(--color-primary-disabled);
+  color: var(--color-text-white);
 }
 
 .submit-btn:not(:disabled):hover {
-  background-color: #7F6AEE;
+  background-color: var(--color-primary);
 }
 
 /* 로딩 상태 */
@@ -220,8 +220,8 @@
   width: 20px;
   height: 20px;
   border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
+  border-top-color: var(--color-text-white);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -232,13 +232,13 @@
 /* 에러 메시지 */
 .error-message {
   display: none;
-  padding: 12px 16px;
-  background-color: #fff3f3;
-  border: 1px solid #ffcccc;
-  border-radius: 6px;
-  color: #d32f2f;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--color-error-background);
+  border: 1px solid var(--color-error-light);
+  border-radius: var(--radius-md);
+  color: var(--color-error-dark);
   font-size: 14px;
-  margin-top: -16px;
+  margin-top: calc(-1 * var(--spacing-md));
 }
 
 .error-message.show {
@@ -248,20 +248,20 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .main-container {
-    padding: 24px 16px;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 
   .form-wrapper {
-    padding: 24px 20px;
+    padding: var(--spacing-lg) 20px;
   }
 
   .form-title {
     font-size: 24px;
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-lg);
   }
 
   .post-form {
-    gap: 24px;
+    gap: var(--spacing-lg);
   }
 
   .form-label {
@@ -270,7 +270,7 @@
 
   .form-input,
   .form-textarea {
-    padding: 12px;
+    padding: var(--spacing-xs);
     font-size: 14px;
   }
 
@@ -287,23 +287,23 @@
 /* 포커스 시 애니메이션 */
 .form-input:focus,
 .form-textarea:focus {
-  animation: focusPulse 0.3s ease;
+  animation: focusPulse var(--transition-normal);
 }
 
 @keyframes focusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(127, 106, 238, 0.4);
+    box-shadow: 0 0 0 0 var(--color-focus-ring);
   }
   100% {
-    box-shadow: 0 0 0 4px rgba(127, 106, 238, 0);
+    box-shadow: 0 0 0 4px transparent;
   }
 }
 
 /* 입력 제한 경고 */
 .char-count.warning {
-  color: #d32f2f;
+  color: var(--color-error-dark);
 }
 
 .char-count.warning .current-count {
-  color: #d32f2f;
+  color: var(--color-error-dark);
 }

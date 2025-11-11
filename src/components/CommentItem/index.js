@@ -15,7 +15,8 @@ class CommentItem extends Component {
     const {
       comment,
       isEditing = false,
-      editingText = ''
+      editingText = '',
+      isOwner = false
     } = this.props;
 
     if (!comment) {
@@ -39,10 +40,12 @@ class CommentItem extends Component {
               <span class="comment-date">${formatDate(comment.createdAt)}</span>
             </div>
           </div>
-          <div class="comment-actions">
-            <button class="comment-action-btn edit-comment-btn" data-comment-id="${commentId}">수정</button>
-            <button class="comment-action-btn delete-comment-btn" data-comment-id="${commentId}">삭제</button>
-          </div>
+          ${isOwner ? `
+            <div class="comment-actions">
+              <button class="comment-action-btn edit-comment-btn" data-comment-id="${commentId}">수정</button>
+              <button class="comment-action-btn delete-comment-btn" data-comment-id="${commentId}">삭제</button>
+            </div>
+          ` : ''}
         </div>
         <div class="comment-content">${comment.content}</div>
 

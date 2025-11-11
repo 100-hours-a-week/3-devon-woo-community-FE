@@ -97,8 +97,8 @@ class PasswordChangePage extends Component {
     // 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
+      window.headerComponent.showProfileIcon(true);
     }
-
     this.setupEventListeners();
 
     // 초기 버튼 상태 체크

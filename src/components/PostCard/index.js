@@ -24,9 +24,9 @@ class PostCard extends Component {
 
             <div class="post-card-stats">
               <div class="post-card-stats-left">
-                <span class="post-card-stat">조회수 ${formatCount(post.viewCount)}</span>
-                <span class="post-card-stat">댓글 ${formatCount(post.commentCount)}</span>
                 <span class="post-card-stat">좋아요 ${formatCount(post.likeCount)}</span>
+                <span class="post-card-stat">댓글 ${formatCount(post.commentCount)}</span>
+                <span class="post-card-stat">조회수 ${formatCount(post.viewCount)}</span>
               </div>
 
               <span class="post-card-date">${formatDate(post.createdAt)}</span>

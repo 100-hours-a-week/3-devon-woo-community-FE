@@ -153,11 +153,14 @@ class PostListPage extends Component {
         imageUrl: post.imageUrl || null
       }));
 
+      // 마지막 페이지 확인: 현재 페이지 + 1이 전체 페이지 수보다 작으면 더 있음
+      const hasMorePages = response.page + 1 < response.totalPages;
+
       this.setState({
         posts: [...this.state.posts, ...transformedPosts],
         page: this.state.page + 1,
         isLoading: false,
-        hasMore: true
+        hasMore: hasMorePages
       });
     } catch (error) {
       console.error('게시글 로드 실패:', error);

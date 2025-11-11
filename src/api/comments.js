@@ -63,9 +63,9 @@ export const updateComment = async (commentId, updateData) => {
 /**
  * 댓글 삭제
  * @param {number} commentId - 댓글 ID
- * @param {CommentUpdateRequest} deleteData - 삭제 요청 데이터 (memberId 필요)
+ * @param {number} memberId - 회원 ID
  * @returns {Promise<void>} 응답 없음 (204 No Content)
  */
-export const deleteComment = async (commentId, deleteData) => {
-  await api.delete(`/api/v1/comments/${commentId}`, deleteData);
+export const deleteComment = async (commentId, memberId) => {
+  await api.delete(`/api/v1/comments/${commentId}?memberId=${memberId}`);
 };

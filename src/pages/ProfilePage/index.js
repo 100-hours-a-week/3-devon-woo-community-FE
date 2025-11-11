@@ -2,6 +2,9 @@ import Component from '../../core/Component.js';
 import { getMemberProfile, updateMemberProfile, deleteMember } from '../../api/members.js';
 import MemberUpdateRequest from '../../dto/request/member/MemberUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
+import Toast from '../../components/Toast/index.js';
+import Modal from '../../components/Modal/index.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -11,15 +14,16 @@ class ProfilePage extends Component {
       nickname: '',
       profileImage: null,
       profileImageUrl: '',
-      existingProfileImageUrl: '',
       nicknameError: '',
       isNicknameValid: true,
       showDeleteModal: false,
-      showToast: false,
       isLoading: true
     };
     this.loadStyle('/src/pages/ProfilePage/style.css');
     this.originalNickname = '';
+    this.profileImageUploader = null; // ProfileImageUploader 인스턴스
+    this.toast = null; // Toast 인스턴스
+    this.deleteModal = null; // Modal 인스턴스
   }
 
   render() {
@@ -40,30 +44,8 @@ class ProfilePage extends Component {
 
           <form class="profile-form" id="profileForm">
             <!-- 프로필 이미지 -->
-            <div class="form-group profile-image-group">
-              <label class="form-label">프로필 사진*</label>
-              <div class="profile-upload-section">
-                <div class="profile-image-container" id="profileImageContainer">
-                  ${this.state.profileImageUrl || this.state.existingProfileImageUrl ? `
-                    <img src="${this.state.profileImageUrl || this.state.existingProfileImageUrl}" alt="프로필" class="profile-image">
-                  ` : `
-                    <div class="profile-placeholder">
-                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-                        <path d="M30 30C37.18 30 43 24.18 43 17C43 9.82 37.18 4 30 4C22.82 4 17 9.82 17 17C17 24.18 22.82 30 30 30ZM30 37C21.34 37 4 41.34 4 50V56H56V50C56 41.34 38.66 37 30 37Z" fill="#999"/>
-                      </svg>
-                    </div>
-                  `}
-                  <div class="profile-overlay">
-                    <span class="profile-overlay-text">변경</span>
-                  </div>
-                </div>
-                <input
-                  type="file"
-                  id="profileImageInput"
-                  class="profile-input-hidden"
-                  accept="image/jpeg,image/png,image/jpg,image/gif"
-                >
-              </div>
+            <div class="form-group">
+              ${this.renderProfileImageUploader()}
             </div>
 
             <!-- 이메일 (읽기 전용) -->
@@ -116,23 +98,52 @@ class ProfilePage extends Component {
         </div>
 
         <!-- 회원 탈퇴 모달 -->
-        <div class="modal-overlay" id="deleteModal" style="display: ${this.state.showDeleteModal ? 'flex' : 'none'}">
-          <div class="modal-content">
-            <h3 class="modal-title">회원 탈퇴</h3>
-            <p class="modal-message">정말로 탈퇴하시겠습니까?<br>모든 데이터가 삭제됩니다.</p>
-            <div class="modal-actions">
-              <button class="modal-btn cancel-btn" id="modalCancelBtn">취소</button>
-              <button class="modal-btn confirm-btn" id="modalConfirmBtn">확인</button>
-            </div>
-          </div>
-        </div>
+        ${this.renderDeleteModal()}
 
         <!-- 토스트 메시지 -->
-        <div class="toast-message" id="toastMessage" style="display: ${this.state.showToast ? 'block' : 'none'}">
-          수정 완료
-        </div>
+        ${this.renderToast()}
       </div>
     `;
+  }
+
+  renderDeleteModal() {
+    if (!this.deleteModal) {
+      this.deleteModal = new Modal({
+        show: this.state.showDeleteModal,
+        title: '회원 탈퇴',
+        message: '정말로 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.',
+        id: 'deleteModal'
+      });
+    } else {
+      this.deleteModal.props.show = this.state.showDeleteModal;
+    }
+    return this.deleteModal.render();
+  }
+
+  renderToast() {
+    if (!this.toast) {
+      this.toast = new Toast({
+        show: false,
+        message: ''
+      });
+    }
+    return this.toast.render();
+  }
+
+  renderProfileImageUploader() {
+    if (!this.profileImageUploader) {
+      this.profileImageUploader = new ProfileImageUploader({
+        imageUrl: this.state.profileImageUrl,
+        onImageChange: (file, dataUrl) => {
+          this.state.profileImage = file;
+          this.state.profileImageUrl = dataUrl;
+        }
+      });
+    } else {
+      // state 변경 시 이미지 URL 업데이트
+      this.profileImageUploader.state.imageUrl = this.state.profileImageUrl;
+    }
+    return this.profileImageUploader.render();
   }
 
   // 최초 마운트 시에만 1회 호출
@@ -165,51 +176,26 @@ class ProfilePage extends Component {
   }
 
   setupEventListeners() {
-    const profileImageContainer = this.$el.querySelector('#profileImageContainer');
-    const profileImageInput = this.$el.querySelector('#profileImageInput');
     const nicknameInput = this.$el.querySelector('#nicknameInput');
     const form = this.$el.querySelector('#profileForm');
     const deleteAccountBtn = this.$el.querySelector('#deleteAccountBtn');
     const submitBtn = this.$el.querySelector('#submitBtn');
 
-    // 프로필 이미지 클릭
-    if (profileImageContainer) {
-      profileImageContainer.addEventListener('click', () => {
-        profileImageInput.click();
-      });
+    // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
+    if (this.profileImageUploader) {
+      const uploaderEl = this.$el.querySelector('.profile-image-uploader');
+      if (uploaderEl) {
+        this.profileImageUploader.$el = uploaderEl;
+        this.profileImageUploader.setupEventListeners();
+      }
     }
 
-    // 프로필 이미지 변경
-    if (profileImageInput) {
-      profileImageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          // 파일 타입 검증
-          const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-          if (!validTypes.includes(file.type)) {
-            alert('이미지 파일만 업로드 가능합니다. (JPEG, PNG, JPG, GIF)');
-            profileImageInput.value = '';
-            return;
-          }
-
-          // 파일 크기 검증 (5MB)
-          if (file.size > 5 * 1024 * 1024) {
-            alert('이미지 크기는 5MB 이하로 업로드해주세요.');
-            profileImageInput.value = '';
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.setState({
-              profileImage: file,
-              profileImageUrl: e.target.result,
-              existingProfileImageUrl: ''
-            });
-          };
-          reader.readAsDataURL(file);
-        }
-      });
+    // Toast의 DOM 요소 연결
+    if (this.toast) {
+      const toastEl = this.$el.querySelector('.toast-message');
+      if (toastEl) {
+        this.toast.$el = toastEl;
+      }
     }
 
     // 닉네임 입력 - setState 없이 직접 업데이트
@@ -254,19 +240,21 @@ class ProfilePage extends Component {
     }
 
     // 모달 버튼 (이벤트 위임)
-    this.$el.addEventListener('click', (e) => {
-      const cancelBtn = e.target.closest('#modalCancelBtn');
-      const confirmBtn = e.target.closest('#modalConfirmBtn');
+    const deleteModal = this.$el.querySelector('#deleteModal');
+    if (deleteModal) {
+      deleteModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
 
-      if (cancelBtn) {
-        this.setState({ showDeleteModal: false });
-        document.body.classList.remove('modal-active');
-      }
-
-      if (confirmBtn) {
-        this.handleDeleteAccount();
-      }
-    });
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({ showDeleteModal: false });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          this.handleDeleteAccount();
+        }
+      });
+    }
   }
 
   beforeUnmount() {
@@ -294,7 +282,7 @@ class ProfilePage extends Component {
       this.setState({
         email: profile.email || '',
         nickname: profile.nickname,
-        existingProfileImageUrl: profile.profileImage || '',
+        profileImageUrl: profile.profileImage || '',
         isLoading: false
       });
     } catch (error) {
@@ -439,13 +427,10 @@ class ProfilePage extends Component {
   }
 
   // 토스트 메시지 표시
-  showToast() {
-    this.setState({ showToast: true });
-
-    // 3초 후 자동 숨김
-    setTimeout(() => {
-      this.setState({ showToast: false });
-    }, 3000);
+  showToast(message = '수정 완료') {
+    if (this.toast) {
+      this.toast.show(message);
+    }
   }
 }
 

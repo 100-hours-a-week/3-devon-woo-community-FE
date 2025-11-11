@@ -120,6 +120,7 @@ class SignupPage extends Component {
     // 회원가입 페이지에서는 뒤로가기 버튼 표시
     if (window.headerComponent) {
       window.headerComponent.showBackButton(true);
+      window.headerComponent.showProfileIcon(false);
     }
 
     this.setupEventListeners();
