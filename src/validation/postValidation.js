@@ -1,12 +1,12 @@
-const { URL_PATTERN } = require("./patterns");
-const VALIDATION_MESSAGES = require("./messages");
+import { URL_PATTERN } from './patterns.js';
+import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * PostCreateRequest 유효성 검증
  * @param {import('../dto/request/post/PostCreateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validatePostCreateRequest(dto) {
+export function validatePostCreateRequest(dto) {
   const errors = [];
 
   if (dto.memberId == null) {
@@ -45,7 +45,7 @@ function validatePostCreateRequest(dto) {
  * @param {import('../dto/request/post/PostUpdateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validatePostUpdateRequest(dto) {
+export function validatePostUpdateRequest(dto) {
   const errors = [];
 
   if (dto.memberId == null) {
@@ -78,8 +78,3 @@ function validatePostUpdateRequest(dto) {
 
   return errors;
 }
-
-module.exports = {
-  validatePostCreateRequest,
-  validatePostUpdateRequest,
-};
