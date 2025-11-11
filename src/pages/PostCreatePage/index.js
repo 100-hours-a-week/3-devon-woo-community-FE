@@ -3,6 +3,7 @@ import { createPost } from '../../api/posts.js';
 import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
+import { processPostImage } from '../../utils/imageProcessor.js';
 
 class PostCreatePage extends Component {
   constructor(props) {
@@ -181,7 +182,7 @@ class PostCreatePage extends Component {
 
     // 이미지 파일 선택
     if (imageInput) {
-      imageInput.addEventListener('change', (e) => {
+      imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -193,16 +194,27 @@ class PostCreatePage extends Component {
           return;
         }
 
-        // FileReader로 미리보기 생성 (브라우저에만 표시)
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.setState({
-            selectedImageFile: file, // File 객체 저장
-            imageUrl: e.target.result, // 미리보기 URL
-            showImagePreview: true
-          });
-        };
-        reader.readAsDataURL(file);
+        try {
+          // 이미지 처리 (리사이즈, WebP 변환)
+          console.log('[PostCreatePage] 이미지 처리 시작...');
+          const processedFile = await processPostImage(file);
+          console.log('[PostCreatePage] 이미지 처리 완료');
+
+          // FileReader로 미리보기 생성 (처리된 이미지)
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.setState({
+              selectedImageFile: processedFile, // 처리된 File 객체 저장
+              imageUrl: e.target.result, // 미리보기 URL
+              showImagePreview: true
+            });
+          };
+          reader.readAsDataURL(processedFile);
+        } catch (error) {
+          console.error('[PostCreatePage] 이미지 처리 실패:', error);
+          alert('이미지 처리에 실패했습니다.');
+          imageInput.value = '';
+        }
       });
     }
 

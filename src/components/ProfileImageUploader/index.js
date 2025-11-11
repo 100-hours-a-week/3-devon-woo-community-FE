@@ -1,5 +1,6 @@
 import Component from '../../core/Component.js';
 import { validateImageFile } from '../../utils/imageUpload.js';
+import { processProfileImage } from '../../utils/imageProcessor.js';
 
 /**
  * ProfileImageUploader 컴포넌트
@@ -75,7 +76,7 @@ class ProfileImageUploader extends Component {
     }
   }
 
-  handleFileChange(e) {
+  async handleFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -90,23 +91,34 @@ class ProfileImageUploader extends Component {
     // 에러 초기화
     this.setState({ error: '' });
 
-    // FileReader로 미리보기 생성 (브라우저에만 표시)
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
+    try {
+      // 이미지 처리 (크롭, 리사이즈, WebP 변환)
+      console.log('[ProfileImageUploader] 이미지 처리 시작...');
+      const processedFile = await processProfileImage(file);
+      console.log('[ProfileImageUploader] 이미지 처리 완료');
 
-      // 상태 업데이트: File 객체와 미리보기 URL 저장
-      this.setState({
-        imageUrl: dataUrl,
-        selectedFile: file
-      });
+      // FileReader로 미리보기 생성 (처리된 이미지)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
 
-      // 부모에게 File 객체 전달 (실제 업로드는 제출 시)
-      if (this.props.onFileSelected) {
-        this.props.onFileSelected(file);
-      }
-    };
-    reader.readAsDataURL(file);
+        // 상태 업데이트: 처리된 File 객체와 미리보기 URL 저장
+        this.setState({
+          imageUrl: dataUrl,
+          selectedFile: processedFile
+        });
+
+        // 부모에게 처리된 File 객체 전달 (실제 업로드는 제출 시)
+        if (this.props.onFileSelected) {
+          this.props.onFileSelected(processedFile);
+        }
+      };
+      reader.readAsDataURL(processedFile);
+    } catch (error) {
+      console.error('[ProfileImageUploader] 이미지 처리 실패:', error);
+      this.setState({ error: '이미지 처리에 실패했습니다.' });
+      e.target.value = '';
+    }
   }
 
   /**

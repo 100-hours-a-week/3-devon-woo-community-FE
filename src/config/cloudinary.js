@@ -24,7 +24,7 @@ const CloudinaryConfig = {
   },
 
   // 허용 파일 타입
-  allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
+  allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
 
   // 에러 메시지
   errorMessages: {
