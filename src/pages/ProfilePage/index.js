@@ -3,6 +3,8 @@ import { getMemberProfile, updateMemberProfile, deleteMember } from '../../api/m
 import MemberUpdateRequest from '../../dto/request/member/MemberUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
+import Toast from '../../components/Toast/index.js';
+import Modal from '../../components/Modal/index.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -15,12 +17,13 @@ class ProfilePage extends Component {
       nicknameError: '',
       isNicknameValid: true,
       showDeleteModal: false,
-      showToast: false,
       isLoading: true
     };
     this.loadStyle('/src/pages/ProfilePage/style.css');
     this.originalNickname = '';
     this.profileImageUploader = null; // ProfileImageUploader 인스턴스
+    this.toast = null; // Toast 인스턴스
+    this.deleteModal = null; // Modal 인스턴스
   }
 
   render() {
@@ -95,23 +98,36 @@ class ProfilePage extends Component {
         </div>
 
         <!-- 회원 탈퇴 모달 -->
-        <div class="modal-overlay" id="deleteModal" style="display: ${this.state.showDeleteModal ? 'flex' : 'none'}">
-          <div class="modal-content">
-            <h3 class="modal-title">회원 탈퇴</h3>
-            <p class="modal-message">정말로 탈퇴하시겠습니까?<br>모든 데이터가 삭제됩니다.</p>
-            <div class="modal-actions">
-              <button class="modal-btn cancel-btn" id="modalCancelBtn">취소</button>
-              <button class="modal-btn confirm-btn" id="modalConfirmBtn">확인</button>
-            </div>
-          </div>
-        </div>
+        ${this.renderDeleteModal()}
 
         <!-- 토스트 메시지 -->
-        <div class="toast-message" id="toastMessage" style="display: ${this.state.showToast ? 'block' : 'none'}">
-          수정 완료
-        </div>
+        ${this.renderToast()}
       </div>
     `;
+  }
+
+  renderDeleteModal() {
+    if (!this.deleteModal) {
+      this.deleteModal = new Modal({
+        show: this.state.showDeleteModal,
+        title: '회원 탈퇴',
+        message: '정말로 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.',
+        id: 'deleteModal'
+      });
+    } else {
+      this.deleteModal.props.show = this.state.showDeleteModal;
+    }
+    return this.deleteModal.render();
+  }
+
+  renderToast() {
+    if (!this.toast) {
+      this.toast = new Toast({
+        show: false,
+        message: ''
+      });
+    }
+    return this.toast.render();
   }
 
   renderProfileImageUploader() {
@@ -174,6 +190,14 @@ class ProfilePage extends Component {
       }
     }
 
+    // Toast의 DOM 요소 연결
+    if (this.toast) {
+      const toastEl = this.$el.querySelector('.toast-message');
+      if (toastEl) {
+        this.toast.$el = toastEl;
+      }
+    }
+
     // 닉네임 입력 - setState 없이 직접 업데이트
     if (nicknameInput) {
       nicknameInput.addEventListener('input', (e) => {
@@ -216,19 +240,21 @@ class ProfilePage extends Component {
     }
 
     // 모달 버튼 (이벤트 위임)
-    this.$el.addEventListener('click', (e) => {
-      const cancelBtn = e.target.closest('#modalCancelBtn');
-      const confirmBtn = e.target.closest('#modalConfirmBtn');
+    const deleteModal = this.$el.querySelector('#deleteModal');
+    if (deleteModal) {
+      deleteModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
 
-      if (cancelBtn) {
-        this.setState({ showDeleteModal: false });
-        document.body.classList.remove('modal-active');
-      }
-
-      if (confirmBtn) {
-        this.handleDeleteAccount();
-      }
-    });
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({ showDeleteModal: false });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          this.handleDeleteAccount();
+        }
+      });
+    }
   }
 
   beforeUnmount() {
@@ -401,13 +427,10 @@ class ProfilePage extends Component {
   }
 
   // 토스트 메시지 표시
-  showToast() {
-    this.setState({ showToast: true });
-
-    // 3초 후 자동 숨김
-    setTimeout(() => {
-      this.setState({ showToast: false });
-    }, 3000);
+  showToast(message = '수정 완료') {
+    if (this.toast) {
+      this.toast.show(message);
+    }
   }
 }
 
