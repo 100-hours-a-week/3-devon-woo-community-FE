@@ -22,7 +22,7 @@ class PostDetailPage extends Component {
     this.loadStyle('/src/pages/PostDetailPage/style.css');
     this.postId = null;
     this.commentSection = null; // CommentSection 인스턴스 저장
-    this.commentsLoaded = false; // 댓글 로드 여부 플래그
+    this.commentSectionMounted = false; // CommentSection 마운트 여부
   }
 
   render() {
@@ -164,29 +164,12 @@ class PostDetailPage extends Component {
 
     // 이벤트 리스너 등록
     this.setupEventListeners();
-
-    // CommentSection 댓글 로드
-    if (this.commentSection) {
-      this.commentSection.loadComments().then(() => {
-        // 댓글 로드 후 재렌더링
-        this.updateCommentSection();
-      });
-    }
   }
 
   // 업데이트 시마다 호출 (React의 componentDidUpdate와 동일)
   updated() {
     // DOM이 교체되므로 이벤트 리스너 재등록
     this.setupEventListeners();
-
-    // CommentSection이 생성되었고 아직 댓글을 로드하지 않았으면 로드
-    if (this.commentSection && !this.commentsLoaded && !this.state.isLoading) {
-      this.commentsLoaded = true;
-      this.commentSection.loadComments().then(() => {
-        // 댓글 로드 후 재렌더링
-        this.updateCommentSection();
-      });
-    }
   }
 
   setupEventListeners() {
@@ -232,94 +215,24 @@ class PostDetailPage extends Component {
       });
     }
 
-    // CommentSection 이벤트 리스너 설정
-    this.setupCommentSectionListeners();
-  }
+    // CommentSection의 DOM 요소 연결 및 초기화
+    if (this.commentSection) {
+      const commentSectionEl = this.$el.querySelector('.comment-section');
+      if (commentSectionEl) {
+        this.commentSection.$el = commentSectionEl;
 
-  // CommentSection 이벤트 리스너 설정
-  setupCommentSectionListeners() {
-    if (!this.commentSection) return;
-
-    // CommentSection의 DOM 요소 연결
-    const commentSectionEl = this.$el.querySelector('.comment-section');
-    if (commentSectionEl) {
-      this.commentSection.$el = commentSectionEl;
-    }
-
-    // 댓글 입력 - 상태 업데이트 및 버튼 활성화
-    const commentInput = this.$el.querySelector('#commentInput');
-    const commentSubmitBtn = this.$el.querySelector('#commentSubmitBtn');
-
-    if (commentInput && commentSubmitBtn) {
-      commentInput.addEventListener('input', (e) => {
-        this.commentSection.state.commentInput = e.target.value;
-
-        if (e.target.value.trim() === '') {
-          commentSubmitBtn.disabled = true;
+        // 최초 1회만 mounted() 호출 (댓글 로드 포함)
+        if (!this.commentSectionMounted) {
+          this.commentSectionMounted = true;
+          this.commentSection.mounted();
         } else {
-          commentSubmitBtn.disabled = false;
+          // 이후에는 이벤트 리스너만 재등록
+          this.commentSection.setupEventListeners();
         }
-      });
-    }
-
-    // 댓글 등록
-    if (commentSubmitBtn) {
-      commentSubmitBtn.addEventListener('click', async () => {
-        await this.commentSection.submitComment();
-        // CommentSection 재렌더링
-        this.updateCommentSection();
-      });
-    }
-
-    // 댓글 수정/삭제 버튼 (이벤트 위임)
-    const commentList = this.$el.querySelector('#commentList');
-    if (commentList) {
-      commentList.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.edit-comment-btn');
-        const deleteBtn = e.target.closest('.delete-comment-btn');
-        const cancelBtn = e.target.closest('.comment-edit-btn.cancel');
-        const saveBtn = e.target.closest('.comment-edit-btn.save');
-
-        if (editBtn) {
-          const commentId = editBtn.dataset.commentId;
-          this.commentSection.startEditComment(commentId);
-          this.updateCommentSection();
-        } else if (deleteBtn) {
-          const commentId = deleteBtn.dataset.commentId;
-          this.commentSection.state.showDeleteCommentModal = true;
-          this.commentSection.state.deleteTargetCommentId = commentId;
-          document.body.classList.add('modal-active');
-          this.updateCommentSection();
-        } else if (cancelBtn) {
-          this.commentSection.cancelEditComment();
-          this.updateCommentSection();
-        } else if (saveBtn) {
-          const commentId = saveBtn.dataset.commentId;
-          await this.saveCommentEdit(commentId);
-          this.updateCommentSection();
-        }
-      });
-    }
-
-    // 댓글 삭제 모달 버튼
-    const deleteCommentModal = this.$el.querySelector('#deleteCommentModal');
-    if (deleteCommentModal) {
-      deleteCommentModal.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.modal-btn');
-        if (!btn) return;
-
-        const action = btn.dataset.action;
-        if (action === 'cancel') {
-          this.commentSection.state.showDeleteCommentModal = false;
-          this.commentSection.state.deleteTargetCommentId = null;
-          document.body.classList.remove('modal-active');
-          this.updateCommentSection();
-        } else if (action === 'confirm') {
-          await this.deleteCommentHandler(this.commentSection.state.deleteTargetCommentId);
-        }
-      });
+      }
     }
   }
+
 
   beforeUnmount() {
     // 뒤로가기 버튼 숨김
@@ -328,51 +241,6 @@ class PostDetailPage extends Component {
     }
     // 모달 스크롤 잠금 해제
     document.body.classList.remove('modal-active');
-  }
-
-  // 댓글 수정 저장 (CommentSection 대신 처리)
-  async saveCommentEdit(commentId) {
-    const textarea = this.$el.querySelector(`.comment-edit-input[data-comment-id="${commentId}"]`);
-    const newContent = textarea ? textarea.value : '';
-
-    if (newContent.trim() === '') {
-      alert('댓글 내용을 입력해주세요.');
-      return;
-    }
-
-    // CommentSection의 saveEditComment에 content 전달
-    if (this.commentSection) {
-      await this.commentSection.saveEditCommentWithContent(commentId, newContent);
-    }
-  }
-
-  // 댓글 삭제 핸들러
-  async deleteCommentHandler(commentId) {
-    if (!this.commentSection) return;
-
-    await this.commentSection.deleteComment(commentId);
-
-    // CommentSection 재렌더링
-    this.updateCommentSection();
-  }
-
-  // CommentSection 재렌더링
-  updateCommentSection() {
-    if (!this.commentSection) return;
-
-    const commentSectionEl = this.$el.querySelector('.comment-section');
-    if (commentSectionEl) {
-      // 새로운 HTML로 교체
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = this.commentSection.render();
-      const newCommentSection = tempDiv.firstElementChild;
-
-      commentSectionEl.parentNode.replaceChild(newCommentSection, commentSectionEl);
-
-      // $el 업데이트 및 이벤트 리스너 재등록
-      this.commentSection.$el = newCommentSection;
-      this.setupCommentSectionListeners();
-    }
   }
 
   // 게시글 작성자 확인

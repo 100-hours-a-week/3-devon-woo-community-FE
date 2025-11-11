@@ -193,20 +193,19 @@ class CommentSection extends Component {
       // PageResponse에서 items 추출
       const comments = commentsData.items || commentsData;
 
-      // setState 대신 직접 수정
-      this.state.comments = comments;
+      // setState로 상태 업데이트 및 재렌더링
+      this.setState({ comments });
 
       // 부모에게 댓글 개수 전달
       if (this.props.onCommentCountChange) {
         this.props.onCommentCountChange(comments.length);
       }
 
-      // 로드 완료 후 재렌더링 필요 (PostDetailPage에서 처리)
       return true;
     } catch (error) {
       console.error('댓글 로드 실패:', error);
       // 에러 발생 시 빈 배열로 설정
-      this.state.comments = [];
+      this.setState({ comments: [] });
       return false;
     }
   }
