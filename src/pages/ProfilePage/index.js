@@ -5,6 +5,7 @@ import AuthService from '../../utils/AuthService.js';
 import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
 import Toast from '../../components/Toast/index.js';
 import Modal from '../../components/Modal/index.js';
+import { uploadProfileImage } from '../../utils/imageUpload.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -14,6 +15,7 @@ class ProfilePage extends Component {
       nickname: '',
       profileImage: null,
       profileImageUrl: '',
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
       nicknameError: '',
       isNicknameValid: true,
       showDeleteModal: false,
@@ -134,9 +136,13 @@ class ProfilePage extends Component {
     if (!this.profileImageUploader) {
       this.profileImageUploader = new ProfileImageUploader({
         imageUrl: this.state.profileImageUrl,
-        onImageChange: (file, dataUrl) => {
-          this.state.profileImage = file;
-          this.state.profileImageUrl = dataUrl;
+        onFileSelected: (file) => {
+          // File 객체만 저장 (업로드는 제출 시)
+          this.state.selectedImageFile = file;
+
+          // 버튼 활성화 상태 업데이트
+          const submitBtn = this.$el.querySelector('#submitBtn');
+          this.updateSubmitButton(submitBtn);
         }
       });
     } else {
@@ -396,11 +402,37 @@ class ProfilePage extends Component {
 
     try {
       const memberId = AuthService.getCurrentUserId();
+      let imageUrl = this.state.profileImageUrl || null;
+
+      // 새로운 이미지 파일이 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[ProfilePage] 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          imageUrl = await uploadProfileImage(this.state.selectedImageFile);
+          console.log('[ProfilePage] 이미지 업로드 완료:', imageUrl);
+
+          // 업로드 완료 후 state 업데이트
+          this.state.profileImageUrl = imageUrl;
+          this.state.selectedImageFile = null;
+
+          if (this.toast) {
+            this.toast.show('프로필 이미지가 업로드되었습니다.');
+          }
+        } catch (uploadError) {
+          console.error('[ProfilePage] 이미지 업로드 실패:', uploadError);
+          if (this.toast) {
+            this.toast.show('이미지 업로드에 실패했습니다.', 'error');
+          }
+          return; // 업로드 실패 시 제출 중단
+        }
+      }
 
       // MemberUpdateRequest DTO 생성
       const updateData = new MemberUpdateRequest({
         nickname: this.state.nickname,
-        profileImage: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
+        profileImage: imageUrl
       });
 
       // API 호출

@@ -1,15 +1,18 @@
 import Component from '../../core/Component.js';
+import { validateImageFile } from '../../utils/imageUpload.js';
 
 /**
  * ProfileImageUploader 컴포넌트
- * 프로필 이미지 업로드 및 미리보기 기능
+ * 프로필 이미지 선택 및 미리보기 기능
+ * 실제 업로드는 제출 시 부모 컴포넌트에서 처리
  */
 class ProfileImageUploader extends Component {
   constructor(props) {
     super(props);
     this.state = {
       imageUrl: props.imageUrl || '',
-      error: ''
+      error: '',
+      selectedFile: null // 선택된 파일 객체
     };
     this.loadStyle('/src/components/ProfileImageUploader/style.css');
   }
@@ -76,21 +79,10 @@ class ProfileImageUploader extends Component {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 파일 타입 검증
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      this.setState({
-        error: '이미지 파일만 업로드 가능합니다. (JPEG, PNG, JPG, GIF)'
-      });
-      e.target.value = '';
-      return;
-    }
-
-    // 파일 크기 검증 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      this.setState({
-        error: '이미지 크기는 5MB 이하로 업로드해주세요.'
-      });
+    // 파일 유효성 검사
+    const validation = validateImageFile(file, 'profile');
+    if (!validation.valid) {
+      this.setState({ error: validation.error });
       e.target.value = '';
       return;
     }
@@ -98,20 +90,30 @@ class ProfileImageUploader extends Component {
     // 에러 초기화
     this.setState({ error: '' });
 
-    // FileReader로 미리보기 생성
+    // FileReader로 미리보기 생성 (브라우저에만 표시)
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target.result;
 
-      // 상태 업데이트
-      this.setState({ imageUrl: dataUrl });
+      // 상태 업데이트: File 객체와 미리보기 URL 저장
+      this.setState({
+        imageUrl: dataUrl,
+        selectedFile: file
+      });
 
-      // 부모에게 파일과 dataUrl 전달
-      if (this.props.onImageChange) {
-        this.props.onImageChange(file, dataUrl);
+      // 부모에게 File 객체 전달 (실제 업로드는 제출 시)
+      if (this.props.onFileSelected) {
+        this.props.onFileSelected(file);
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  /**
+   * 선택된 파일 가져오기 (부모 컴포넌트에서 사용)
+   */
+  getSelectedFile() {
+    return this.state.selectedFile;
   }
 }
 

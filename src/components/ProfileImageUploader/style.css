@@ -81,6 +81,34 @@
   text-align: center;
 }
 
+/* 업로드 중 상태 */
+.profile-image-container.uploading {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.profile-image-container.uploading .profile-overlay {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 업로드 진행률 바 */
+.upload-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .profile-image-container {
