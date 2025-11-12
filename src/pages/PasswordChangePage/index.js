@@ -2,6 +2,8 @@ import Component from '../../core/Component.js';
 import { updatePassword } from '../../api/members.js';
 import PasswordUpdateRequest from '../../dto/request/member/PasswordUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import { validatePassword, validatePasswordConfirm } from '../../validation/index.js';
+import { navigate } from '../../core/Router.js';
 
 class PasswordChangePage extends Component {
   constructor(props) {
@@ -52,7 +54,7 @@ class PasswordChangePage extends Component {
                 value="${this.state.password}"
               >
               <p class="helper-text ${this.state.passwordError ? 'show' : ''}" id="passwordHelper">
-                *비밀번호는 8자 이상, 20자 이하이며, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다.
+                ${this.state.passwordError || '*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다.'}
               </p>
             </div>
 
@@ -67,7 +69,7 @@ class PasswordChangePage extends Component {
                 value="${this.state.passwordConfirm}"
               >
               <p class="helper-text ${this.state.passwordConfirmError ? 'show' : ''}" id="passwordConfirmHelper">
-                *비밀번호와 다릅니다.
+                ${this.state.passwordConfirmError || '*비밀번호를 한번 더 입력해주세요'}
               </p>
             </div>
 
@@ -163,7 +165,7 @@ class PasswordChangePage extends Component {
       });
 
       passwordInput.addEventListener('blur', () => {
-        this.validatePassword();
+        this.checkPasswordValidity();
       });
     }
 
@@ -187,7 +189,7 @@ class PasswordChangePage extends Component {
       });
 
       passwordConfirmInput.addEventListener('blur', () => {
-        this.validatePasswordConfirm();
+        this.checkPasswordConfirmValidity();
       });
     }
 
@@ -208,21 +210,11 @@ class PasswordChangePage extends Component {
   }
 
   // 비밀번호 유효성 검사
-  validatePassword() {
-    const password = this.state.password;
+  checkPasswordValidity() {
+    const errorMessage = validatePassword(this.state.password);
 
-    if (!password) {
-      this.setState({ passwordError: '*비밀번호를 입력해주세요.' });
-      return false;
-    }
-
-    // 비밀번호 정규식: 8-20자, 대문자, 소문자, 숫자, 특수문자 각 1개 이상
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,20}$/;
-
-    if (!passwordRegex.test(password)) {
-      this.setState({
-        passwordError: '*비밀번호는 8자 이상, 20자 이하이며, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다.'
-      });
+    if (errorMessage) {
+      this.setState({ passwordError: errorMessage });
       return false;
     }
 
@@ -231,16 +223,11 @@ class PasswordChangePage extends Component {
   }
 
   // 비밀번호 확인 유효성 검사
-  validatePasswordConfirm() {
-    const passwordConfirm = this.state.passwordConfirm;
+  checkPasswordConfirmValidity() {
+    const errorMessage = validatePasswordConfirm(this.state.password, this.state.passwordConfirm);
 
-    if (!passwordConfirm) {
-      this.setState({ passwordConfirmError: '*비밀번호 확인을 입력해주세요.' });
-      return false;
-    }
-
-    if (passwordConfirm !== this.state.password) {
-      this.setState({ passwordConfirmError: '*비밀번호와 다릅니다.' });
+    if (errorMessage) {
+      this.setState({ passwordConfirmError: errorMessage });
       return false;
     }
 
@@ -285,8 +272,8 @@ class PasswordChangePage extends Component {
     }
 
     // 최종 유효성 검사
-    const isPasswordValid = this.validatePassword();
-    const isPasswordConfirmValid = this.validatePasswordConfirm();
+    const isPasswordValid = this.checkPasswordValidity();
+    const isPasswordConfirmValid = this.checkPasswordConfirmValidity();
 
     if (!isPasswordValid || !isPasswordConfirmValid) {
       return;
@@ -322,7 +309,7 @@ class PasswordChangePage extends Component {
 
       // 선택: 프로필 페이지로 돌아가기
       setTimeout(() => {
-        window.router.navigate('/profile');
+        navigate('/profile');
       }, 1500);
     } catch (error) {
       console.error('비밀번호 변경 실패:', error);

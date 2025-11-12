@@ -102,4 +102,33 @@ class Router {
   }
 }
 
+// Singleton 인스턴스
+let routerInstance = null;
+
+// Router 인스턴스 생성 (app.js에서 호출)
+export function createRouter() {
+  if (!routerInstance) {
+    routerInstance = new Router();
+  }
+  return routerInstance;
+}
+
+// navigate 함수 export (React의 useNavigate()와 유사)
+export function navigate(path) {
+  if (!routerInstance) {
+    console.error('Router not initialized. Call createRouter() first.');
+    return;
+  }
+  routerInstance.navigate(path);
+}
+
+// navigateReplace 함수 export
+export function navigateReplace(path) {
+  if (!routerInstance) {
+    console.error('Router not initialized. Call createRouter() first.');
+    return;
+  }
+  routerInstance.navigateReplace(path);
+}
+
 export default Router;

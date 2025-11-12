@@ -1,12 +1,46 @@
-const { EMAIL_PATTERN, PASSWORD_MIN_LENGTH } = require("./patterns");
-const VALIDATION_MESSAGES = require("./messages");
+import { EMAIL_PATTERN, PASSWORD_PATTERN, NICKNAME_MAX_LENGTH } from './patterns.js';
+import { VALIDATION_MESSAGES } from './messages.js';
+
+/**
+ * 이메일 유효성 검증 (단일 필드)
+ * @param {string} email - 검증할 이메일
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validateEmail(email) {
+  if (!email) {
+    return VALIDATION_MESSAGES.REQUIRED_FIELD;
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return VALIDATION_MESSAGES.INVALID_EMAIL_FORMAT;
+  }
+
+  return "";
+}
+
+/**
+ * 닉네임 유효성 검증 (단일 필드)
+ * @param {string} nickname - 검증할 닉네임
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validateNickname(nickname) {
+  if (!nickname) {
+    return VALIDATION_MESSAGES.REQUIRED_FIELD;
+  }
+
+  if (nickname.length > NICKNAME_MAX_LENGTH) {
+    return VALIDATION_MESSAGES.INVALID_NICKNAME;
+  }
+
+  return "";
+}
 
 /**
  * LoginRequest 유효성 검증
  * @param {import('../dto/request/auth/LoginRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validateLoginRequest(dto) {
+export function validateLoginRequest(dto) {
   const errors = [];
 
   if (!dto.email) {
@@ -36,7 +70,7 @@ function validateLoginRequest(dto) {
  * @param {import('../dto/request/auth/SignupRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validateSignupRequest(dto) {
+export function validateSignupRequest(dto) {
   const errors = [];
 
   if (!dto.email) {
@@ -56,7 +90,7 @@ function validateSignupRequest(dto) {
       field: "password",
       message: VALIDATION_MESSAGES.REQUIRED_PASSWORD,
     });
-  } else if (dto.password.length < PASSWORD_MIN_LENGTH) {
+  } else if (!PASSWORD_PATTERN.test(dto.password)) {
     errors.push({
       field: "password",
       message: VALIDATION_MESSAGES.INVALID_PASSWORD_FORMAT,
@@ -72,8 +106,3 @@ function validateSignupRequest(dto) {
 
   return errors;
 }
-
-module.exports = {
-  validateLoginRequest,
-  validateSignupRequest,
-};

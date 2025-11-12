@@ -62,6 +62,12 @@ class CommentSection extends Component {
   }
 
   renderComments() {
+    // 안전장치: comments가 배열이 아니면 빈 문자열 반환
+    if (!Array.isArray(this.state.comments)) {
+      console.warn('renderComments: comments가 배열이 아닙니다', this.state.comments);
+      return '';
+    }
+
     const currentUserId = AuthService.getCurrentUserId();
 
     return this.state.comments.map(comment => {
@@ -190,8 +196,19 @@ class CommentSection extends Component {
         sort: 'createdAt,desc' // 최신순 정렬
       });
 
-      // PageResponse에서 items 추출
-      const comments = commentsData.items || commentsData;
+      // 디버깅: 응답 데이터 확인
+      console.log('댓글 API 응답:', commentsData);
+
+      // PageResponse에서 items 추출 (안전한 처리)
+      let comments = [];
+      if (commentsData?.items && Array.isArray(commentsData.items)) {
+        comments = commentsData.items;
+      } else if (Array.isArray(commentsData)) {
+        comments = commentsData;
+      } else {
+        console.warn('예상치 못한 댓글 데이터 형식:', commentsData);
+        comments = [];
+      }
 
       // setState로 상태 업데이트 및 재렌더링
       this.setState({ comments });

@@ -9,6 +9,7 @@ import { getPostById, deletePost as deletePostAPI, likePost, unlikePost } from '
 
 // Utils imports
 import AuthService from '../../utils/AuthService.js';
+import { navigate, navigateReplace } from '../../core/Router.js';
 
 class PostDetailPage extends Component {
   constructor(props) {
@@ -17,7 +18,8 @@ class PostDetailPage extends Component {
       post: null,
       isLiked: false,
       isLoading: true,
-      showDeleteModal: false
+      showDeleteModal: false,
+      showLoginModal: false
     };
     this.loadStyle('/src/pages/PostDetailPage/style.css');
     this.postId = null;
@@ -110,6 +112,7 @@ class PostDetailPage extends Component {
         ${this.renderCommentSection()}
 
         ${this.renderDeleteModal()}
+        ${this.renderLoginModal()}
       </div>
     `;
   }
@@ -146,6 +149,16 @@ class PostDetailPage extends Component {
     return deleteModal.render();
   }
 
+  renderLoginModal() {
+    const loginModal = new Modal({
+      show: this.state.showLoginModal,
+      title: '로그인이 필요합니다',
+      message: '로그인을 했을 때만 좋아요를 누를 수 있습니다.\n로그인하시겠습니까?',
+      id: 'loginModal'
+    });
+    return loginModal.render();
+  }
+
   // 최초 마운트 시에만 1회 호출 (React의 componentDidMount와 동일)
   mounted() {
     // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
@@ -177,7 +190,7 @@ class PostDetailPage extends Component {
     const editBtn = this.$el.querySelector('#editBtn');
     if (editBtn) {
       editBtn.addEventListener('click', () => {
-        window.router.navigateReplace(`/posts/${this.postId}/edit`);
+        navigate(`/posts/${this.postId}/edit`);
       });
     }
 
@@ -211,6 +224,26 @@ class PostDetailPage extends Component {
           document.body.classList.remove('modal-active');
         } else if (action === 'confirm') {
           this.deletePost();
+        }
+      });
+    }
+
+    // 로그인 모달 버튼
+    const loginModal = this.$el.querySelector('#loginModal');
+    if (loginModal) {
+      loginModal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({ showLoginModal: false });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          // 로그인 페이지로 이동
+          this.setState({ showLoginModal: false });
+          document.body.classList.remove('modal-active');
+          navigateReplace('/login');
         }
       });
     }
@@ -261,7 +294,8 @@ class PostDetailPage extends Component {
 
       this.setState({
         post: postData,
-        isLiked: postData.isLiked || false, // 좋아요 여부 설정
+        // isLiked가 null이거나 undefined일 경우 false로 설정
+        isLiked: postData.isLiked === true,
         isLoading: false
       });
     } catch (error) {
@@ -273,8 +307,10 @@ class PostDetailPage extends Component {
 
   // 좋아요 토글
   async toggleLike() {
-    // 로그인 확인
-    if (!AuthService.requireAuth()) {
+    // 로그인 확인 - 로그인하지 않은 경우 모달 표시
+    if (!AuthService.isLoggedIn()) {
+      this.setState({ showLoginModal: true });
+      document.body.classList.add('modal-active');
       return;
     }
 
@@ -318,7 +354,7 @@ class PostDetailPage extends Component {
       await deletePostAPI(this.postId, memberId);
 
       alert('게시글이 삭제되었습니다.');
-      window.router.navigate('/posts');
+      navigateReplace('/posts');
     } catch (error) {
       console.error('게시글 삭제 실패:', error);
       alert('게시글 삭제에 실패했습니다.');

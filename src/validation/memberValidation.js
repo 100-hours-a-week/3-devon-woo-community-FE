@@ -1,16 +1,16 @@
-const {
+import {
   NICKNAME_MAX_LENGTH,
   URL_PATTERN,
-  PASSWORD_MIN_LENGTH,
-} = require("./patterns");
-const VALIDATION_MESSAGES = require("./messages");
+  PASSWORD_PATTERN,
+} from './patterns.js';
+import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * MemberUpdateRequest 유효성 검증
  * @param {import('../dto/request/member/MemberUpdateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validateMemberUpdateRequest(dto) {
+export function validateMemberUpdateRequest(dto) {
   const errors = [];
 
   if (dto.nickname && dto.nickname.length > NICKNAME_MAX_LENGTH) {
@@ -35,7 +35,7 @@ function validateMemberUpdateRequest(dto) {
  * @param {import('../dto/request/member/PasswordUpdateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validatePasswordUpdateRequest(dto) {
+export function validatePasswordUpdateRequest(dto) {
   const errors = [];
 
   if (!dto.currentPassword) {
@@ -50,7 +50,7 @@ function validatePasswordUpdateRequest(dto) {
       field: "newPassword",
       message: VALIDATION_MESSAGES.REQUIRED_PASSWORD,
     });
-  } else if (dto.newPassword.length < PASSWORD_MIN_LENGTH) {
+  } else if (!PASSWORD_PATTERN.test(dto.newPassword)) {
     errors.push({
       field: "newPassword",
       message: VALIDATION_MESSAGES.INVALID_PASSWORD_FORMAT,
@@ -60,7 +60,37 @@ function validatePasswordUpdateRequest(dto) {
   return errors;
 }
 
-module.exports = {
-  validateMemberUpdateRequest,
-  validatePasswordUpdateRequest,
-};
+/**
+ * 비밀번호 유효성 검증 (단일 필드)
+ * @param {string} password - 검증할 비밀번호
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validatePassword(password) {
+  if (!password) {
+    return VALIDATION_MESSAGES.REQUIRED_PASSWORD;
+  }
+
+  if (!PASSWORD_PATTERN.test(password)) {
+    return VALIDATION_MESSAGES.INVALID_PASSWORD_FORMAT;
+  }
+
+  return "";
+}
+
+/**
+ * 비밀번호 확인 유효성 검증
+ * @param {string} password - 원본 비밀번호
+ * @param {string} passwordConfirm - 확인 비밀번호
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validatePasswordConfirm(password, passwordConfirm) {
+  if (!passwordConfirm) {
+    return VALIDATION_MESSAGES.REQUIRED_PASSWORD;
+  }
+
+  if (password !== passwordConfirm) {
+    return VALIDATION_MESSAGES.PASSWORD_MISMATCH;
+  }
+
+  return "";
+}

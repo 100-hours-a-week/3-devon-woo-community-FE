@@ -1,11 +1,11 @@
-const VALIDATION_MESSAGES = require("./messages");
+import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * CommentCreateRequest 유효성 검증
  * @param {import('../dto/request/comment/CommentCreateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validateCommentCreateRequest(dto) {
+export function validateCommentCreateRequest(dto) {
   const errors = [];
 
   if (dto.memberId == null) {
@@ -30,7 +30,7 @@ function validateCommentCreateRequest(dto) {
  * @param {import('../dto/request/comment/CommentUpdateRequest')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
-function validateCommentUpdateRequest(dto) {
+export function validateCommentUpdateRequest(dto) {
   const errors = [];
 
   if (dto.memberId == null) {
@@ -49,8 +49,3 @@ function validateCommentUpdateRequest(dto) {
 
   return errors;
 }
-
-module.exports = {
-  validateCommentCreateRequest,
-  validateCommentUpdateRequest,
-};

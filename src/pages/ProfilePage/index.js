@@ -5,6 +5,8 @@ import AuthService from '../../utils/AuthService.js';
 import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
 import Toast from '../../components/Toast/index.js';
 import Modal from '../../components/Modal/index.js';
+import { uploadProfileImage } from '../../utils/imageUpload.js';
+import { navigate } from '../../core/Router.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -14,6 +16,7 @@ class ProfilePage extends Component {
       nickname: '',
       profileImage: null,
       profileImageUrl: '',
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
       nicknameError: '',
       isNicknameValid: true,
       showDeleteModal: false,
@@ -134,9 +137,13 @@ class ProfilePage extends Component {
     if (!this.profileImageUploader) {
       this.profileImageUploader = new ProfileImageUploader({
         imageUrl: this.state.profileImageUrl,
-        onImageChange: (file, dataUrl) => {
-          this.state.profileImage = file;
-          this.state.profileImageUrl = dataUrl;
+        onFileSelected: (file) => {
+          // File 객체만 저장 (업로드는 제출 시)
+          this.state.selectedImageFile = file;
+
+          // 버튼 활성화 상태 업데이트
+          const submitBtn = this.$el.querySelector('#submitBtn');
+          this.updateSubmitButton(submitBtn);
         }
       });
     } else {
@@ -219,7 +226,7 @@ class ProfilePage extends Component {
       });
 
       nicknameInput.addEventListener('blur', () => {
-        this.validateNickname();
+        this.checkNicknameValidity();
       });
     }
 
@@ -292,8 +299,8 @@ class ProfilePage extends Component {
     }
   }
 
-  // 닉네임 유효성 검사
-  async validateNickname() {
+  // 닉네임 유효성 검사 (blur 이벤트용)
+  checkNicknameValidity() {
     const nickname = this.state.nickname.trim();
 
     // 빈 값 검사
@@ -314,12 +321,24 @@ class ProfilePage extends Component {
       return false;
     }
 
-    // 닉네임이 변경되지 않았으면 중복 체크 생략
-    if (nickname === this.originalNickname) {
+    // 에러가 있었거나 유효하지 않은 상태였을 때만 setState 호출
+    // (불필요한 리렌더링 방지)
+    if (this.state.nicknameError || !this.state.isNicknameValid) {
       this.setState({
         nicknameError: '',
         isNicknameValid: true
       });
+    }
+
+    return true;
+  }
+
+  // 닉네임 중복 체크 (제출 시에만 수행)
+  async checkNicknameDuplicate() {
+    const nickname = this.state.nickname.trim();
+
+    // 닉네임이 변경되지 않았으면 중복 체크 생략
+    if (nickname === this.originalNickname) {
       return true;
     }
 
@@ -329,8 +348,8 @@ class ProfilePage extends Component {
       // const response = await apiGet(`/api/v1/users/check-nickname?nickname=${nickname}`);
       // const isDuplicate = response.isDuplicate;
 
-      // 임시: 랜덤으로 중복 체크 (실제로는 API 응답 사용)
-      const isDuplicate = Math.random() < 0.3;
+      // 임시: 중복 체크 (실제로는 API 응답 사용)
+      const isDuplicate = false;
 
       if (isDuplicate) {
         this.setState({
@@ -340,10 +359,6 @@ class ProfilePage extends Component {
         return false;
       }
 
-      this.setState({
-        nicknameError: '',
-        isNicknameValid: true
-      });
       return true;
     } catch (error) {
       console.error('닉네임 중복 체크 실패:', error);
@@ -353,7 +368,10 @@ class ProfilePage extends Component {
 
   // 폼 유효성 검사
   isFormValid() {
-    return this.state.nickname.trim() !== '' && this.state.isNicknameValid;
+    const hasValidNickname = this.state.nickname.trim() !== '' && this.state.isNicknameValid;
+    const nicknameChanged = this.state.nickname.trim() !== this.originalNickname;
+    const imageChanged = this.state.selectedImageFile !== null;
+    return hasValidNickname && (nicknameChanged || imageChanged);
   }
 
   // 제출 버튼 활성화 상태 업데이트
@@ -373,19 +391,50 @@ class ProfilePage extends Component {
       return;
     }
 
-    // 최종 유효성 검사
-    const isValid = await this.validateNickname();
-    if (!isValid) {
+    // 로그인 확인
+    if (!AuthService.requireAuth()) {
+      return;
+    }
+
+    // 중복 체크 (닉네임이 변경된 경우에만)
+    const isDuplicateValid = await this.checkNicknameDuplicate();
+    if (!isDuplicateValid) {
       return;
     }
 
     try {
       const memberId = AuthService.getCurrentUserId();
+      let imageUrl = this.state.profileImageUrl || null;
+
+      // 새로운 이미지 파일이 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[ProfilePage] 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          imageUrl = await uploadProfileImage(this.state.selectedImageFile);
+          console.log('[ProfilePage] 이미지 업로드 완료:', imageUrl);
+
+          // 업로드 완료 후 state 업데이트
+          this.state.profileImageUrl = imageUrl;
+          this.state.selectedImageFile = null;
+
+          if (this.toast) {
+            this.toast.show('프로필 이미지가 업로드되었습니다.');
+          }
+        } catch (uploadError) {
+          console.error('[ProfilePage] 이미지 업로드 실패:', uploadError);
+          if (this.toast) {
+            this.toast.show('이미지 업로드에 실패했습니다.', 'error');
+          }
+          return; // 업로드 실패 시 제출 중단
+        }
+      }
 
       // MemberUpdateRequest DTO 생성
       const updateData = new MemberUpdateRequest({
         nickname: this.state.nickname,
-        profileImage: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
+        profileImage: imageUrl
       });
 
       // API 호출
@@ -394,8 +443,17 @@ class ProfilePage extends Component {
       // 성공 시 토스트 메시지 표시
       this.showToast();
 
-      // originalNickname 업데이트
+      // originalNickname 업데이트 (다음 변경 감지를 위해)
       this.originalNickname = this.state.nickname;
+
+      // 헤더의 프로필 이미지 리프레시
+      if (window.headerComponent) {
+        window.headerComponent.refreshProfileImage();
+      }
+
+      // 버튼 비활성화 (변경사항이 없으므로)
+      const submitBtn = this.$el.querySelector('#submitBtn');
+      this.updateSubmitButton(submitBtn);
     } catch (error) {
       console.error('프로필 수정 실패:', error);
       alert('프로필 수정에 실패했습니다.');
@@ -417,7 +475,7 @@ class ProfilePage extends Component {
       AuthService.logout();
 
       // 로그인 페이지로 이동
-      window.router.navigate('/login');
+      navigate('/login');
     } catch (error) {
       console.error('회원 탈퇴 실패:', error);
       alert('회원 탈퇴에 실패했습니다.');

@@ -1,6 +1,7 @@
 import Component from '../../core/Component.js';
 import AuthService from '../../utils/AuthService.js';
 import { getMemberProfile } from '../../api/members.js';
+import { navigate } from '../../core/Router.js';
 
 class Header extends Component {
   constructor(props) {
@@ -15,6 +16,7 @@ class Header extends Component {
     };
     this.loadStyle('/src/components/Header/style.css');
     this.outsideClickHandler = null;
+    this.profileImageLoaded = false; // 프로필 이미지 로드 완료 플래그
   }
 
   render() {
@@ -30,7 +32,7 @@ class Header extends Component {
             </button>
           ` : ''}
 
-          <h1 class="header-title">아무 말 대잔치</h1>
+          <h1 class="header-title ${this.isAuthPage() ? 'non-clickable' : ''}" id="headerTitle">아무 말 대잔치</h1>
 
           <!-- profile icon -->
           ${this.state.showProfileIcon ? `
@@ -73,17 +75,34 @@ class Header extends Component {
 
   updated() {
     this.setupEventListeners();
+
+    // showProfileIcon이 활성화되고 아직 로드하지 않은 경우에만 프로필 이미지 로드
+    if (this.state.showProfileIcon && !this.profileImageLoaded) {
+      this.loadProfileImage();
+    }
   }
 
   setupEventListeners() {
     const backButton = this.$el.querySelector('#backButton');
     const profileIconBtn = this.$el.querySelector('#profileIconBtn');
     const logoutBtn = this.$el.querySelector('#logoutBtn');
+    const headerTitle = this.$el.querySelector('#headerTitle');
 
     // 뒤로가기 버튼
     if (backButton) {
       backButton.addEventListener('click', () => {
         window.history.back();
+      });
+    }
+
+    // 헤더 타이틀 클릭 - /posts로 이동 (로그인/회원가입 페이지 제외)
+    if (headerTitle) {
+      headerTitle.addEventListener('click', () => {
+        const currentPage = this.state.currentPage;
+        // 로그인/회원가입 페이지가 아닐 때만 이동
+        if (currentPage !== '/login' && currentPage !== '/' && currentPage !== '/signup') {
+          navigate('/posts');
+        }
       });
     }
 
@@ -144,15 +163,18 @@ class Header extends Component {
   // 프로필 이미지 로드
   async loadProfileImage() {
     if (!this.state.showProfileIcon) return;
+    if (this.profileImageLoaded) return; // 이미 로드했으면 중복 로드 방지
 
     const memberId = AuthService.getCurrentUserId();
     if (!memberId) return;
 
     try {
       const profile = await getMemberProfile(memberId);
+      this.profileImageLoaded = true; // 로드 완료 플래그 설정
       this.setState({ profileImage: profile.profileImage });
     } catch (error) {
       console.error('프로필 이미지 로드 실패:', error);
+      this.profileImageLoaded = true; // 실패해도 플래그 설정 (재시도 방지)
     }
   }
 
@@ -165,7 +187,7 @@ class Header extends Component {
     alert('로그아웃되었습니다.');
 
     // 로그인 페이지로 이동
-    window.router.navigate('/login');
+    navigate('/login');
   }
 
   // 뒤로가기 버튼 표시/숨김
@@ -176,11 +198,31 @@ class Header extends Component {
   // 프로필 아이콘 표시/숨김
   showProfileIcon(show) {
     this.setState({ showProfileIcon: show });
+
+    // 프로필 아이콘을 표시할 때 프로필 이미지 로드
+    if (show) {
+      this.loadProfileImage();
+    } else {
+      // 숨길 때 플래그 리셋
+      this.profileImageLoaded = false;
+    }
+  }
+
+  // 프로필 이미지 리프레시 (ProfilePage에서 업데이트 후 호출용)
+  refreshProfileImage() {
+    this.profileImageLoaded = false; // 플래그 리셋
+    this.loadProfileImage(); // 다시 로드
   }
 
   // 현재 페이지 설정 (활성화 표시용)
   setCurrentPage(page) {
     this.setState({ currentPage: page });
+  }
+
+  // 인증 페이지(로그인/회원가입) 여부 확인
+  isAuthPage() {
+    const currentPage = this.state.currentPage;
+    return currentPage === '/login' || currentPage === '/' || currentPage === '/signup';
   }
 
   beforeUnmount() {

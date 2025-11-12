@@ -2,18 +2,32 @@ import Component from '../../core/Component.js';
 import { signup } from '../../api/auth.js';
 import SignupRequest from '../../dto/request/auth/SignupRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import { navigateReplace } from '../../core/Router.js';
+import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
+import { uploadProfileImage } from '../../utils/imageUpload.js';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirm,
+  validateNickname
+} from '../../validation/index.js';
 
 class SignupPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      profileImage: null,
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
       email: '',
       password: '',
       passwordConfirm: '',
-      nickname: ''
+      nickname: '',
+      emailError: '',
+      passwordError: '',
+      passwordConfirmError: '',
+      nicknameError: ''
     };
     this.loadStyle('/src/pages/SignupPage/style.css');
+    this.profileImageUploader = null; // ProfileImageUploader 인스턴스
   }
 
   render() {
@@ -24,28 +38,8 @@ class SignupPage extends Component {
 
           <form class="signup-form" id="signupForm">
             <!-- 프로필 이미지 업로드 -->
-            <div class="form-group profile-group">
-              <label class="form-label">프로필 사진</label>
-              <div class="profile-upload-section">
-                <div class="profile-image-container" id="profileImageContainer">
-                  <img src="" alt="프로필 이미지" class="profile-image" id="profileImage" style="display: none;">
-                  <div class="profile-placeholder" id="profilePlaceholder">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                      <path d="M20 10V30M10 20H30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </div>
-                  <input
-                    type="file"
-                    id="profileInput"
-                    class="profile-input-hidden"
-                    accept="image/jpeg,image/png,image/jpg"
-                  >
-                </div>
-                <button type="button" class="profile-delete-btn" id="profileDeleteBtn" style="display: none;">
-                  이미지 삭제
-                </button>
-              </div>
-              <p class="helper-text" id="profileHelperText">* helper text</p>
+            <div class="form-group">
+              ${this.renderProfileImageUploader()}
             </div>
 
             <!-- 이메일 입력 -->
@@ -54,11 +48,13 @@ class SignupPage extends Component {
               <input
                 type="email"
                 id="emailInput"
-                class="form-input"
+                class="form-input ${this.state.emailError ? 'error' : ''}"
                 placeholder="이메일을 입력해주세요"
                 value="${this.state.email}"
               />
-              <p class="helper-text error" id="emailHelperText"></p>
+              <p class="helper-text ${this.state.emailError ? 'show' : ''}" id="emailHelper">
+                ${this.state.emailError || '*올바른 이메일 주소를 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 비밀번호 입력 -->
@@ -67,11 +63,13 @@ class SignupPage extends Component {
               <input
                 type="password"
                 id="passwordInput"
-                class="form-input"
+                class="form-input ${this.state.passwordError ? 'error' : ''}"
                 placeholder="비밀번호를 입력해주세요"
                 value="${this.state.password}"
               />
-              <p class="helper-text error" id="passwordHelperText"></p>
+              <p class="helper-text ${this.state.passwordError ? 'show' : ''}" id="passwordHelper">
+                ${this.state.passwordError || '*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다.'}
+              </p>
             </div>
 
             <!-- 비밀번호 확인 -->
@@ -80,11 +78,13 @@ class SignupPage extends Component {
               <input
                 type="password"
                 id="passwordConfirmInput"
-                class="form-input"
+                class="form-input ${this.state.passwordConfirmError ? 'error' : ''}"
                 placeholder="비밀번호를 한번 더 입력해주세요"
                 value="${this.state.passwordConfirm}"
               />
-              <p class="helper-text error" id="passwordConfirmHelperText"></p>
+              <p class="helper-text ${this.state.passwordConfirmError ? 'show' : ''}" id="passwordConfirmHelper">
+                ${this.state.passwordConfirmError || '*비밀번호를 한번 더 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 닉네임 입력 -->
@@ -93,12 +93,14 @@ class SignupPage extends Component {
               <input
                 type="text"
                 id="nicknameInput"
-                class="form-input"
+                class="form-input ${this.state.nicknameError ? 'error' : ''}"
                 placeholder="닉네임을 입력해주세요"
-                maxlength="10"
+                maxlength="30"
                 value="${this.state.nickname}"
               />
-              <p class="helper-text error" id="nicknameHelperText"></p>
+              <p class="helper-text ${this.state.nicknameError ? 'show' : ''}" id="nicknameHelper">
+                ${this.state.nicknameError || '*닉네임을 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 회원가입 버튼 -->
@@ -116,6 +118,20 @@ class SignupPage extends Component {
     `;
   }
 
+  renderProfileImageUploader() {
+    if (!this.profileImageUploader) {
+      this.profileImageUploader = new ProfileImageUploader({
+        imageUrl: '',
+        onFileSelected: (file) => {
+          // File 객체만 저장 (업로드는 제출 시)
+          this.state.selectedImageFile = file;
+          console.log('[SignupPage] 프로필 이미지 선택됨:', file.name);
+        }
+      });
+    }
+    return this.profileImageUploader.render();
+  }
+
   mounted() {
     // 회원가입 페이지에서는 뒤로가기 버튼 표시
     if (window.headerComponent) {
@@ -124,18 +140,21 @@ class SignupPage extends Component {
     }
 
     this.setupEventListeners();
+
+    // 초기 버튼 상태 체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   updated() {
     this.setupEventListeners();
+
+    // 버튼 상태 재체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
-    const profileImageContainer = this.$el.querySelector('#profileImageContainer');
-    const profileInput = this.$el.querySelector('#profileInput');
-    const profileImage = this.$el.querySelector('#profileImage');
-    const profilePlaceholder = this.$el.querySelector('#profilePlaceholder');
-    const profileDeleteBtn = this.$el.querySelector('#profileDeleteBtn');
     const emailInput = this.$el.querySelector('#emailInput');
     const passwordInput = this.$el.querySelector('#passwordInput');
     const passwordConfirmInput = this.$el.querySelector('#passwordConfirmInput');
@@ -143,69 +162,108 @@ class SignupPage extends Component {
     const submitBtn = this.$el.querySelector('#submitBtn');
     const form = this.$el.querySelector('#signupForm');
 
-    // 프로필 이미지 클릭
-    if (profileImageContainer) {
-      profileImageContainer.addEventListener('click', () => {
-        profileInput.click();
-      });
+    // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
+    if (this.profileImageUploader) {
+      const uploaderEl = this.$el.querySelector('.profile-image-uploader');
+      if (uploaderEl) {
+        this.profileImageUploader.$el = uploaderEl;
+        this.profileImageUploader.setupEventListeners();
+      }
     }
 
-    // 프로필 이미지 선택
-    if (profileInput) {
-      profileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            profileImage.src = e.target.result;
-            profileImage.style.display = 'block';
-            profilePlaceholder.style.display = 'none';
-            profileDeleteBtn.style.display = 'block';
-            this.state.profileImage = file;
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
-
-    // 프로필 이미지 삭제
-    if (profileDeleteBtn) {
-      profileDeleteBtn.addEventListener('click', () => {
-        profileImage.src = '';
-        profileImage.style.display = 'none';
-        profilePlaceholder.style.display = 'flex';
-        profileDeleteBtn.style.display = 'none';
-        profileInput.value = '';
-        this.state.profileImage = null;
-      });
-    }
-
-    // 입력 이벤트
+    // 이메일 입력
     if (emailInput) {
       emailInput.addEventListener('input', (e) => {
         this.state.email = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.emailError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#emailHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        emailInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      emailInput.addEventListener('blur', () => {
+        this.checkEmailValidity();
       });
     }
 
+    // 비밀번호 입력
     if (passwordInput) {
       passwordInput.addEventListener('input', (e) => {
         this.state.password = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.passwordError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      passwordInput.addEventListener('blur', () => {
+        this.checkPasswordValidity();
       });
     }
 
+    // 비밀번호 확인 입력
     if (passwordConfirmInput) {
       passwordConfirmInput.addEventListener('input', (e) => {
         this.state.passwordConfirm = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.passwordConfirmError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordConfirmHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordConfirmInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      passwordConfirmInput.addEventListener('blur', () => {
+        this.checkPasswordConfirmValidity();
       });
     }
 
+    // 닉네임 입력
     if (nicknameInput) {
       nicknameInput.addEventListener('input', (e) => {
         this.state.nickname = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.nicknameError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#nicknameHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        nicknameInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      nicknameInput.addEventListener('blur', () => {
+        this.checkNicknameValidity();
       });
     }
 
@@ -225,26 +283,113 @@ class SignupPage extends Component {
     }
   }
 
-  checkFormValid(submitBtn) {
-    if (this.state.email && this.state.password &&
-        this.state.passwordConfirm && this.state.nickname) {
-      submitBtn.disabled = false;
-    } else {
-      submitBtn.disabled = true;
+  // 이메일 유효성 검사
+  checkEmailValidity() {
+    const errorMessage = validateEmail(this.state.email);
+
+    if (errorMessage) {
+      this.setState({ emailError: errorMessage });
+      return false;
+    }
+
+    this.setState({ emailError: '' });
+    return true;
+  }
+
+  // 비밀번호 유효성 검사
+  checkPasswordValidity() {
+    const errorMessage = validatePassword(this.state.password);
+
+    if (errorMessage) {
+      this.setState({ passwordError: errorMessage });
+      return false;
+    }
+
+    this.setState({ passwordError: '' });
+    return true;
+  }
+
+  // 비밀번호 확인 유효성 검사
+  checkPasswordConfirmValidity() {
+    const errorMessage = validatePasswordConfirm(this.state.password, this.state.passwordConfirm);
+
+    if (errorMessage) {
+      this.setState({ passwordConfirmError: errorMessage });
+      return false;
+    }
+
+    this.setState({ passwordConfirmError: '' });
+    return true;
+  }
+
+  // 닉네임 유효성 검사
+  checkNicknameValidity() {
+    const errorMessage = validateNickname(this.state.nickname);
+
+    if (errorMessage) {
+      this.setState({ nicknameError: errorMessage });
+      return false;
+    }
+
+    this.setState({ nicknameError: '' });
+    return true;
+  }
+
+  // 폼 유효성 검사
+  isFormValid() {
+    const hasEmail = this.state.email.trim() !== '';
+    const hasPassword = this.state.password.trim() !== '';
+    const hasPasswordConfirm = this.state.passwordConfirm.trim() !== '';
+    const hasNickname = this.state.nickname.trim() !== '';
+    const noErrors = !this.state.emailError && !this.state.passwordError &&
+                     !this.state.passwordConfirmError && !this.state.nicknameError;
+
+    return hasEmail && hasPassword && hasPasswordConfirm && hasNickname && noErrors;
+  }
+
+  // 제출 버튼 활성화 상태 업데이트
+  updateSubmitButton(submitBtn) {
+    if (submitBtn) {
+      if (this.isFormValid()) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
     }
   }
 
   async handleSubmit() {
-    // 비밀번호 확인 검증
-    if (this.state.password !== this.state.passwordConfirm) {
-      alert('비밀번호가 일치하지 않습니다.');
+    if (!this.isFormValid()) {
+      return;
+    }
+
+    // 최종 유효성 검사
+    const isEmailValid = this.checkEmailValidity();
+    const isPasswordValid = this.checkPasswordValidity();
+    const isPasswordConfirmValid = this.checkPasswordConfirmValidity();
+    const isNicknameValid = this.checkNicknameValidity();
+
+    if (!isEmailValid || !isPasswordValid || !isPasswordConfirmValid || !isNicknameValid) {
       return;
     }
 
     try {
-      // TODO: 프로필 이미지 업로드 처리 (추후 구현)
-      // 현재는 이미지 URL을 null로 전달
-      const profileImageUrl = null;
+      let profileImageUrl = null;
+
+      // 프로필 이미지가 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[SignupPage] 프로필 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          profileImageUrl = await uploadProfileImage(this.state.selectedImageFile);
+          console.log('[SignupPage] 프로필 이미지 업로드 완료:', profileImageUrl);
+        } catch (uploadError) {
+          console.error('[SignupPage] 프로필 이미지 업로드 실패:', uploadError);
+          alert('프로필 이미지 업로드에 실패했습니다. 이미지 없이 진행하시겠습니까?');
+          // 이미지 업로드 실패 시에도 회원가입은 진행 가능
+        }
+      }
 
       // DTO 생성
       const signupData = new SignupRequest({
@@ -263,10 +408,16 @@ class SignupPage extends Component {
       alert('회원가입이 완료되었습니다!');
 
       // 게시글 목록으로 이동
-      window.router.navigate('/posts');
+      navigateReplace('/posts');
     } catch (error) {
       console.error('회원가입 실패:', error);
-      alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+
+      // 에러 응답에 따라 적절한 에러 메시지 표시
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+      }
     }
   }
 }

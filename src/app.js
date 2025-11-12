@@ -1,5 +1,5 @@
 // 앱 초기화 및 라우트 설정
-import Router from './core/Router.js';
+import { createRouter } from './core/Router.js';
 import Header from './components/Header/index.js';
 import LoginPage from './pages/LoginPage/index.js';
 import SignupPage from './pages/SignupPage/index.js';
@@ -32,7 +32,7 @@ function initApp() {
   window.headerComponent = header;
 
   // 라우터 생성 및 라우트 등록
-  const router = new Router();
+  const router = createRouter();
   router.addRoute('/', LoginPage);
   router.addRoute('/login', LoginPage);
   router.addRoute('/signup', SignupPage);
@@ -45,9 +45,6 @@ function initApp() {
 
   // 라우터 초기화
   router.init();
-
-  // 전역 라우터 참조 (컴포넌트에서 사용)
-  window.router = router;
 
   // 라우트 변경 시 헤더 상태 업데이트
   window.updateHeaderState = updateHeaderState;

@@ -1,3 +1,5 @@
+import { navigate } from '../core/Router.js';
+
 /**
  * 로그인 상태 관리 서비스
  * localStorage를 사용하여 로그인 상태를 유지합니다.
@@ -45,7 +47,7 @@ class AuthService {
   static requireAuth() {
     if (!this.isLoggedIn()) {
       alert('로그인이 필요한 기능입니다.');
-      window.router.navigate('/login');
+      navigate('/login');
       return false;
     }
     return true;

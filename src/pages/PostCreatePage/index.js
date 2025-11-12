@@ -2,6 +2,9 @@ import Component from '../../core/Component.js';
 import { createPost } from '../../api/posts.js';
 import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
+import { processPostImage } from '../../utils/imageProcessor.js';
+import { navigateReplace } from '../../core/Router.js';
 
 class PostCreatePage extends Component {
   constructor(props) {
@@ -9,8 +12,8 @@ class PostCreatePage extends Component {
     this.state = {
       title: '',
       content: '',
-      image: null,
-      imageUrl: '',
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
+      imageUrl: '', // 미리보기 URL (Data URL)
       showImagePreview: false
     };
     this.loadStyle('/src/pages/PostCreatePage/style.css');
@@ -64,7 +67,7 @@ class PostCreatePage extends Component {
                   파일 선택
                 </button>
                 <span class="image-upload-text" id="imageUploadText">
-                  ${this.state.image ? this.state.image.name : '파일을 선택해주세요.'}
+                  ${this.state.selectedImageFile ? this.state.selectedImageFile.name : '파일을 선택해주세요.'}
                 </span>
                 <input
                   type="file"
@@ -180,26 +183,38 @@ class PostCreatePage extends Component {
 
     // 이미지 파일 선택
     if (imageInput) {
-      imageInput.addEventListener('change', (e) => {
+      imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        if (file) {
-          // 이미지 파일 형식 검증
-          const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-          if (!validTypes.includes(file.type)) {
-            alert('이미지 파일만 업로드 가능합니다. (jpg, png, gif)');
-            imageInput.value = '';
-            return;
-          }
+        if (!file) return;
 
+        // 파일 유효성 검사
+        const validation = validateImageFile(file, 'post');
+        if (!validation.valid) {
+          alert(validation.error);
+          imageInput.value = '';
+          return;
+        }
+
+        try {
+          // 이미지 처리 (리사이즈, WebP 변환)
+          console.log('[PostCreatePage] 이미지 처리 시작...');
+          const processedFile = await processPostImage(file);
+          console.log('[PostCreatePage] 이미지 처리 완료');
+
+          // FileReader로 미리보기 생성 (처리된 이미지)
           const reader = new FileReader();
           reader.onload = (e) => {
             this.setState({
-              image: file,
-              imageUrl: e.target.result,
+              selectedImageFile: processedFile, // 처리된 File 객체 저장
+              imageUrl: e.target.result, // 미리보기 URL
               showImagePreview: true
             });
           };
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(processedFile);
+        } catch (error) {
+          console.error('[PostCreatePage] 이미지 처리 실패:', error);
+          alert('이미지 처리에 실패했습니다.');
+          imageInput.value = '';
         }
       });
     }
@@ -209,7 +224,7 @@ class PostCreatePage extends Component {
       const removeBtn = e.target.closest('#imageRemoveBtn');
       if (removeBtn) {
         this.setState({
-          image: null,
+          selectedImageFile: null,
           imageUrl: '',
           showImagePreview: false
         });
@@ -266,13 +281,29 @@ class PostCreatePage extends Component {
 
     try {
       const memberId = AuthService.getCurrentUserId();
+      let imageUrl = null;
+
+      // 새로운 이미지 파일이 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[PostCreatePage] 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          imageUrl = await uploadPostImage(this.state.selectedImageFile);
+          console.log('[PostCreatePage] 이미지 업로드 완료:', imageUrl);
+        } catch (uploadError) {
+          console.error('[PostCreatePage] 이미지 업로드 실패:', uploadError);
+          alert('이미지 업로드에 실패했습니다.');
+          return; // 업로드 실패 시 제출 중단
+        }
+      }
 
       // PostCreateRequest DTO 생성
       const postData = new PostCreateRequest({
         memberId,
         title: this.state.title,
         content: this.state.content,
-        image: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
+        image: imageUrl // Cloudinary에 업로드된 이미지 URL
       });
 
       // API 호출
@@ -281,7 +312,7 @@ class PostCreatePage extends Component {
       alert('게시글이 작성되었습니다.');
 
       // 작성 완료 후 게시글 상세 페이지로 이동
-      window.router.navigate(`/posts/${response.postId}`);
+      navigateReplace(`/posts/${response.postId}`);
     } catch (error) {
       console.error('게시글 작성 실패:', error);
       alert('게시글 작성에 실패했습니다.');

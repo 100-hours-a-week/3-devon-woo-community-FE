@@ -2,6 +2,8 @@ import Component from '../../core/Component.js';
 import { getPostById, updatePost } from '../../api/posts.js';
 import PostUpdateRequest from '../../dto/request/post/PostUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
+import { navigateReplace } from '../../core/Router.js';
 
 class PostEditPage extends Component {
   constructor(props) {
@@ -9,8 +11,8 @@ class PostEditPage extends Component {
     this.state = {
       title: '',
       content: '',
-      image: null,
-      imageUrl: '',
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
+      imageUrl: '', // 미리보기 URL
       existingImageUrl: '', // 기존 이미지 URL
       showImagePreview: false,
       isLoading: true
@@ -74,10 +76,10 @@ class PostEditPage extends Component {
               <label class="form-label">이미지</label>
               <div class="image-upload-section">
                 <button type="button" class="image-upload-btn" id="imageUploadBtn">
-                  ${this.state.existingImageUrl ? '이미지 변경' : '파일 선택'}
+                  ${this.state.existingImageUrl || this.state.selectedImageFile ? '이미지 변경' : '파일 선택'}
                 </button>
                 <span class="image-upload-text" id="imageUploadText">
-                  ${this.state.image ? this.state.image.name : (this.state.existingImageUrl ? '기존 이미지' : '파일을 선택해주세요.')}
+                  ${this.state.selectedImageFile ? this.state.selectedImageFile.name : (this.state.existingImageUrl ? '기존 이미지' : '파일을 선택해주세요.')}
                 </span>
                 <input
                   type="file"
@@ -205,26 +207,27 @@ class PostEditPage extends Component {
     if (imageInput) {
       imageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) {
-          // 이미지 파일 형식 검증
-          const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-          if (!validTypes.includes(file.type)) {
-            alert('이미지 파일만 업로드 가능합니다. (jpg, png, gif)');
-            imageInput.value = '';
-            return;
-          }
+        if (!file) return;
 
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.setState({
-              image: file,
-              imageUrl: e.target.result,
-              showImagePreview: true,
-              existingImageUrl: '' // 새 이미지 선택 시 기존 이미지 제거
-            });
-          };
-          reader.readAsDataURL(file);
+        // 파일 유효성 검사
+        const validation = validateImageFile(file, 'post');
+        if (!validation.valid) {
+          alert(validation.error);
+          imageInput.value = '';
+          return;
         }
+
+        // FileReader로 미리보기 생성 (브라우저에만 표시)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.setState({
+            selectedImageFile: file, // File 객체 저장
+            imageUrl: e.target.result, // 미리보기 URL
+            showImagePreview: true,
+            existingImageUrl: '' // 새 이미지 선택 시 기존 이미지 제거
+          });
+        };
+        reader.readAsDataURL(file);
       });
     }
 
@@ -233,7 +236,7 @@ class PostEditPage extends Component {
       const removeBtn = e.target.closest('#imageRemoveBtn');
       if (removeBtn) {
         this.setState({
-          image: null,
+          selectedImageFile: null,
           imageUrl: '',
           showImagePreview: false,
           existingImageUrl: ''
@@ -274,7 +277,7 @@ class PostEditPage extends Component {
       // 작성자 확인 - 본인 게시글만 수정 가능
       if (post.member.memberId !== memberId) {
         alert('본인의 게시글만 수정할 수 있습니다.');
-        window.router.navigate(`/posts/${this.postId}`);
+        navigate(`/posts/${this.postId}`);
         return;
       }
 
@@ -288,7 +291,7 @@ class PostEditPage extends Component {
       console.error('게시글 로드 실패:', error);
       this.setState({ isLoading: false });
       alert('게시글을 불러오는데 실패했습니다.');
-      window.router.navigate('/posts');
+      navigate('/posts');
     }
   }
 
@@ -322,13 +325,29 @@ class PostEditPage extends Component {
 
     try {
       const memberId = AuthService.getCurrentUserId();
+      let imageUrl = this.state.existingImageUrl || null;
+
+      // 새로운 이미지 파일이 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[PostEditPage] 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          imageUrl = await uploadPostImage(this.state.selectedImageFile);
+          console.log('[PostEditPage] 이미지 업로드 완료:', imageUrl);
+        } catch (uploadError) {
+          console.error('[PostEditPage] 이미지 업로드 실패:', uploadError);
+          alert('이미지 업로드에 실패했습니다.');
+          return; // 업로드 실패 시 제출 중단
+        }
+      }
 
       // PostUpdateRequest DTO 생성
       const updateData = new PostUpdateRequest({
         memberId,
         title: this.state.title,
         content: this.state.content,
-        image: null  // TODO: 이미지 업로드 기능 구현 후 업데이트
+        image: imageUrl // 새로 업로드된 이미지 또는 기존 이미지 URL
       });
 
       // API 호출
@@ -337,7 +356,7 @@ class PostEditPage extends Component {
       alert('게시글이 수정되었습니다.');
 
       // 수정 완료 후 상세 페이지로 이동
-      window.router.navigate(`/posts/${this.postId}`);
+      navigateReplace(`/posts/${this.postId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
 
