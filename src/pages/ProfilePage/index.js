@@ -370,7 +370,8 @@ class ProfilePage extends Component {
   isFormValid() {
     const hasValidNickname = this.state.nickname.trim() !== '' && this.state.isNicknameValid;
     const nicknameChanged = this.state.nickname.trim() !== this.originalNickname;
-    return hasValidNickname && nicknameChanged;
+    const imageChanged = this.state.selectedImageFile !== null;
+    return hasValidNickname && (nicknameChanged || imageChanged);
   }
 
   // 제출 버튼 활성화 상태 업데이트
