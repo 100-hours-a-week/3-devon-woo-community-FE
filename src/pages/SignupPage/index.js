@@ -2,6 +2,7 @@ import Component from '../../core/Component.js';
 import { signup } from '../../api/auth.js';
 import SignupRequest from '../../dto/request/auth/SignupRequest.js';
 import AuthService from '../../utils/AuthService.js';
+import { navigateReplace } from '../../core/Router.js';
 
 class SignupPage extends Component {
   constructor(props) {
@@ -263,7 +264,7 @@ class SignupPage extends Component {
       alert('회원가입이 완료되었습니다!');
 
       // 게시글 목록으로 이동
-      window.router.navigate('/posts');
+      navigateReplace('/posts');
     } catch (error) {
       console.error('회원가입 실패:', error);
       alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');

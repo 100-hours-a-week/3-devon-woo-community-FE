@@ -3,6 +3,7 @@ import { getPostById, updatePost } from '../../api/posts.js';
 import PostUpdateRequest from '../../dto/request/post/PostUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
+import { navigateReplace } from '../../core/Router.js';
 
 class PostEditPage extends Component {
   constructor(props) {
@@ -276,7 +277,7 @@ class PostEditPage extends Component {
       // 작성자 확인 - 본인 게시글만 수정 가능
       if (post.member.memberId !== memberId) {
         alert('본인의 게시글만 수정할 수 있습니다.');
-        window.router.navigate(`/posts/${this.postId}`);
+        navigate(`/posts/${this.postId}`);
         return;
       }
 
@@ -290,7 +291,7 @@ class PostEditPage extends Component {
       console.error('게시글 로드 실패:', error);
       this.setState({ isLoading: false });
       alert('게시글을 불러오는데 실패했습니다.');
-      window.router.navigate('/posts');
+      navigate('/posts');
     }
   }
 
@@ -355,7 +356,7 @@ class PostEditPage extends Component {
       alert('게시글이 수정되었습니다.');
 
       // 수정 완료 후 상세 페이지로 이동
-      window.router.navigate(`/posts/${this.postId}`);
+      navigateReplace(`/posts/${this.postId}`);
     } catch (error) {
       console.error('게시글 수정 실패:', error);
 

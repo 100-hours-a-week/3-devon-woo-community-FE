@@ -4,6 +4,7 @@ import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
 import { processPostImage } from '../../utils/imageProcessor.js';
+import { navigateReplace } from '../../core/Router.js';
 
 class PostCreatePage extends Component {
   constructor(props) {
@@ -311,7 +312,7 @@ class PostCreatePage extends Component {
       alert('게시글이 작성되었습니다.');
 
       // 작성 완료 후 게시글 상세 페이지로 이동
-      window.router.navigate(`/posts/${response.postId}`);
+      navigateReplace(`/posts/${response.postId}`);
     } catch (error) {
       console.error('게시글 작성 실패:', error);
       alert('게시글 작성에 실패했습니다.');

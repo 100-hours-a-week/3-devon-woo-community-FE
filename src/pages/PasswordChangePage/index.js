@@ -3,6 +3,7 @@ import { updatePassword } from '../../api/members.js';
 import PasswordUpdateRequest from '../../dto/request/member/PasswordUpdateRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { validatePassword, validatePasswordConfirm } from '../../validation/index.js';
+import { navigate } from '../../core/Router.js';
 
 class PasswordChangePage extends Component {
   constructor(props) {
@@ -308,7 +309,7 @@ class PasswordChangePage extends Component {
 
       // 선택: 프로필 페이지로 돌아가기
       setTimeout(() => {
-        window.router.navigate('/profile');
+        navigate('/profile');
       }, 1500);
     } catch (error) {
       console.error('비밀번호 변경 실패:', error);

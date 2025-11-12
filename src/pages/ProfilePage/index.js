@@ -6,6 +6,7 @@ import ProfileImageUploader from '../../components/ProfileImageUploader/index.js
 import Toast from '../../components/Toast/index.js';
 import Modal from '../../components/Modal/index.js';
 import { uploadProfileImage } from '../../utils/imageUpload.js';
+import { navigate } from '../../core/Router.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -468,7 +469,7 @@ class ProfilePage extends Component {
       AuthService.logout();
 
       // 로그인 페이지로 이동
-      window.router.navigate('/login');
+      navigate('/login');
     } catch (error) {
       console.error('회원 탈퇴 실패:', error);
       alert('회원 탈퇴에 실패했습니다.');

@@ -2,6 +2,7 @@ import Component from '../../core/Component.js';
 import PostCard from '../../components/PostCard/index.js';
 import LoadingSpinner from '../../components/LoadingSpinner/index.js';
 import { getPosts } from '../../api/posts.js';
+import { navigate } from '../../core/Router.js';
 
 class PostListPage extends Component {
   constructor(props) {
@@ -88,7 +89,7 @@ class PostListPage extends Component {
     // 게시글 작성 버튼 클릭
     if (createPostBtn) {
       createPostBtn.addEventListener('click', () => {
-        window.router.navigateReplace('/posts/create');
+        navigate('/posts/create');
       });
     }
 
@@ -98,7 +99,7 @@ class PostListPage extends Component {
         const postCard = e.target.closest('.post-card');
         if (postCard) {
           const postId = postCard.dataset.postId;
-          window.router.navigate(`/posts/${postId}`);
+          navigate(`/posts/${postId}`);
         }
       });
     }

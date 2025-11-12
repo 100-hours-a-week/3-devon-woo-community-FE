@@ -1,6 +1,7 @@
 import Component from '../../core/Component.js';
 import AuthService from '../../utils/AuthService.js';
 import { getMemberProfile } from '../../api/members.js';
+import { navigate } from '../../core/Router.js';
 
 class Header extends Component {
   constructor(props) {
@@ -165,7 +166,7 @@ class Header extends Component {
     alert('로그아웃되었습니다.');
 
     // 로그인 페이지로 이동
-    window.router.navigate('/login');
+    navigate('/login');
   }
 
   // 뒤로가기 버튼 표시/숨김
