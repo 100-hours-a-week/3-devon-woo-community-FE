@@ -54,19 +54,19 @@ export default class MockServer {
       return { success: true, data: PageResponse.createDummy(items, 0, 20, 100) };
     }
 
-    if (url.match(/\/posts\/\d+/) && method === 'GET') {
+    if (url.match(/\/api\/v1\/posts\/\d+(\?.*)?$/) && method === 'GET' && !url.includes('/comments')) {
       const PostResponse = (await import('../../dto/response/post/PostResponse.js')).default;
       const id = parseInt(url.match(/\/posts\/(\d+)/)[1]);
       return { success: true, data: PostResponse.createDummy(id) };
     }
 
-    if (url.match(/\/posts\/\d+$/) && method === 'PATCH') {
+    if (url.match(/\/api\/v1\/posts\/\d+(\?.*)?$/) && method === 'PATCH') {
       const PostResponse = (await import('../../dto/response/post/PostResponse.js')).default;
       const id = parseInt(url.match(/\/posts\/(\d+)/)[1]);
       return { success: true, data: PostResponse.createDummy(id) };
     }
 
-    if (url.match(/\/posts\/\d+$/) && method === 'DELETE') {
+    if (url.match(/\/api\/v1\/posts\/\d+(\?.*)?$/) && method === 'DELETE') {
       return { success: true, data: null };
     }
 
@@ -79,12 +79,8 @@ export default class MockServer {
     }
 
     // ---------------- COMMENTS ----------------
-    if (url.includes('/posts/') && url.includes('/comments') && method === 'POST') {
-      const CommentResponse = (await import('../../dto/response/comment/CommentResponse.js')).default;
-      return { success: true, data: CommentResponse.createDefault() };
-    }
-
-    if (url.includes('/posts/') && url.includes('/comments?') && method === 'GET') {
+    // 댓글 목록 조회: GET /posts/{postId}/comments
+    if (url.match(/\/api\/v1\/posts\/\d+\/comments(\?.*)?$/) && method === 'GET') {
       const CommentResponse = (await import('../../dto/response/comment/CommentResponse.js')).default;
       const PageResponse = (await import('../../dto/response/common/PageResponse.js')).default;
       const postId = parseInt(url.match(/\/posts\/(\d+)/)[1]);
@@ -92,19 +88,25 @@ export default class MockServer {
       return { success: true, data: PageResponse.createDummy(items, 0, 10, 50) };
     }
 
-    if (url.match(/\/comments\/\d+$/) && method === 'GET') {
+    // 댓글 생성: POST /posts/{postId}/comments
+    if (url.match(/\/api\/v1\/posts\/\d+\/comments$/) && method === 'POST') {
+      const CommentResponse = (await import('../../dto/response/comment/CommentResponse.js')).default;
+      return { success: true, data: CommentResponse.createDefault() };
+    }
+
+    if (url.match(/\/api\/v1\/comments\/\d+$/) && method === 'GET') {
       const CommentResponse = (await import('../../dto/response/comment/CommentResponse.js')).default;
       const id = parseInt(url.match(/\/comments\/(\d+)/)[1]);
       return { success: true, data: CommentResponse.createDummy(id) };
     }
 
-    if (url.match(/\/comments\/\d+$/) && method === 'PATCH') {
+    if (url.match(/\/api\/v1\/comments\/\d+$/) && method === 'PATCH') {
       const CommentResponse = (await import('../../dto/response/comment/CommentResponse.js')).default;
       const id = parseInt(url.match(/\/comments\/(\d+)/)[1]);
       return { success: true, data: CommentResponse.createDummy(id) };
     }
 
-    if (url.match(/\/comments\/\d+$/) && method === 'DELETE') {
+    if (url.match(/\/api\/v1\/comments\/\d+$/) && method === 'DELETE') {
       return { success: true, data: null };
     }
 
