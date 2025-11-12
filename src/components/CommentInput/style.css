@@ -8,6 +8,7 @@
   padding: var(--spacing-sm);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  background-color: var(--color-background-white);
 }
 
 /* 댓글 입력 textarea */
