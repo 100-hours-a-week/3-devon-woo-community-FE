@@ -6,10 +6,8 @@
 
 /* 폼 래퍼 */
 .form-wrapper {
-  background-color: var(--color-background-white);
   border-radius: var(--radius-xl);
   padding: 40px;
-  box-shadow: var(--shadow-md);
 }
 
 .form-title {
@@ -175,7 +173,7 @@
 
 /* 제출 버튼 */
 .submit-btn {
-  width: 100%;
+  width: 60%;
   padding: var(--spacing-md);
   border: none;
   border-radius: var(--radius-lg);
@@ -184,6 +182,8 @@
   cursor: pointer;
   transition: background-color var(--transition-normal);
   margin-top: var(--spacing-md);
+    margin: var(--spacing-md) auto 0; /* 가운데 정렬 */
+  display: block; /* inline 요소면 margin auto 안 먹힘 */
 }
 
 /* 버튼 비활성화 상태 (제목 또는 내용 미입력) */

@@ -18,7 +18,7 @@
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
   max-width: 400px;
-  width: 90%;
+  width: 30%;
   box-shadow: var(--shadow-xl);
 }
 
@@ -59,12 +59,12 @@
 
 /* 취소 버튼 */
 .modal-btn.cancel-btn {
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+  background-color: #000;
+  color: #fff
 }
 
 .modal-btn.cancel-btn:hover {
-  background-color: var(--color-border-primary);
+  background-color: #555;
 }
 
 /* 확인 버튼 */
