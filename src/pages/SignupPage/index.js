@@ -3,6 +3,8 @@ import { signup } from '../../api/auth.js';
 import SignupRequest from '../../dto/request/auth/SignupRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigateReplace } from '../../core/Router.js';
+import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
+import { uploadProfileImage } from '../../utils/imageUpload.js';
 import {
   validateEmail,
   validatePassword,
@@ -14,7 +16,7 @@ class SignupPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      profileImage: null,
+      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
       email: '',
       password: '',
       passwordConfirm: '',
@@ -25,6 +27,7 @@ class SignupPage extends Component {
       nicknameError: ''
     };
     this.loadStyle('/src/pages/SignupPage/style.css');
+    this.profileImageUploader = null; // ProfileImageUploader 인스턴스
   }
 
   render() {
@@ -35,27 +38,8 @@ class SignupPage extends Component {
 
           <form class="signup-form" id="signupForm">
             <!-- 프로필 이미지 업로드 -->
-            <div class="form-group profile-group">
-              <label class="form-label">프로필 사진</label>
-              <div class="profile-upload-section">
-                <div class="profile-image-container" id="profileImageContainer">
-                  <img src="" alt="프로필 이미지" class="profile-image" id="profileImage" style="display: none;">
-                  <div class="profile-placeholder" id="profilePlaceholder">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                      <path d="M20 10V30M10 20H30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </div>
-                  <input
-                    type="file"
-                    id="profileInput"
-                    class="profile-input-hidden"
-                    accept="image/jpeg,image/png,image/jpg"
-                  >
-                </div>
-                <button type="button" class="profile-delete-btn" id="profileDeleteBtn" style="display: none;">
-                  이미지 삭제
-                </button>
-              </div>
+            <div class="form-group">
+              ${this.renderProfileImageUploader()}
             </div>
 
             <!-- 이메일 입력 -->
@@ -134,6 +118,20 @@ class SignupPage extends Component {
     `;
   }
 
+  renderProfileImageUploader() {
+    if (!this.profileImageUploader) {
+      this.profileImageUploader = new ProfileImageUploader({
+        imageUrl: '',
+        onFileSelected: (file) => {
+          // File 객체만 저장 (업로드는 제출 시)
+          this.state.selectedImageFile = file;
+          console.log('[SignupPage] 프로필 이미지 선택됨:', file.name);
+        }
+      });
+    }
+    return this.profileImageUploader.render();
+  }
+
   mounted() {
     // 회원가입 페이지에서는 뒤로가기 버튼 표시
     if (window.headerComponent) {
@@ -157,11 +155,6 @@ class SignupPage extends Component {
   }
 
   setupEventListeners() {
-    const profileImageContainer = this.$el.querySelector('#profileImageContainer');
-    const profileInput = this.$el.querySelector('#profileInput');
-    const profileImage = this.$el.querySelector('#profileImage');
-    const profilePlaceholder = this.$el.querySelector('#profilePlaceholder');
-    const profileDeleteBtn = this.$el.querySelector('#profileDeleteBtn');
     const emailInput = this.$el.querySelector('#emailInput');
     const passwordInput = this.$el.querySelector('#passwordInput');
     const passwordConfirmInput = this.$el.querySelector('#passwordConfirmInput');
@@ -169,41 +162,13 @@ class SignupPage extends Component {
     const submitBtn = this.$el.querySelector('#submitBtn');
     const form = this.$el.querySelector('#signupForm');
 
-    // 프로필 이미지 클릭
-    if (profileImageContainer) {
-      profileImageContainer.addEventListener('click', () => {
-        profileInput.click();
-      });
-    }
-
-    // 프로필 이미지 선택
-    if (profileInput) {
-      profileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            profileImage.src = e.target.result;
-            profileImage.style.display = 'block';
-            profilePlaceholder.style.display = 'none';
-            profileDeleteBtn.style.display = 'block';
-            this.state.profileImage = file;
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
-
-    // 프로필 이미지 삭제
-    if (profileDeleteBtn) {
-      profileDeleteBtn.addEventListener('click', () => {
-        profileImage.src = '';
-        profileImage.style.display = 'none';
-        profilePlaceholder.style.display = 'flex';
-        profileDeleteBtn.style.display = 'none';
-        profileInput.value = '';
-        this.state.profileImage = null;
-      });
+    // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
+    if (this.profileImageUploader) {
+      const uploaderEl = this.$el.querySelector('.profile-image-uploader');
+      if (uploaderEl) {
+        this.profileImageUploader.$el = uploaderEl;
+        this.profileImageUploader.setupEventListeners();
+      }
     }
 
     // 이메일 입력
@@ -409,9 +374,22 @@ class SignupPage extends Component {
     }
 
     try {
-      // TODO: 프로필 이미지 업로드 처리 (추후 구현)
-      // 현재는 이미지 URL을 null로 전달
-      const profileImageUrl = null;
+      let profileImageUrl = null;
+
+      // 프로필 이미지가 선택되었다면 업로드
+      if (this.state.selectedImageFile) {
+        console.log('[SignupPage] 프로필 이미지 업로드 시작...');
+
+        try {
+          // Cloudinary에 업로드
+          profileImageUrl = await uploadProfileImage(this.state.selectedImageFile);
+          console.log('[SignupPage] 프로필 이미지 업로드 완료:', profileImageUrl);
+        } catch (uploadError) {
+          console.error('[SignupPage] 프로필 이미지 업로드 실패:', uploadError);
+          alert('프로필 이미지 업로드에 실패했습니다. 이미지 없이 진행하시겠습니까?');
+          // 이미지 업로드 실패 시에도 회원가입은 진행 가능
+        }
+      }
 
       // DTO 생성
       const signupData = new SignupRequest({
