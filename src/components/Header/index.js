@@ -31,7 +31,7 @@ class Header extends Component {
             </button>
           ` : ''}
 
-          <h1 class="header-title">아무 말 대잔치</h1>
+          <h1 class="header-title ${this.isAuthPage() ? 'non-clickable' : ''}" id="headerTitle">아무 말 대잔치</h1>
 
           <!-- profile icon -->
           ${this.state.showProfileIcon ? `
@@ -80,11 +80,23 @@ class Header extends Component {
     const backButton = this.$el.querySelector('#backButton');
     const profileIconBtn = this.$el.querySelector('#profileIconBtn');
     const logoutBtn = this.$el.querySelector('#logoutBtn');
+    const headerTitle = this.$el.querySelector('#headerTitle');
 
     // 뒤로가기 버튼
     if (backButton) {
       backButton.addEventListener('click', () => {
         window.history.back();
+      });
+    }
+
+    // 헤더 타이틀 클릭 - /posts로 이동 (로그인/회원가입 페이지 제외)
+    if (headerTitle) {
+      headerTitle.addEventListener('click', () => {
+        const currentPage = this.state.currentPage;
+        // 로그인/회원가입 페이지가 아닐 때만 이동
+        if (currentPage !== '/login' && currentPage !== '/' && currentPage !== '/signup') {
+          navigate('/posts');
+        }
       });
     }
 
@@ -182,6 +194,12 @@ class Header extends Component {
   // 현재 페이지 설정 (활성화 표시용)
   setCurrentPage(page) {
     this.setState({ currentPage: page });
+  }
+
+  // 인증 페이지(로그인/회원가입) 여부 확인
+  isAuthPage() {
+    const currentPage = this.state.currentPage;
+    return currentPage === '/login' || currentPage === '/' || currentPage === '/signup';
   }
 
   beforeUnmount() {
