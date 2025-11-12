@@ -15,7 +15,7 @@ class PostListPage extends Component {
     };
     this.loadStyle('/src/pages/PostListPage/style.css');
     this.observer = null;
-    this.pageSize = 10;
+    this.pageSize = 20;
   }
 
   render() {
