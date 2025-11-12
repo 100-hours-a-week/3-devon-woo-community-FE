@@ -3,6 +3,12 @@ import { signup } from '../../api/auth.js';
 import SignupRequest from '../../dto/request/auth/SignupRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigateReplace } from '../../core/Router.js';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirm,
+  validateNickname
+} from '../../validation/index.js';
 
 class SignupPage extends Component {
   constructor(props) {
@@ -12,7 +18,11 @@ class SignupPage extends Component {
       email: '',
       password: '',
       passwordConfirm: '',
-      nickname: ''
+      nickname: '',
+      emailError: '',
+      passwordError: '',
+      passwordConfirmError: '',
+      nicknameError: ''
     };
     this.loadStyle('/src/pages/SignupPage/style.css');
   }
@@ -46,7 +56,6 @@ class SignupPage extends Component {
                   이미지 삭제
                 </button>
               </div>
-              <p class="helper-text" id="profileHelperText">* helper text</p>
             </div>
 
             <!-- 이메일 입력 -->
@@ -55,11 +64,13 @@ class SignupPage extends Component {
               <input
                 type="email"
                 id="emailInput"
-                class="form-input"
+                class="form-input ${this.state.emailError ? 'error' : ''}"
                 placeholder="이메일을 입력해주세요"
                 value="${this.state.email}"
               />
-              <p class="helper-text error" id="emailHelperText"></p>
+              <p class="helper-text ${this.state.emailError ? 'show' : ''}" id="emailHelper">
+                ${this.state.emailError || '*올바른 이메일 주소를 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 비밀번호 입력 -->
@@ -68,11 +79,13 @@ class SignupPage extends Component {
               <input
                 type="password"
                 id="passwordInput"
-                class="form-input"
+                class="form-input ${this.state.passwordError ? 'error' : ''}"
                 placeholder="비밀번호를 입력해주세요"
                 value="${this.state.password}"
               />
-              <p class="helper-text error" id="passwordHelperText"></p>
+              <p class="helper-text ${this.state.passwordError ? 'show' : ''}" id="passwordHelper">
+                ${this.state.passwordError || '*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다.'}
+              </p>
             </div>
 
             <!-- 비밀번호 확인 -->
@@ -81,11 +94,13 @@ class SignupPage extends Component {
               <input
                 type="password"
                 id="passwordConfirmInput"
-                class="form-input"
+                class="form-input ${this.state.passwordConfirmError ? 'error' : ''}"
                 placeholder="비밀번호를 한번 더 입력해주세요"
                 value="${this.state.passwordConfirm}"
               />
-              <p class="helper-text error" id="passwordConfirmHelperText"></p>
+              <p class="helper-text ${this.state.passwordConfirmError ? 'show' : ''}" id="passwordConfirmHelper">
+                ${this.state.passwordConfirmError || '*비밀번호를 한번 더 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 닉네임 입력 -->
@@ -94,12 +109,14 @@ class SignupPage extends Component {
               <input
                 type="text"
                 id="nicknameInput"
-                class="form-input"
+                class="form-input ${this.state.nicknameError ? 'error' : ''}"
                 placeholder="닉네임을 입력해주세요"
-                maxlength="10"
+                maxlength="30"
                 value="${this.state.nickname}"
               />
-              <p class="helper-text error" id="nicknameHelperText"></p>
+              <p class="helper-text ${this.state.nicknameError ? 'show' : ''}" id="nicknameHelper">
+                ${this.state.nicknameError || '*닉네임을 입력해주세요.'}
+              </p>
             </div>
 
             <!-- 회원가입 버튼 -->
@@ -125,10 +142,18 @@ class SignupPage extends Component {
     }
 
     this.setupEventListeners();
+
+    // 초기 버튼 상태 체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   updated() {
     this.setupEventListeners();
+
+    // 버튼 상태 재체크
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
@@ -181,32 +206,99 @@ class SignupPage extends Component {
       });
     }
 
-    // 입력 이벤트
+    // 이메일 입력
     if (emailInput) {
       emailInput.addEventListener('input', (e) => {
         this.state.email = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.emailError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#emailHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        emailInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      emailInput.addEventListener('blur', () => {
+        this.checkEmailValidity();
       });
     }
 
+    // 비밀번호 입력
     if (passwordInput) {
       passwordInput.addEventListener('input', (e) => {
         this.state.password = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.passwordError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      passwordInput.addEventListener('blur', () => {
+        this.checkPasswordValidity();
       });
     }
 
+    // 비밀번호 확인 입력
     if (passwordConfirmInput) {
       passwordConfirmInput.addEventListener('input', (e) => {
         this.state.passwordConfirm = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.passwordConfirmError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#passwordConfirmHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        passwordConfirmInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      passwordConfirmInput.addEventListener('blur', () => {
+        this.checkPasswordConfirmValidity();
       });
     }
 
+    // 닉네임 입력
     if (nicknameInput) {
       nicknameInput.addEventListener('input', (e) => {
         this.state.nickname = e.target.value;
-        this.checkFormValid(submitBtn);
+        this.state.nicknameError = '';
+
+        // 헬퍼 텍스트 숨김
+        const helperText = this.$el.querySelector('#nicknameHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        // 입력 필드 에러 상태 제거
+        nicknameInput.classList.remove('error');
+
+        // 버튼 활성화 상태 업데이트
+        this.updateSubmitButton(submitBtn);
+      });
+
+      nicknameInput.addEventListener('blur', () => {
+        this.checkNicknameValidity();
       });
     }
 
@@ -226,19 +318,93 @@ class SignupPage extends Component {
     }
   }
 
-  checkFormValid(submitBtn) {
-    if (this.state.email && this.state.password &&
-        this.state.passwordConfirm && this.state.nickname) {
-      submitBtn.disabled = false;
-    } else {
-      submitBtn.disabled = true;
+  // 이메일 유효성 검사
+  checkEmailValidity() {
+    const errorMessage = validateEmail(this.state.email);
+
+    if (errorMessage) {
+      this.setState({ emailError: errorMessage });
+      return false;
+    }
+
+    this.setState({ emailError: '' });
+    return true;
+  }
+
+  // 비밀번호 유효성 검사
+  checkPasswordValidity() {
+    const errorMessage = validatePassword(this.state.password);
+
+    if (errorMessage) {
+      this.setState({ passwordError: errorMessage });
+      return false;
+    }
+
+    this.setState({ passwordError: '' });
+    return true;
+  }
+
+  // 비밀번호 확인 유효성 검사
+  checkPasswordConfirmValidity() {
+    const errorMessage = validatePasswordConfirm(this.state.password, this.state.passwordConfirm);
+
+    if (errorMessage) {
+      this.setState({ passwordConfirmError: errorMessage });
+      return false;
+    }
+
+    this.setState({ passwordConfirmError: '' });
+    return true;
+  }
+
+  // 닉네임 유효성 검사
+  checkNicknameValidity() {
+    const errorMessage = validateNickname(this.state.nickname);
+
+    if (errorMessage) {
+      this.setState({ nicknameError: errorMessage });
+      return false;
+    }
+
+    this.setState({ nicknameError: '' });
+    return true;
+  }
+
+  // 폼 유효성 검사
+  isFormValid() {
+    const hasEmail = this.state.email.trim() !== '';
+    const hasPassword = this.state.password.trim() !== '';
+    const hasPasswordConfirm = this.state.passwordConfirm.trim() !== '';
+    const hasNickname = this.state.nickname.trim() !== '';
+    const noErrors = !this.state.emailError && !this.state.passwordError &&
+                     !this.state.passwordConfirmError && !this.state.nicknameError;
+
+    return hasEmail && hasPassword && hasPasswordConfirm && hasNickname && noErrors;
+  }
+
+  // 제출 버튼 활성화 상태 업데이트
+  updateSubmitButton(submitBtn) {
+    if (submitBtn) {
+      if (this.isFormValid()) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
     }
   }
 
   async handleSubmit() {
-    // 비밀번호 확인 검증
-    if (this.state.password !== this.state.passwordConfirm) {
-      alert('비밀번호가 일치하지 않습니다.');
+    if (!this.isFormValid()) {
+      return;
+    }
+
+    // 최종 유효성 검사
+    const isEmailValid = this.checkEmailValidity();
+    const isPasswordValid = this.checkPasswordValidity();
+    const isPasswordConfirmValid = this.checkPasswordConfirmValidity();
+    const isNicknameValid = this.checkNicknameValidity();
+
+    if (!isEmailValid || !isPasswordValid || !isPasswordConfirmValid || !isNicknameValid) {
       return;
     }
 
@@ -267,7 +433,13 @@ class SignupPage extends Component {
       navigateReplace('/posts');
     } catch (error) {
       console.error('회원가입 실패:', error);
-      alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+
+      // 에러 응답에 따라 적절한 에러 메시지 표시
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+      }
     }
   }
 }

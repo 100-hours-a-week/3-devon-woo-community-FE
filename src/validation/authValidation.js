@@ -1,5 +1,39 @@
-import { EMAIL_PATTERN, PASSWORD_PATTERN } from './patterns.js';
+import { EMAIL_PATTERN, PASSWORD_PATTERN, NICKNAME_MAX_LENGTH } from './patterns.js';
 import { VALIDATION_MESSAGES } from './messages.js';
+
+/**
+ * 이메일 유효성 검증 (단일 필드)
+ * @param {string} email - 검증할 이메일
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validateEmail(email) {
+  if (!email) {
+    return VALIDATION_MESSAGES.REQUIRED_FIELD;
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return VALIDATION_MESSAGES.INVALID_EMAIL_FORMAT;
+  }
+
+  return "";
+}
+
+/**
+ * 닉네임 유효성 검증 (단일 필드)
+ * @param {string} nickname - 검증할 닉네임
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validateNickname(nickname) {
+  if (!nickname) {
+    return VALIDATION_MESSAGES.REQUIRED_FIELD;
+  }
+
+  if (nickname.length > NICKNAME_MAX_LENGTH) {
+    return VALIDATION_MESSAGES.INVALID_NICKNAME;
+  }
+
+  return "";
+}
 
 /**
  * LoginRequest 유효성 검증

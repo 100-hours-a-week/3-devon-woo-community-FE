@@ -448,7 +448,7 @@ class ProfilePage extends Component {
 
       // 헤더의 프로필 이미지 리프레시
       if (window.headerComponent) {
-        window.headerComponent.loadProfileImage();
+        window.headerComponent.refreshProfileImage();
       }
 
       // 버튼 비활성화 (변경사항이 없으므로)

@@ -2,7 +2,12 @@
  * Validation 함수들의 중앙 집중식 export
  */
 
-export { validateLoginRequest, validateSignupRequest } from './authValidation.js';
+export {
+  validateLoginRequest,
+  validateSignupRequest,
+  validateEmail,
+  validateNickname
+} from './authValidation.js';
 export {
   validateMemberUpdateRequest,
   validatePasswordUpdateRequest,

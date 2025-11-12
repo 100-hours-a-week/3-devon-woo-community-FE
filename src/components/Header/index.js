@@ -16,6 +16,7 @@ class Header extends Component {
     };
     this.loadStyle('/src/components/Header/style.css');
     this.outsideClickHandler = null;
+    this.profileImageLoaded = false; // 프로필 이미지 로드 완료 플래그
   }
 
   render() {
@@ -75,8 +76,8 @@ class Header extends Component {
   updated() {
     this.setupEventListeners();
 
-    // showProfileIcon이 활성화될 때 프로필 이미지 로드
-    if (this.state.showProfileIcon && !this.state.profileImage) {
+    // showProfileIcon이 활성화되고 아직 로드하지 않은 경우에만 프로필 이미지 로드
+    if (this.state.showProfileIcon && !this.profileImageLoaded) {
       this.loadProfileImage();
     }
   }
@@ -162,15 +163,18 @@ class Header extends Component {
   // 프로필 이미지 로드
   async loadProfileImage() {
     if (!this.state.showProfileIcon) return;
+    if (this.profileImageLoaded) return; // 이미 로드했으면 중복 로드 방지
 
     const memberId = AuthService.getCurrentUserId();
     if (!memberId) return;
 
     try {
       const profile = await getMemberProfile(memberId);
+      this.profileImageLoaded = true; // 로드 완료 플래그 설정
       this.setState({ profileImage: profile.profileImage });
     } catch (error) {
       console.error('프로필 이미지 로드 실패:', error);
+      this.profileImageLoaded = true; // 실패해도 플래그 설정 (재시도 방지)
     }
   }
 
@@ -198,7 +202,16 @@ class Header extends Component {
     // 프로필 아이콘을 표시할 때 프로필 이미지 로드
     if (show) {
       this.loadProfileImage();
+    } else {
+      // 숨길 때 플래그 리셋
+      this.profileImageLoaded = false;
     }
+  }
+
+  // 프로필 이미지 리프레시 (ProfilePage에서 업데이트 후 호출용)
+  refreshProfileImage() {
+    this.profileImageLoaded = false; // 플래그 리셋
+    this.loadProfileImage(); // 다시 로드
   }
 
   // 현재 페이지 설정 (활성화 표시용)
