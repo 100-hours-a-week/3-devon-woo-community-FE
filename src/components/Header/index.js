@@ -74,6 +74,11 @@ class Header extends Component {
 
   updated() {
     this.setupEventListeners();
+
+    // showProfileIcon이 활성화될 때 프로필 이미지 로드
+    if (this.state.showProfileIcon && !this.state.profileImage) {
+      this.loadProfileImage();
+    }
   }
 
   setupEventListeners() {
@@ -189,6 +194,11 @@ class Header extends Component {
   // 프로필 아이콘 표시/숨김
   showProfileIcon(show) {
     this.setState({ showProfileIcon: show });
+
+    // 프로필 아이콘을 표시할 때 프로필 이미지 로드
+    if (show) {
+      this.loadProfileImage();
+    }
   }
 
   // 현재 페이지 설정 (활성화 표시용)

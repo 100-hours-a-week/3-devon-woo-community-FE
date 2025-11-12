@@ -446,6 +446,11 @@ class ProfilePage extends Component {
       // originalNickname 업데이트 (다음 변경 감지를 위해)
       this.originalNickname = this.state.nickname;
 
+      // 헤더의 프로필 이미지 리프레시
+      if (window.headerComponent) {
+        window.headerComponent.loadProfileImage();
+      }
+
       // 버튼 비활성화 (변경사항이 없으므로)
       const submitBtn = this.$el.querySelector('#submitBtn');
       this.updateSubmitButton(submitBtn);
