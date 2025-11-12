@@ -4,9 +4,11 @@
 
 export const VALIDATION_MESSAGES = {
   REQUIRED_FIELD: "필수 입력 항목입니다",
-  INVALID_EMAIL_FORMAT: "올바른 이메일 형식이 아닙니다",
-  INVALID_PASSWORD_FORMAT: "비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다",
+  REQUIRED_EMAIL: "이메일을 입력해주세요",
+  INVALID_EMAIL_FORMAT: "올바른 이메일 주소 형식을 입력해주세요 (예: example@example.com)",
   REQUIRED_PASSWORD: "비밀번호를 입력해주세요",
+  INVALID_PASSWORD_FORMAT: "비밀번호는 8~20자이며 대문자, 소문자, 숫자, 특수문자를 포함해야 합니다",
+  LOGIN_FAILED: "아이디 또는 비밀번호를 확인해주세요",
   PASSWORD_MISMATCH: "비밀번호가 일치하지 않습니다",
   INVALID_NICKNAME: "닉네임은 최대 30자까지 입력 가능합니다",
   INVALID_IMAGE_URL: "올바른 이미지 URL 형식이 아닙니다",

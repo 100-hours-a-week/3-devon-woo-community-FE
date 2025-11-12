@@ -7,12 +7,29 @@ import { VALIDATION_MESSAGES } from './messages.js';
  * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
  */
 export function validateEmail(email) {
-  if (!email) {
-    return VALIDATION_MESSAGES.REQUIRED_FIELD;
+  if (!email || email.trim() === '') {
+    return VALIDATION_MESSAGES.REQUIRED_EMAIL;
   }
 
   if (!EMAIL_PATTERN.test(email)) {
     return VALIDATION_MESSAGES.INVALID_EMAIL_FORMAT;
+  }
+
+  return "";
+}
+
+/**
+ * 비밀번호 유효성 검증 (단일 필드 - 로그인용)
+ * @param {string} password - 검증할 비밀번호
+ * @returns {string} 에러 메시지 (빈 문자열이면 유효함)
+ */
+export function validateLoginPassword(password) {
+  if (!password || password.trim() === '') {
+    return VALIDATION_MESSAGES.REQUIRED_PASSWORD;
+  }
+
+  if (!PASSWORD_PATTERN.test(password)) {
+    return VALIDATION_MESSAGES.INVALID_PASSWORD_FORMAT;
   }
 
   return "";
