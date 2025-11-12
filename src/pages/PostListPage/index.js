@@ -149,8 +149,7 @@ class PostListPage extends Component {
         viewCount: post.viewCount,
         commentCount: post.commentCount,
         likeCount: post.likeCount,
-        author: post.member?.nickname || '익명',
-        authorProfileImage: post.member?.profileImage || null,
+        member: post.member,
         imageUrl: post.imageUrl || null
       }));
 

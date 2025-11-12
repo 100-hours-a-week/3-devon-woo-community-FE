@@ -33,11 +33,11 @@ class PostCard extends Component {
             </div>
 
             <div class="post-card-footer">
-              ${post.authorProfileImage ?
-                `<img src="${post.authorProfileImage}" alt="${post.author}" class="author-profile-image" />` :
+              ${post.member?.profileImage ?
+                `<img src="${post.member.profileImage}" alt="${post.member.nickname}" class="author-profile-image" />` :
                 `<div class="author-profile-placeholder"></div>`
               }
-              <span class="author-name">${post.author || '익명'}</span>
+              <span class="author-name">${post.member?.nickname || '익명'}</span>
             </div>
           </div> 
         </div>
