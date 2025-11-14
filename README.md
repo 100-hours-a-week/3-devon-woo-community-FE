@@ -1,120 +1,93 @@
-# 아무 말 대잔치
+# 커뮤니티 사이트
 
-바닐라 JavaScript로 구현한 React 스타일 SPA 커뮤니티 사이트입니다.
-Node.js나 React 없이 순수 JavaScript로 구현하되, React로 쉽게 전환할 수 있는 구조로 설계되었습니다.
+바닐라 JavaScript로 구현한 간단한 커뮤니티 사이트입니다.
 
 ## 프로젝트 구조
 
 ```
 3-devon-woo-community-FE/
-├── index.html              # SPA 진입점 (단일 HTML)
-├── CLAUDE.md               # 개발 가이드
-├── README.md               # 프로젝트 설명
+├── index.html                 # 메인 HTML 파일
 ├── src/
-│   ├── app.js             # 앱 초기화 및 라우트 설정
-│   ├── core/              # 코어 시스템
-│   │   ├── Component.js   # 컴포넌트 베이스 클래스
-│   │   └── Router.js      # 클라이언트 사이드 라우터
-│   ├── components/        # 공통 컴포넌트
-│   │   └── Header/
-│   │       ├── index.js   # Header 컴포넌트
-│   │       └── style.css  # Header 전용 스타일
-│   ├── pages/             # 페이지 컴포넌트
-│   │   ├── LoginPage/
-│   │   │   ├── index.js   # LoginPage 컴포넌트
-│   │   │   └── style.css  # LoginPage 전용 스타일
-│   │   ├── SignupPage/
-│   │   │   ├── index.js
-│   │   │   └── style.css
-│   │   ├── PostListPage/
-│   │   │   ├── index.js
-│   │   │   └── style.css
-│   │   ├── PostDetailPage/
-│   │   │   ├── index.js
-│   │   │   └── style.css
-│   │   ├── PostEditPage/
-│   │   │   ├── index.js
-│   │   │   └── style.css
-│   │   ├── ProfilePage/
-│   │   │   ├── index.js
-│   │   │   └── style.css
-│   │   └── ProfileEditPage/
-│   │       ├── index.js
-│   │       └── style.css
-│   ├── dto/               # 데이터 전송 객체
-│   │   ├── request/       # API 요청 DTO
-│   │   │   ├── auth/      # 인증 관련
-│   │   │   ├── member/    # 회원 관련
-│   │   │   ├── post/      # 게시글 관련
-│   │   │   ├── comment/   # 댓글 관련
-│   │   │   └── common/    # 공통 (페이지네이션 등)
-│   │   └── response/      # API 응답 DTO
-│   │       ├── auth/
-│   │       ├── member/
-│   │       ├── post/
-│   │       ├── comment/
-│   │       └── common/
-│   ├── validation/        # 검증 로직
-│   │   ├── authValidation.js
-│   │   ├── memberValidation.js
-│   │   ├── postValidation.js
-│   │   ├── commentValidation.js
-│   │   ├── patterns.js
-│   │   ├── messages.js
-│   │   └── index.js
-│   ├── utils/             # 유틸리티 함수
-│   │   └── api.js         # API 헬퍼 (GET, POST, PUT, DELETE)
-│   └── styles/            # 전역 스타일
-│       ├── theme.css      # 색상 테마 (CSS Variables)
-│       └── global.css     # 전역 스타일 (reset, body, layout)
-└── sample-page/           # 디자인 레퍼런스
-    ├── login/
-    ├── sgin-up/
-    ├── post-list/
-    ├── post-details/
-    ├── post-make/
-    ├── profile/
-    └── profile-edit/
+│   ├── components/           # 재사용 가능한 컴포넌트
+│   │   ├── Header.js        # 헤더 컴포넌트
+│   │   ├── Footer.js        # 푸터 컴포넌트
+│   │   └── PostItem.js      # 게시글 아이템 컴포넌트
+│   ├── pages/               # 페이지 컴포넌트
+│   │   ├── LoginPage.js     # 로그인 페이지
+│   │   ├── PostListPage.js  # 게시글 리스트 페이지
+│   │   ├── PostDetailPage.js # 게시글 상세 페이지
+│   │   └── ProfilePage.js   # 개인정보 페이지
+│   ├── router/              # 라우팅 시스템
+│   │   └── router.js        # 해시 기반 라우터
+│   ├── styles/              # CSS 스타일
+│   │   ├── global.css       # 전역 스타일
+│   │   ├── components.css   # 컴포넌트 스타일
+│   │   └── pages.css        # 페이지 스타일
+│   └── app.js               # 앱 진입점
+└── README.md
 ```
 
-## 핵심 특징
+## 기능
 
-- **React 스타일 컴포넌트**: 클래스 기반, `render()`, `setState()`, Props
-- **컴포넌트별 폴더 구조**: 각 폴더에 `index.js` + `style.css`
-- **SPA 라우팅**: History API 기반, 페이지 새로고침 없음
-- **DTO 및 검증**: API 요청/응답 DTO, 분리된 검증 로직
-- **CSS Variables**: 일관된 테마 시스템
-
-## 주요 기능
-
-로그인/회원가입, 게시글 CRUD, 댓글, 프로필 관리, 비밀번호 변경
+- **로그인 페이지**: 사용자 로그인 UI
+- **게시글 리스트**: 게시글 목록 조회
+- **게시글 상세**: 게시글 상세 정보 및 댓글
+- **개인정보**: 사용자 프로필 정보
 
 ## 실행 방법
 
-### VSCode Live Server (추천)
-`index.html` 우클릭 → "Open with Live Server"
+Node.js나 빌드 도구 없이 바로 실행 가능합니다.
 
-### Python 서버
+### 방법 1: Live Server 사용 (추천)
+
+VSCode의 Live Server 확장 프로그램을 설치한 후:
+
+1. `index.html` 파일을 엽니다
+2. 우클릭 → "Open with Live Server" 선택
+
+### 방법 2: Python 서버 사용
+
 ```bash
+# Python 3
 python -m http.server 8000
+
+# 브라우저에서 http://localhost:8000 접속
 ```
+
+### 방법 3: 다른 로컬 서버
+
+원하는 로컬 서버를 사용할 수 있습니다.
 
 ## 라우팅
 
-- `/` - 게시글 목록
-- `/login` - 로그인
-- `/signup` - 회원가입
-- `/posts/:id` - 게시글 상세
-- `/posts/:id/edit` - 게시글 수정
-- `/posts/create` - 게시글 작성
-- `/profile` - 프로필
-- `/profile/edit` - 프로필 수정
+History API 기반 SPA 라우팅을 사용합니다:
+
+- `/` 또는 `/login` - 로그인 페이지
+- `/signup` - 회원가입 페이지
+
+## 향후 작업 (TODO)
+
+현재는 기본 구조만 구축된 상태입니다. 다음 작업들이 필요합니다:
+
+- [ ] API 연동
+- [ ] 로그인/로그아웃 로직 구현
+- [ ] 게시글 CRUD 기능
+- [ ] 댓글 기능
+- [ ] 상태 관리
+- [ ] 로컬 스토리지 활용
+- [ ] 폼 검증
+
+## React 마이그레이션 고려사항
+
+이 프로젝트는 향후 React로 전환할 수 있도록 설계되었습니다:
+
+- 컴포넌트 기반 구조
+- 명확한 파일 분리
+- props를 통한 데이터 전달 패턴
+- 이벤트 핸들러 분리
 
 ## 기술 스택
 
-바닐라 JavaScript (ES6+) · CSS3 (CSS Variables) · HTML5
-
-## 참고
-
-- 개발 가이드: [CLAUDE.md](./CLAUDE.md)
-- 샘플 디자인: [sample-page/](./sample-page/)
+- 바닐라 JavaScript (ES6+)
+- CSS3
+- HTML5
