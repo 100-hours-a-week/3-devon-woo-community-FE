@@ -8,8 +8,10 @@
 .signup-wrapper {
   width: 100%;
   max-width: 500px;
+  background-color: var(--color-background-white);
   border-radius: var(--radius-xl);
   padding: 48px 40px;
+  box-shadow: var(--shadow-md);
 }
 
 .signup-title {

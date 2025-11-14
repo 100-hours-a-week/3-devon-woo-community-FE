@@ -17,10 +17,6 @@ body {
   flex-direction: column;
 }
 
-.form-input{
-    background-color: var(--color-background);
-}
-
 /* App Container */
 #app {
   flex: 1;

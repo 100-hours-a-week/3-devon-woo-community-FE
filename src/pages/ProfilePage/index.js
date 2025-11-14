@@ -113,8 +113,8 @@ class ProfilePage extends Component {
     if (!this.deleteModal) {
       this.deleteModal = new Modal({
         show: this.state.showDeleteModal,
-        title: '회원 탈퇴 하시겠습니까?',
-        message: '작성된 게시글과 댓글은 삭제됩니다.',
+        title: '회원 탈퇴',
+        message: '정말로 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.',
         id: 'deleteModal'
       });
     } else {

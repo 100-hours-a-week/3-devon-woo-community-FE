@@ -8,8 +8,10 @@
 .login-wrapper {
   width: 100%;
   max-width: 500px;
+  background-color: var(--color-background-white);
   border-radius: var(--radius-xl);
   padding: 48px 40px;
+  box-shadow: var(--shadow-md);
 }
 
 .login-title {
@@ -49,7 +51,6 @@
   font-size: 14px;
   font-family: inherit;
   transition: border-color var(--transition-fast);
-  background-color: var(--color-background);
 }
 
 .form-input:focus {

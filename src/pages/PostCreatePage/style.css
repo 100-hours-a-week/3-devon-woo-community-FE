@@ -6,8 +6,10 @@
 
 /* 폼 래퍼 */
 .form-wrapper {
+  background-color: var(--color-background-white);
   border-radius: var(--radius-xl);
   padding: 40px;
+  box-shadow: var(--shadow-md);
 }
 
 .form-title {
@@ -47,7 +49,6 @@
   font-size: 16px;
   font-family: inherit;
   transition: border-color var(--transition-fast);
-  background-color: var(--color-background);
 }
 
 .form-input:focus {
@@ -86,7 +87,6 @@
   resize: vertical;
   min-height: 200px;
   transition: border-color var(--transition-fast);
-  background-color: var(--color-background);
 }
 
 .form-textarea:focus {
@@ -119,7 +119,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
-  background-color: var(--color-background);
 }
 
 .image-upload-btn:hover {
@@ -176,7 +175,7 @@
 
 /* 제출 버튼 */
 .submit-btn {
-  width: 60%;
+  width: 100%;
   padding: var(--spacing-md);
   border: none;
   border-radius: var(--radius-lg);
@@ -185,8 +184,6 @@
   cursor: pointer;
   transition: background-color var(--transition-normal);
   margin-top: var(--spacing-md);
-  margin: var(--spacing-md) auto 0;
-  display: block;
 }
 
 /* 버튼 비활성화 상태 (제목 또는 내용 미입력) */

@@ -1,8 +1,10 @@
 /* 댓글 섹션 */
 .comment-section {
   width: 100%;
+  background-color: var(--color-background-white);
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
 }
 
 /* 댓글 목록 */
