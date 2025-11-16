@@ -1,7 +1,7 @@
 /* 메인 컨테이너 */
 #main .main-container {
   margin: 0 auto;
-  padding: var(--spacing-2xl) var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-md);
 }
 
 /* 게시글 상세 */
@@ -18,11 +18,11 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
 }
 
 .post-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text-primary);
   flex: 1;
@@ -73,8 +73,8 @@
 }
 
 .author-avatar {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-full);
   background-color: var(--color-border-primary);
   overflow: hidden;
@@ -96,10 +96,9 @@
 
 .author-details {
   display: flex;
-  flex-direction: column;
   flex-direction: row;
-  align-items: center;
-  gap: var(--spacing-md);
+  align-items: flex-start;
+  gap: var(--spacing-lg);
 }
 
 .author-name {
@@ -127,6 +126,7 @@
 
 /* 게시글 본문 */
 .post-content {
+  min-height: 150px;
   font-size: 16px;
   line-height: 1.8;
   color: var(--color-text-primary);
