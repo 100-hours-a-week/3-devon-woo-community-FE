@@ -15,7 +15,8 @@ const api = new Axios({
  * @returns {Promise<SignupResponse>} 생성된 사용자 정보
  */
 export const signup = async (signupData) => {
-  const res = await api.post("/api/v1/auth/signup", signupData);
+  const res = await api.post("/auth/signup", signupData);
+  console.log(res.data);
   return res.data;
 };
 
@@ -25,7 +26,8 @@ export const signup = async (signupData) => {
  * @returns {Promise<LoginResponse>} 로그인한 사용자 정보
  */
 export const login = async (loginData) => {
-  const res = await api.post("/api/v1/auth/login", loginData);
+  const res = await api.post("/auth/login", loginData);
+  console.log(res.data);
   return res.data;
 };
 
@@ -34,5 +36,5 @@ export const login = async (loginData) => {
  * @returns {Promise<void>} 응답 없음 (204 No Content)
  */
 export const logout = async () => {
-  await api.post("/api/v1/auth/logout");
+  await api.post("/auth/logout");
 };
