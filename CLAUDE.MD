@@ -38,30 +38,27 @@ Node.js나 React를 사용하지 않지만, 추후 React로 쉽게 전환할 수
 - 페이지 새로고침 없이 화면 전환
 
 ### 6. API 연동
-- Fetch API를 사용한 비동기 통신
+- 커스텀 Axios 클래스를 사용한 HTTP 통신
 - DTO(Data Transfer Object) 활용
 - RESTful API 통신
+- Mock 서버 지원
 
 ### 7. 점진적 개발
 - 한 번에 많은 코드를 작성하지 않고 간단하고 레거시한 코드로 시작
 - 기본 기능만 포함하여 점차 업그레이드
-- HTML과 CSS 디자인은 sample-page를 그대로 참고
 
 ---
 
 ## 프로젝트 구조
 
-### 폴더 구조 원칙
+### 폴더 구조
 
 **응집성 우선**: 관련된 파일들은 같은 폴더에 배치합니다.
-- 각 컴포넌트/페이지는 독립적인 폴더를 가지며, `index.js`와 `style.css`를 포함합니다.
-- React 컴포넌트 구조와 동일하여 추후 전환이 쉽습니다.
-- 스타일은 컴포넌트 로드 시 동적으로 `<link>` 태그 추가하여 로드합니다.
 
 ```
 3-devon-woo-community-FE/
 ├── index.html              # SPA 진입점 (단일 HTML)
-├── CLAUDE.MD               # 개발 가이드 (본 문서)
+├── CLAUDE.md               # 개발 가이드 (본 문서)
 ├── README.md               # 프로젝트 설명
 ├── src/
 │   ├── app.js             # 앱 초기화 및 라우트 설정
@@ -69,16 +66,34 @@ Node.js나 React를 사용하지 않지만, 추후 React로 쉽게 전환할 수
 │   │   ├── Component.js   # 컴포넌트 베이스 클래스
 │   │   └── Router.js      # 클라이언트 사이드 라우터
 │   ├── components/        # 공통 컴포넌트
-│   │   └── Header/
-│   │       ├── index.js   # Header 컴포넌트
-│   │       └── style.css  # Header 전용 스타일
+│   │   ├── Header/
+│   │   ├── PostCard/
+│   │   ├── Toast/
+│   │   ├── Modal/
+│   │   ├── LoadingSpinner/
+│   │   ├── CommentSection/
+│   │   ├── CommentItem/
+│   │   ├── CommentInput/
+│   │   └── ProfileImageUploader/
 │   ├── pages/             # 페이지 컴포넌트
 │   │   ├── LoginPage/
-│   │   │   ├── index.js   # LoginPage 컴포넌트
-│   │   │   └── style.css  # LoginPage 전용 스타일
-│   │   └── SignupPage/
-│   │       ├── index.js   # SignupPage 컴포넌트
-│   │       └── style.css  # SignupPage 전용 스타일
+│   │   ├── SignupPage/
+│   │   ├── PostListPage/
+│   │   ├── PostDetailPage/
+│   │   ├── PostCreatePage/
+│   │   ├── PostEditPage/
+│   │   ├── ProfilePage/
+│   │   └── PasswordChangePage/
+│   ├── api/               # API 레이어 (도메인별)
+│   │   ├── base/
+│   │   │   ├── axios.js       # 커스텀 HTTP 클라이언트
+│   │   │   └── MockServer.js  # Mock 서버
+│   │   ├── auth.js            # 인증 API
+│   │   ├── posts.js           # 게시글 API
+│   │   ├── comments.js        # 댓글 API
+│   │   ├── members.js         # 회원 API
+│   │   ├── users.js           # 사용자 API
+│   │   └── cloudinary.js      # 이미지 업로드 API
 │   ├── dto/               # 데이터 전송 객체
 │   │   ├── request/       # API 요청 DTO
 │   │   │   ├── auth/      # 인증 관련
@@ -101,18 +116,17 @@ Node.js나 React를 사용하지 않지만, 추후 React로 쉽게 전환할 수
 │   │   ├── messages.js            # 검증 메시지 상수
 │   │   └── index.js               # 통합 export
 │   ├── utils/             # 유틸리티 함수
-│   │   └── api.js         # API 헬퍼 (GET, POST, PUT, DELETE)
-│   └── styles/            # 전역 스타일만 위치
+│   │   ├── AuthService.js     # 인증 상태 관리
+│   │   ├── imageUpload.js     # 이미지 업로드
+│   │   ├── imageProcessor.js  # 이미지 처리
+│   │   └── formatters.js      # 데이터 포맷팅
+│   ├── services/          # 비즈니스 로직 서비스
+│   │   └── cloudinary.js  # Cloudinary 서비스
+│   ├── config/            # 설정 파일
+│   │   └── cloudinary.js  # Cloudinary 설정
+│   └── styles/            # 전역 스타일
 │       ├── theme.css      # 색상 테마 (CSS Variables)
 │       └── global.css     # 전역 스타일 (reset, body, layout)
-└── sample-page/           # 디자인 레퍼런스 (참고용)
-    ├── login/
-    ├── sgin-up/
-    ├── post-list/
-    ├── post-details/
-    ├── post-make/
-    ├── profile/
-    └── profile-edit/
 ```
 
 ### 스타일 관리 전략
@@ -123,7 +137,7 @@ Node.js나 React를 사용하지 않지만, 추후 React로 쉽게 전환할 수
 
 2. **컴포넌트/페이지별 스타일**
    - 각 폴더 내 `style.css`에 해당 컴포넌트 전용 스타일 작성
-   - 동적 로딩: 컴포넌트 생성 시 자동으로 `<link>` 태그 추가
+   - 동적 로딩: 컴포넌트 생성 시 `loadStyle()` 메서드 호출
 
 3. **장점**
    - 응집성: 관련 파일이 한 곳에 모여있어 관리 용이
@@ -150,44 +164,30 @@ src/components/MyComponent/
 ```javascript
 import Component from '../../core/Component.js';
 
-// 스타일 동적 로드
-const loadStyle = () => {
-  const linkId = 'my-component-style';
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = '/src/components/MyComponent/style.css';
-    document.head.appendChild(link);
-  }
-};
-
 class MyComponent extends Component {
   constructor(props = {}) {
     super(props);
     this.state = {
-      // 상태 정의
+      message: ''
     };
-    loadStyle(); // 스타일 로드
+    this.loadStyle('/src/components/MyComponent/style.css');
   }
 
-  // HTML 문자열을 반환하는 메서드
   render() {
     return `
       <div class="my-component">
         <h1>${this.props.title}</h1>
         <p>${this.state.message}</p>
+        <button class="my-button">클릭</button>
       </div>
     `;
   }
 
-  // 렌더링 후 실행되는 메서드 (이벤트 리스너 등록)
   mounted() {
     const button = this.$el.querySelector('.my-button');
     button.addEventListener('click', this.handleClick.bind(this));
   }
 
-  // 이벤트 핸들러
   handleClick() {
     this.setState({ message: 'Clicked!' });
   }
@@ -196,7 +196,12 @@ class MyComponent extends Component {
 export default MyComponent;
 ```
 
-### 주요 메서드
+### Component 베이스 클래스 주요 메서드
+
+#### `loadStyle(cssPath)`
+- CSS 파일을 동적으로 로드
+- 중복 로드 방지 (linkId 기반)
+- constructor에서 호출
 
 #### `render()`
 - **필수 구현**
@@ -205,15 +210,20 @@ export default MyComponent;
 - React의 JSX와 유사한 역할
 
 #### `mounted()`
-- 컴포넌트가 DOM에 마운트된 후 실행
+- 컴포넌트가 DOM에 마운트된 후 **최초 1회만** 실행
 - 이벤트 리스너 등록
 - API 호출 등 초기화 작업 수행
 - React의 `componentDidMount()`와 유사
 
+#### `updated()`
+- `setState()` 호출로 리렌더링될 때마다 실행
+- 필요 시 이벤트 리스너 재등록
+- 기본적으로는 비어있음 (자식 클래스에서 필요시 구현)
+
 #### `setState(newState)`
-- 상태를 업데이트하고 리렌더링
+- 상태를 업데이트하고 자동 리렌더링
 - React의 `setState()`와 동일한 역할
-- 상태 변경 감지 및 자동 렌더링
+- `update()` 메서드를 내부적으로 호출
 
 #### `beforeUnmount()`
 - 컴포넌트가 제거되기 전 실행
@@ -231,77 +241,69 @@ src/pages/LoginPage/
 └── style.css     # 로그인 페이지 스타일
 ```
 
-### index.js (간단한 버전)
+### index.js
 
 ```javascript
 import Component from '../../core/Component.js';
-
-// 스타일 동적 로드
-const loadStyle = () => {
-  const linkId = 'login-page-style';
-  if (!document.getElementById(linkId)) {
-    const link = document.createElement('link');
-    link.id = linkId;
-    link.rel = 'stylesheet';
-    link.href = '/src/pages/LoginPage/style.css';
-    document.head.appendChild(link);
-  }
-};
+import { login } from '../../api/auth.js';
+import LoginRequest from '../../dto/request/auth/LoginRequest.js';
+import AuthService from '../../utils/AuthService.js';
+import { navigateReplace } from '../../core/Router.js';
+import { validateEmail, validateLoginPassword } from '../../validation/authValidation.js';
 
 class LoginPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       email: '',
-      password: ''
+      password: '',
+      emailError: '',
+      passwordError: '',
+      isLoading: false
     };
-    loadStyle();
+    this.loadStyle('/src/pages/LoginPage/style.css');
   }
 
   render() {
     return `
-      <div class="page">
-        <header class="header">
-          <h1 class="header-title">아무 말 대잔치</h1>
-        </header>
-
-        <main class="main-container">
-          <div class="login-wrapper">
-            <h2 class="login-title">로그인</h2>
-
-            <form class="login-form" id="loginForm">
-              <div class="form-group">
-                <label for="emailInput" class="form-label">이메일</label>
-                <input
-                  type="email"
-                  id="emailInput"
-                  class="form-input"
-                  placeholder="이메일을 입력하세요"
-                  value="${this.state.email}"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="passwordInput" class="form-label">비밀번호</label>
-                <input
-                  type="password"
-                  id="passwordInput"
-                  class="form-input"
-                  placeholder="비밀번호를 입력하세요"
-                  value="${this.state.password}"
-                />
-              </div>
-
-              <button type="submit" class="submit-btn" id="submitBtn" disabled>
-                로그인
-              </button>
-
-              <div class="signup-link-section">
-                <a href="/signup" class="signup-link">회원가입</a>
-              </div>
-            </form>
-          </div>
-        </main>
+      <div class="main-container">
+        <div class="login-wrapper">
+          <h2 class="login-title">로그인</h2>
+          <form class="login-form" id="loginForm">
+            <div class="form-group">
+              <label for="emailInput" class="form-label">이메일</label>
+              <input
+                type="email"
+                id="emailInput"
+                class="form-input ${this.state.emailError ? 'error' : ''}"
+                placeholder="이메일을 입력하세요"
+                value="${this.state.email}"
+              />
+              <p class="helper-text ${this.state.emailError ? 'show' : ''}">
+                ${this.state.emailError || '*이메일을 입력해주세요'}
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="passwordInput" class="form-label">비밀번호</label>
+              <input
+                type="password"
+                id="passwordInput"
+                class="form-input ${this.state.passwordError ? 'error' : ''}"
+                placeholder="비밀번호를 입력하세요"
+                value="${this.state.password}"
+              />
+              <p class="helper-text ${this.state.passwordError ? 'show' : ''}">
+                ${this.state.passwordError || '*비밀번호를 입력해주세요'}
+              </p>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+              로그인
+            </button>
+            <div class="signup-link-section">
+              <a href="/signup" class="signup-link">회원가입</a>
+            </div>
+          </form>
+        </div>
       </div>
     `;
   }
@@ -312,38 +314,56 @@ class LoginPage extends Component {
     const submitBtn = this.$el.querySelector('#submitBtn');
     const form = this.$el.querySelector('#loginForm');
 
-    // 입력 이벤트
     emailInput.addEventListener('input', (e) => {
       this.state.email = e.target.value;
-      this.checkFormValid(submitBtn);
+      this.validateEmail();
+      this.updateSubmitButton();
     });
 
     passwordInput.addEventListener('input', (e) => {
       this.state.password = e.target.value;
-      this.checkFormValid(submitBtn);
+      this.validatePassword();
+      this.updateSubmitButton();
     });
 
-    // 폼 제출
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      this.handleSubmit();
+      await this.handleSubmit();
     });
   }
 
-  checkFormValid(submitBtn) {
-    if (this.state.email && this.state.password) {
-      submitBtn.disabled = false;
-    } else {
-      submitBtn.disabled = true;
+  validateEmail() {
+    this.state.emailError = validateEmail(this.state.email);
+    this.update();
+  }
+
+  validatePassword() {
+    this.state.passwordError = validateLoginPassword(this.state.password);
+    this.update();
+  }
+
+  updateSubmitButton() {
+    const submitBtn = this.$el.querySelector('#submitBtn');
+    const isValid = !this.state.emailError && !this.state.passwordError &&
+                   this.state.email && this.state.password;
+    submitBtn.disabled = !isValid;
+  }
+
+  async handleSubmit() {
+    try {
+      this.setState({ isLoading: true });
+      const loginRequest = new LoginRequest({
+        email: this.state.email,
+        password: this.state.password
+      });
+      const response = await login(loginRequest);
+      AuthService.login(response.userId);
+      navigateReplace('/posts');
+    } catch (error) {
+      alert(error.message || '로그인에 실패했습니다.');
+    } finally {
+      this.setState({ isLoading: false });
     }
-  }
-
-  handleSubmit() {
-    console.log('로그인 시도:', {
-      email: this.state.email,
-      password: this.state.password
-    });
-    // API 호출 로직 추가 예정
   }
 }
 
@@ -358,31 +378,29 @@ export default LoginPage;
 
 ```javascript
 // app.js
-import Router from './core/Router.js';
+import { createRouter } from './core/Router.js';
 import LoginPage from './pages/LoginPage/index.js';
 import SignupPage from './pages/SignupPage/index.js';
 
-const router = new Router();
+const router = createRouter();
 
-// 라우트 등록
 router.addRoute('/', LoginPage);
 router.addRoute('/login', LoginPage);
 router.addRoute('/signup', SignupPage);
+router.addRoute('/posts/:id', PostDetailPage); // 동적 라우트
 
-// 라우터 초기화
 router.init();
-
-// 전역 라우터 참조 (컴포넌트에서 사용)
-window.router = router;
 ```
 
 ### 페이지 이동
 
 ```javascript
-// 프로그래매틱 네비게이션
-window.router.navigate('/signup');
+import { navigate, navigateReplace } from './core/Router.js';
 
-// 링크를 통한 네비게이션 (자동 감지)
+navigate('/posts');
+navigateReplace('/login');
+
+// 링크는 자동으로 SPA 라우팅 처리
 <a href="/signup">회원가입</a>
 ```
 
@@ -390,48 +408,209 @@ window.router.navigate('/signup');
 
 ## API 통신
 
-### API 헬퍼 사용
+### API 레이어 구조
 
-```javascript
-import { apiGet, apiPost, apiPut, apiDelete } from '../../utils/api.js';
+도메인별로 API 모듈을 분리하여 관리합니다.
 
-// GET 요청
-const posts = await apiGet('/api/v1/posts');
-
-// POST 요청 (DTO 사용)
-const loginDto = new LoginRequest({ email, password });
-const response = await apiPost('/api/v1/auth/login', loginDto);
-
-// PUT 요청
-const updateDto = new PostUpdateRequest({ title, content });
-await apiPut(`/api/v1/posts/${postId}`, updateDto);
-
-// DELETE 요청
-await apiDelete(`/api/v1/posts/${postId}`);
+```
+src/api/
+├── base/
+│   ├── axios.js       # 커스텀 HTTP 클라이언트
+│   └── MockServer.js  # Mock 서버
+├── auth.js            # 인증 API
+├── posts.js           # 게시글 API
+├── comments.js        # 댓글 API
+└── members.js         # 회원 API
 ```
 
-### DTO 활용
+### 커스텀 Axios 클라이언트
+
+`src/api/base/axios.js`에 fetch 기반 HTTP 클라이언트 구현:
+
+```javascript
+class Axios {
+  constructor(config = {}) {
+    this.baseURL = config.baseURL || "";
+    this.headers = config.headers || {};
+    this.useMock = config.useMock !== undefined ? config.useMock : USE_MOCK;
+  }
+
+  async request(method, url, body, options = {}) {
+    const config = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...this.headers,
+        ...options.headers,
+      },
+      body: this.prepareBody(body, options.headers),
+    };
+
+    const res = await fetch(this.baseURL + url, config);
+    if (res.status === 204) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  get(url, opt = {}) { return this.request("GET", url, null, opt); }
+  post(url, body, opt = {}) { return this.request("POST", url, body, opt); }
+  put(url, body, opt = {}) { return this.request("PUT", url, body, opt); }
+  patch(url, body, opt = {}) { return this.request("PATCH", url, body, opt); }
+  delete(url, opt = {}) { return this.request("DELETE", url, null, opt); }
+}
+```
+
+### API 모듈 사용 예시
+
+```javascript
+// src/api/posts.js
+import Axios from "./base/axios.js";
+
+const api = new Axios({
+  baseURL: "http://localhost:8080",
+});
+
+export const getPosts = async ({ page = 0, size = 20, sort = "createdAt,desc" } = {}) => {
+  const queryParams = new URLSearchParams({ page, size, sort });
+  const res = await api.get(`/api/v1/posts?${queryParams}`);
+  return res.data;
+};
+
+export const getPostById = async (postId, memberId = null) => {
+  const queryParams = memberId ? `?memberId=${memberId}` : "";
+  const res = await api.get(`/api/v1/posts/${postId}${queryParams}`);
+  return res.data;
+};
+
+export const createPost = async (postData) => {
+  const res = await api.post("/api/v1/posts", postData);
+  return res.data;
+};
+
+export const updatePost = async (postId, updateData) => {
+  const res = await api.patch(`/api/v1/posts/${postId}`, updateData);
+  return res.data;
+};
+
+export const deletePost = async (postId, memberId) => {
+  await api.delete(`/api/v1/posts/${postId}?memberId=${memberId}`);
+};
+
+export const likePost = async (postId, memberId) => {
+  await api.post(`/api/v1/posts/${postId}/like?memberId=${memberId}`);
+};
+
+export const unlikePost = async (postId, memberId) => {
+  await api.delete(`/api/v1/posts/${postId}/like?memberId=${memberId}`);
+};
+```
+
+### 페이지에서 API 사용
+
+```javascript
+import { getPosts } from '../../api/posts.js';
+import { login } from '../../api/auth.js';
+import LoginRequest from '../../dto/request/auth/LoginRequest.js';
+
+async mounted() {
+  const posts = await getPosts({ page: 0, size: 20 });
+  console.log(posts);
+
+  const loginRequest = new LoginRequest({ email, password });
+  const response = await login(loginRequest);
+}
+```
+
+### Mock 서버
+
+개발 중 백엔드 없이 테스트 가능:
+
+```javascript
+// src/api/base/axios.js
+const USE_MOCK = false; // true로 변경하면 Mock 서버 사용
+
+// MockServer.js에서 Mock 데이터 관리
+class MockServer {
+  handle(method, url, body) {
+    // Mock 응답 반환
+  }
+}
+```
+
+---
+
+## AuthService - 인증 상태 관리
+
+localStorage를 사용하여 로그인 상태를 유지합니다.
+
+```javascript
+import AuthService from '../utils/AuthService.js';
+
+AuthService.login(userId);
+
+AuthService.logout();
+
+const userId = AuthService.getCurrentUserId();
+
+const isLoggedIn = AuthService.isLoggedIn();
+
+if (!AuthService.requireAuth()) {
+  return;
+}
+```
+
+---
+
+## DTO 활용
+
+### DTO 생성 및 사용
 
 ```javascript
 import LoginRequest from '../../dto/request/auth/LoginRequest.js';
-import { validateLoginRequest } from '../../validation/authValidation.js';
+import { validateEmail, validateLoginPassword } from '../../validation/authValidation.js';
 
-// DTO 생성
-const loginDto = new LoginRequest({
+const loginRequest = new LoginRequest({
   email: 'user@example.com',
   password: 'password123'
 });
 
-// 검증
-const errors = validateLoginRequest(loginDto);
-if (Object.keys(errors).length > 0) {
-  // 에러 처리
-  console.error('Validation errors:', errors);
+const emailError = validateEmail(loginRequest.email);
+const passwordError = validateLoginPassword(loginRequest.password);
+
+if (emailError || passwordError) {
+  console.error('Validation failed');
   return;
 }
 
-// API 호출
-const response = await apiPost('/api/v1/auth/login', loginDto);
+const response = await login(loginRequest);
+```
+
+---
+
+## Validation
+
+### 검증 함수 사용
+
+```javascript
+import { validateEmail, validatePassword, validateNickname } from '../../validation/authValidation.js';
+import { VALIDATION_MESSAGES } from '../../validation/messages.js';
+
+const emailError = validateEmail(email);
+if (emailError) {
+  this.setState({ emailError });
+}
+
+const passwordError = validatePassword(password);
+const nicknameError = validateNickname(nickname);
+```
+
+### 검증 패턴
+
+```javascript
+// src/validation/patterns.js
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+export const NICKNAME_PATTERN = /^[^\s]{1,10}$/;
 ```
 
 ---
@@ -443,7 +622,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 테마 시스템을 활용하여 일관된 스타일을 유지합니다.
 
 ```css
-/* 정의된 색상 사용 */
 .button {
   background-color: var(--color-primary);
   color: var(--color-text-inverse);
@@ -461,15 +639,15 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 ### 주요 CSS Variables
 
 ```css
---color-primary: #7F6AEE;           /* 메인 색상 */
---color-primary-hover: #6B5ED6;     /* 호버 상태 */
---color-primary-disabled: #ACA0EB;  /* 비활성 상태 */
---color-error: #ff4444;             /* 에러 */
---color-success: #4caf50;           /* 성공 */
---color-background: #f5f5f5;        /* 배경색 */
---color-surface: #ffffff;           /* 카드/패널 */
---color-text: #333333;              /* 텍스트 */
---color-text-secondary: #666666;    /* 보조 텍스트 */
+--color-primary: #7F6AEE;
+--color-primary-hover: #6B5ED6;
+--color-primary-disabled: #ACA0EB;
+--color-error: #ff4444;
+--color-success: #4caf50;
+--color-background: #f5f5f5;
+--color-surface: #ffffff;
+--color-text: #333333;
+--color-text-secondary: #666666;
 ```
 
 ---
@@ -496,26 +674,12 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 
 ### 3. API 연동
 
-1. 해당 DTO 파일 확인/생성 (`src/dto/`)
-2. 검증 함수 확인/생성 (`src/validation/`)
-3. API 헬퍼 함수 사용 (`src/utils/api.js`)
-4. 에러 처리 구현
-
----
-
-## 디자인 레퍼런스
-
-`sample-page/` 디렉토리의 HTML/CSS를 참고하여 디자인을 구현합니다.
-
-- **로그인**: `sample-page/login/`
-- **회원가입**: `sample-page/sgin-up/`
-- **게시글 목록**: `sample-page/post-list/`
-- **게시글 상세**: `sample-page/post-details/`
-- **게시글 작성**: `sample-page/post-make/`
-- **프로필**: `sample-page/profile/`
-- **비밀번호 변경**: `sample-page/profile-edit/`
-
-**디자인은 그대로 가져가되, 구조는 컴포넌트화하여 재사용 가능하게 작성합니다.**
+1. 해당 도메인의 API 모듈 확인 (`src/api/posts.js` 등)
+2. 필요한 API 함수가 없으면 추가 작성
+3. DTO 파일 확인/생성 (`src/dto/`)
+4. 검증 함수 확인/생성 (`src/validation/`)
+5. 페이지에서 API 함수 import 및 호출
+6. 에러 처리 구현
 
 ---
 
@@ -526,11 +690,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 ### 전환 시 변경 사항
 
 1. **폴더 구조** - 동일 (변경 불필요)
-   ```
-   src/components/Header/
-   ├── index.js      ✓ 동일
-   └── style.css     ✓ 동일 (또는 CSS Modules로 전환)
-   ```
 
 2. **컴포넌트 구조**
    ```javascript
@@ -551,10 +710,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 
 3. **상태 관리** - 동일
    ```javascript
-   // 현재
-   this.setState({ email: value });
-
-   // React (동일)
    this.setState({ email: value });
    ```
 
@@ -573,7 +728,10 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
    - 현재 커스텀 라우터 → React Router로 교체
 
 6. **스타일 로딩**
-   - 동적 `<link>` 태그 추가 → `import './style.css'`로 변경
+   - 동적 `<link>` 태그 → `import './style.css'`로 변경
+
+7. **API 레이어**
+   - 현재 커스텀 Axios → axios 라이브러리로 교체 (선택적)
 
 ---
 
@@ -593,7 +751,7 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 
 4. **DTO를 활용합니다**
    - API 통신 시 DTO 사용
-   - 타입 안정성 확보 (TypeScript 전환 대비)
+   - 타입 안정성 확보
 
 5. **검증은 분리합니다**
    - 비즈니스 로직과 검증 로직 분리
@@ -614,7 +772,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 9. **간단하게 시작하고 점진적으로 개선합니다**
    - 기본 기능만 먼저 구현
    - 동작 확인 후 고급 기능 추가
-   - 복잡한 최적화는 필요할 때 적용
 
 ---
 
@@ -626,7 +783,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 
 2. **이벤트 위임을 고려합니다**
    - 동적으로 생성되는 요소의 이벤트 처리
-   - 성능 최적화
 
 3. **XSS 공격을 방지합니다**
    - 사용자 입력을 HTML에 직접 삽입하지 않음
@@ -635,10 +791,6 @@ const response = await apiPost('/api/v1/auth/login', loginDto);
 4. **메모리 누수를 방지합니다**
    - 이벤트 리스너 정리
    - 타이머 정리
-
-5. **SEO를 고려합니다**
-   - SPA의 한계 인지
-   - 필요 시 SSR 또는 Pre-rendering 고려
 
 ---
 
@@ -653,13 +805,8 @@ VSCode의 Live Server 확장 프로그램을 설치한 후:
 ### Python 서버 사용
 
 ```bash
-# 프로젝트 루트에서
 python -m http.server 8000
-
-# 브라우저에서 http://localhost:8000 접속
 ```
-
-**주의**: 서버 실행 테스트는 개발 과정에서 제외합니다.
 
 ---
 
@@ -672,6 +819,14 @@ python -m http.server 8000
 ---
 
 ## 버전 히스토리
+
+- **v1.2.0** (2025-11-18): 실제 구조 반영
+  - API 레이어 도메인별 분리 (auth, posts, comments, members)
+  - 커스텀 Axios 클래스 구현 및 설명 추가
+  - Mock 서버 지원 추가
+  - AuthService, 이미지 업로드 등 유틸리티 설명 추가
+  - 실제 구현된 컴포넌트 목록 반영
+  - Component 베이스 클래스 메서드 상세 설명
 
 - **v1.1.0** (2025-11-08): 폴더 구조 리팩토링
   - 컴포넌트/페이지별 폴더 구조 적용 (index.js + style.css)
