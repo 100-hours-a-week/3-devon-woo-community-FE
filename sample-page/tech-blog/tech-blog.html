@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAVER D² - 기술 블로그</title>
+    <link rel="stylesheet" href="tech-blog.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <h1 class="logo">
+                    <span class="logo-naver">NAVER</span>
+                    <span class="logo-d2">D²</span>
+                </h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-link">Hello world</a>
+                <a href="#" class="nav-link">D2 News</a>
+                <a href="#" class="nav-link">About D2</a>
+            </nav>
+            <div class="search-section">
+                <input type="text" class="search-input" placeholder="D2에서 검색">
+                <button class="search-btn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="content-wrapper">
+            <section class="post-section">
+                <div class="post-list" id="postList">
+                </div>
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn pagination-prev" id="prevBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="pagination-numbers" id="paginationNumbers">
+                    </div>
+                    <button class="pagination-btn pagination-next" id="nextBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <section class="top-section">
+                    <h3 class="sidebar-title">TOP 5</h3>
+                    <ol class="top-list" id="topList">
+                    </ol>
+                </section>
+
+                <section class="keywords-section">
+                    <h3 class="sidebar-title">TOP KEYWORDS</h3>
+                    <div class="keyword-tags" id="keywordTags">
+                    </div>
+                </section>
+
+                <section class="newsletter-section">
+                    <div class="newsletter-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <input type="email" class="newsletter-input" placeholder="D2의 새로운 소식 받기">
+                    <button class="newsletter-btn">구독신청</button>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <button class="scroll-top-btn" id="scrollTopBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <script src="tech-blog.js"></script>
+</body>
+</html>

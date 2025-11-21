@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactional Outbox 패턴으로 메시지 발행 보장하기 - NAVER D²</title>
+    <link rel="stylesheet" href="detail.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <h1 class="logo">
+                    <span class="logo-naver">NAVER</span>
+                    <span class="logo-d2">D²</span>
+                </h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-link">Hello world</a>
+                <a href="#" class="nav-link">D2 News</a>
+                <a href="#" class="nav-link">About D2</a>
+            </nav>
+            <div class="search-section">
+                <input type="text" class="search-input" placeholder="D2에서 검색">
+                <button class="search-btn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <article class="post-detail">
+            <div class="post-header">
+                <div class="post-category">Polling Publisher 방식을 중심으로</div>
+                <h1 class="post-title">Transactional Outbox 패턴으로 메시지 발행 보장하기</h1>
+                <div class="post-meta">
+                    <span class="post-author">강규</span>
+                    <span class="post-divider">|</span>
+                    <span class="post-date">2024년 01월 17일</span>
+                </div>
+                <div class="post-actions">
+                    <button class="like-btn" id="likeBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 17.5L8.5 16.2C4 12.1 1 9.4 1 6.1C1 3.4 3.1 1.3 5.8 1.3C7.3 1.3 8.8 2 10 3.1C11.2 2 12.7 1.3 14.2 1.3C16.9 1.3 19 3.4 19 6.1C19 9.4 16 12.1 11.5 16.2L10 17.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span id="likeCount">29</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="post-thumbnail">
+                <img src="https://via.placeholder.com/800x450/E8F5E9/4CAF50?text=Transactional+Outbox" alt="게시글 썸네일">
+            </div>
+
+            <div class="post-content">
+                <p>안녕하세요. 리디 백엔드 엔지니어 강규입니다.</p>
+
+                <p>오늘은 Event Driven Architecture에서 메시지 발행의 신뢰성을 보장하는 Transactional Outbox 패턴을 소개하고, 이를 리디 서비스에 적용하며 느낀 박폭 공유하고자 합니다.</p>
+
+                <h2>Transactional Outbox 패턴이란 무엇인가요?</h2>
+
+                <p>Event Driven Architecture를 따르는 서비스에서는 대게 Message Broker를 이용해 다양한 메시지(이벤트)를 publish (발행) 하고, 그에 연관된 작업을 비동기적으로 처리하여 시스템을 통합합니다.</p>
+
+                <p>이때 DB 트랜잭션을 실행할 뒤 연관 메시지를 Message Broker에 publish 하게 되는데, 대로 메시지 publish가 반드시 완료되어야 하는 경우가 있습니다.</p>
+
+                <p>리디 주문 기능을 예로 들어볼까요? 리디 주문 기능은 DB 트랜잭션을 실행할 때마다 발생합니다. 그리고 Message Broker에 주문 완료 메시지를 publish 합니다.</p>
+
+                <h3>주요 문제점</h3>
+
+                <p>DB 트랜잭션은 DB 자원에서 완전성(atomicity)을 보장하므로 트랜잭션에 포함된 query들은 완전적으로 실행하지만, 대개는 DB와 Message Broker가 다른 기종이나 완전적인 처리가 불가능합니다.</p>
+
+                <p>따라서 DB 상 주문 완료 지리가 되었다면도 Message Broker에 메시지를 publish 하는 데 실패할 수 있고, DB의 주문 완료 지리를 rollback 하기도 어렵습니다.</p>
+
+                <div class="post-image">
+                    <img src="https://via.placeholder.com/700x400/F5F5F5/333?text=Transactional+Outbox+Pattern" alt="설명 이미지">
+                </div>
+
+                <h2>구현 방법</h2>
+
+                <p>Transactional Outbox 패턴을 구현하는 방법은 크게 두 가지가 있습니다:</p>
+
+                <ol>
+                    <li><strong>Polling Publisher</strong> - 주기적으로 Outbox 테이블을 조회하여 발행</li>
+                    <li><strong>Transaction Log Tailing</strong> - DB 로그를 추적하여 실시간 발행</li>
+                </ol>
+
+                <p>이번 글에서는 Polling Publisher 방식을 중심으로 설명하겠습니다.</p>
+
+                <h3>코드 예제</h3>
+
+                <pre><code>public class OutboxPublisher {
+    @Scheduled(fixedDelay = 1000)
+    public void publishOutboxMessages() {
+        List&lt;OutboxMessage&gt; messages = outboxRepository.findUnpublished();
+
+        for (OutboxMessage message : messages) {
+            try {
+                messageProducer.send(message);
+                outboxRepository.markAsPublished(message.getId());
+            } catch (Exception e) {
+                log.error("Failed to publish message", e);
+            }
+        }
+    }
+}</code></pre>
+
+                <h2>마치며</h2>
+
+                <p>Transactional Outbox 패턴을 통해 메시지 발행의 신뢰성을 크게 향상시킬 수 있었습니다. 다만 구현 복잡도가 증가하고 약간의 지연이 발생할 수 있다는 트레이드오프가 있습니다.</p>
+
+                <p>여러분의 서비스에도 적용해보시면 좋을 것 같습니다. 감사합니다!</p>
+            </div>
+        </article>
+
+        <section class="recommended-posts">
+            <h3 class="section-title">추천 게시글</h3>
+            <div class="recommended-list" id="recommendedList">
+            </div>
+        </section>
+
+        <section class="comments-section">
+            <div class="comments-header">
+                <h3 class="section-title">댓글 <span id="commentCount">23</span>개</h3>
+                <div class="comments-sort">
+                    <label for="sortSelect">정렬 기준</label>
+                    <select id="sortSelect" class="sort-select">
+                        <option value="latest">날짜 오름차순</option>
+                        <option value="oldest">날짜 내림차순</option>
+                        <option value="likes">좋아요순</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="comment-write">
+                <div class="comment-avatar">
+                    <img src="https://via.placeholder.com/48/CCCCCC/666?text=U" alt="프로필">
+                </div>
+                <div class="comment-input-wrapper">
+                    <textarea
+                        id="commentInput"
+                        class="comment-textarea"
+                        placeholder="댓글 달기..."
+                        rows="3"
+                    ></textarea>
+                    <div class="comment-actions">
+                        <button class="comment-submit-btn" id="submitCommentBtn">댓글 작성</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comments-list" id="commentsList">
+            </div>
+        </section>
+    </main>
+
+    <button class="scroll-top-btn" id="scrollTopBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <script src="detail.js"></script>
+</body>
+</html>
