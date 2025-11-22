@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - NEXON COMPANY</title>
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">
+                <a href="../tech-blog/blog.html">NEXON COMPANY</a>
+            </h1>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="signup-wrapper">
+            <h2 class="page-title">회원가입</h2>
+            <p class="page-subtitle">넥슨 계정을 만들고<br>다양한 서비스를 이용해보세요.</p>
+
+            <form class="signup-form" id="signupForm">
+                <div class="form-group">
+                    <label for="emailInput" class="form-label">이메일</label>
+                    <div class="input-with-button">
+                        <input
+                            type="email"
+                            id="emailInput"
+                            class="form-input"
+                            placeholder="example@email.com"
+                            required
+                            autocomplete="email"
+                        >
+                        <button type="button" class="btn-verify" id="sendCodeBtn">인증코드 발송</button>
+                    </div>
+                    <div class="help-text" id="emailHelp"></div>
+                </div>
+
+                <div class="form-group" id="verificationGroup" style="display: none;">
+                    <label for="verificationCodeInput" class="form-label">인증코드</label>
+                    <div class="input-with-button">
+                        <input
+                            type="text"
+                            id="verificationCodeInput"
+                            class="form-input"
+                            placeholder="6자리 인증코드"
+                            maxlength="6"
+                        >
+                        <button type="button" class="btn-verify" id="verifyCodeBtn">확인</button>
+                    </div>
+                    <div class="timer" id="timer">05:00</div>
+                    <div class="help-text" id="verificationHelp"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="nicknameInput" class="form-label">닉네임</label>
+                    <input
+                        type="text"
+                        id="nicknameInput"
+                        class="form-input"
+                        placeholder="2-20자 이내"
+                        required
+                        minlength="2"
+                        maxlength="20"
+                    >
+                    <div class="help-text" id="nicknameHelp"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="passwordInput" class="form-label">비밀번호</label>
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="passwordInput"
+                            class="form-input"
+                            placeholder="8자 이상, 영문/숫자/특수문자 포함"
+                            required
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" id="passwordToggle1" aria-label="비밀번호 표시">
+                            <svg class="eye-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle class="eye-open" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line class="eye-closed" x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="help-text" id="passwordHelp"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="passwordConfirmInput" class="form-label">비밀번호 확인</label>
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="passwordConfirmInput"
+                            class="form-input"
+                            placeholder="비밀번호를 다시 입력해주세요"
+                            required
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" id="passwordToggle2" aria-label="비밀번호 표시">
+                            <svg class="eye-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle class="eye-open" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line class="eye-closed" x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="help-text" id="passwordConfirmHelp"></div>
+                </div>
+
+                <div class="form-group terms-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="termsAll" class="checkbox-input">
+                        <span class="checkbox-text">전체 동의</span>
+                    </label>
+                    <div class="terms-divider"></div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="checkbox-input terms-item" required>
+                        <span class="checkbox-text">[필수] 이용약관 동의</span>
+                        <a href="#" class="terms-link">보기</a>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="checkbox-input terms-item" required>
+                        <span class="checkbox-text">[필수] 개인정보 처리방침 동의</span>
+                        <a href="#" class="terms-link">보기</a>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="checkbox-input terms-item">
+                        <span class="checkbox-text">[선택] 마케팅 정보 수신 동의</span>
+                        <a href="#" class="terms-link">보기</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary btn-signup" id="signupBtn" disabled>회원가입</button>
+            </form>
+
+            <div class="login-link">
+                이미 계정이 있으신가요? <a href="../login/login.html">로그인</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="signup.js"></script>
+</body>
+</html>
