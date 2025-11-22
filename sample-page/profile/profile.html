@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Doe - Tech Blog</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <h1 class="logo">
+                    <span class="logo-text">Tech Blog</span>
+                </h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Posts</a>
+                <a href="#" class="nav-link">About Me</a>
+                <a href="#" class="nav-link">Tags</a>
+                <a href="#" class="nav-link">Contact</a>
+            </nav>
+            <div class="header-actions">
+                <div class="search-section">
+                    <input type="text" class="search-input" placeholder="Search">
+                    <button class="search-btn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <button class="theme-toggle" id="themeToggle">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 1v2M10 17v2M19 10h-2M3 10H1M16.07 16.07l-1.41-1.41M5.34 5.34L3.93 3.93M16.07 3.93l-1.41 1.41M5.34 14.66l-1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" style="display: none;">
+                        <path d="M17 10.5A7 7 0 1 1 9.5 3a6 6 0 0 0 7.5 7.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="content-wrapper">
+            <aside class="profile-sidebar">
+                <section class="profile-card">
+                    <div class="profile-image-wrapper">
+                        <img src="https://via.placeholder.com/160" alt="John Doe" class="profile-image" id="profileImage">
+                    </div>
+                    <h2 class="profile-name" id="profileName">John Doe</h2>
+                    <p class="profile-handle" id="profileHandle">A passionate developer</p>
+                    <p class="profile-bio" id="profileBio"></p>
+
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="postCount">315</div>
+                            <div class="stat-label">작성</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="reviewCount">1</div>
+                            <div class="stat-label">리뷰</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="commentCount">0</div>
+                            <div class="stat-label">댓글</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-edit-profile" id="editProfileBtn" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M11.333 2A1.886 1.886 0 0 1 14 4.667l-9 9-3.667.666.667-3.666 9-9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        프로필 편집
+                    </button>
+                </section>
+
+                <section class="categories-section">
+                    <h3 class="sidebar-title">Categories</h3>
+                    <ul class="category-list" id="categoryList">
+                    </ul>
+                </section>
+
+                <section class="tags-section">
+                    <h3 class="sidebar-title">Tags</h3>
+                    <div class="tag-cloud" id="tagCloud">
+                    </div>
+                </section>
+
+                <section class="recent-posts-section">
+                    <h3 class="sidebar-title">Recent Posts</h3>
+                    <ul class="recent-posts-list" id="recentPostsList">
+                    </ul>
+                </section>
+            </aside>
+
+            <section class="posts-section">
+                <div class="posts-header">
+                    <h2 class="posts-title">Posts</h2>
+                    <div class="sort-options">
+                        <button class="sort-btn active" data-sort="latest">
+                            최신순
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="sort-btn" data-sort="popular">인기순</button>
+                        <button class="sort-btn" data-sort="views">조회순</button>
+                    </div>
+                </div>
+
+                <div class="posts-list" id="postsList">
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn pagination-prev" id="prevBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="pagination-numbers" id="paginationNumbers">
+                    </div>
+                    <button class="pagination-btn pagination-next" id="nextBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <button class="scroll-top-btn" id="scrollTopBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024, John Doe</p>
+            <div class="footer-links">
+                <span>Next.js / Spring</span>
+                <span class="footer-divider">·</span>
+                <a href="#" class="footer-link">RSS</a>
+                <span class="footer-divider">·</span>
+                <a href="#" class="footer-link">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="profile.js"></script>
+</body>
+</html>
