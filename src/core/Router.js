@@ -58,11 +58,16 @@ class Router {
   loadPage(path) {
     console.log('loadPage called with path:', path);
     let PageComponent = this.routes[path];
+    let props = {};
 
     // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
     if (!PageComponent) {
       console.log('Exact route not found, trying dynamic route');
-      PageComponent = this.matchDynamicRoute(path);
+      const result = this.matchDynamicRoute(path);
+      if (result) {
+        PageComponent = result.component;
+        props = result.params;
+      }
     }
 
     // 그래도 없으면 기본 페이지
@@ -88,7 +93,7 @@ class Router {
     if (main) {
       console.log('Mounting page to main container');
       main.innerHTML = '';
-      this.currentPage = new PageComponent();
+      this.currentPage = new PageComponent(props);
       this.currentPage.mount(main);
     } else {
       console.error('Main container not found');
@@ -98,12 +103,23 @@ class Router {
   // 동적 라우트 매칭
   matchDynamicRoute(path) {
     for (const routePath in this.routes) {
-      // :id 같은 동적 파라미터를 정규식으로 변환
-      const pattern = routePath.replace(/:\w+/g, '(\\d+)');
+      const paramNames = [];
+      const pattern = routePath.replace(/:(\w+)/g, (match, paramName) => {
+        paramNames.push(paramName);
+        return '(\\d+)';
+      });
       const regex = new RegExp(`^${pattern}$`);
+      const match = path.match(regex);
 
-      if (regex.test(path)) {
-        return this.routes[routePath];
+      if (match) {
+        const params = {};
+        paramNames.forEach((name, index) => {
+          params[name] = match[index + 1];
+        });
+        return {
+          component: this.routes[routePath],
+          params
+        };
       }
     }
     return null;

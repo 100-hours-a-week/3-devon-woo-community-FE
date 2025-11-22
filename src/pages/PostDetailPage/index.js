@@ -1,366 +1,509 @@
 import Component from '../../core/Component.js';
-import { formatDate, formatCount } from '../../utils/formatters.js';
-import LoadingSpinner from '../../components/LoadingSpinner/index.js';
-import Modal from '../../components/Modal/index.js';
-import CommentSection from '../../components/CommentSection/index.js';
-
-// API imports
-import { getPostById, deletePost as deletePostAPI, likePost, unlikePost } from '../../api/posts.js';
-
-// Utils imports
-import AuthService from '../../utils/AuthService.js';
-import { navigate, navigateReplace } from '../../core/Router.js';
+import Header from '../../components/Header/index.js';
+import { getPostById, getPosts } from '../../api/posts.js';
+import { navigate } from '../../core/Router.js';
 
 class PostDetailPage extends Component {
-  constructor(props) {
+  constructor(props = {}) {
     super(props);
+
     this.state = {
       post: null,
-      isLiked: false,
       isLoading: true,
-      showDeleteModal: false,
-      showLoginModal: false
+      likeCount: 0,
+      isLiked: false,
+      recommendedPosts: [],
+      comments: [],
+      commentText: ''
     };
+
+    this.postId = props.id || props.postId;
     this.loadStyle('/src/pages/PostDetailPage/style.css');
-    this.postId = null;
-    this.commentSection = null; // CommentSection 인스턴스 저장
-    this.commentSectionMounted = false; // CommentSection 마운트 여부
   }
 
   render() {
-    if (this.state.isLoading) {
-      const loadingSpinner = new LoadingSpinner({ show: true });
+    const { post, isLoading, likeCount, isLiked, recommendedPosts, comments, commentText } = this.state;
+
+    if (isLoading) {
       return `
-        <div class="main-container">
-          ${loadingSpinner.render()}
+        <div class="post-detail-page">
+          <main class="post-detail-main">
+            <div style="text-align: center; padding: 60px 0; color: #999;">
+              게시글을 불러오는 중...
+            </div>
+          </main>
         </div>
       `;
     }
 
-    const post = this.state.post;
     if (!post) {
       return `
-        <div class="main-container">
-          <div class="error-message">게시글을 찾을 수 없습니다.</div>
+        <div class="post-detail-page">
+          <main class="post-detail-main">
+            <div style="text-align: center; padding: 60px 0; color: #999;">
+              게시글을 찾을 수 없습니다.
+            </div>
+          </main>
         </div>
       `;
     }
 
     return `
-      <div class="main-container">
-        <!-- 게시글 상세 섹션 -->
-        <article class="post-detail">
-          <!-- 게시글 헤더 -->
-          <div class="post-header">
-            <h2 class="post-title">${post.title}</h2>
-
-          </div>
-
-          <!-- 게시글 메타 정보 -->
-          <div class="post-meta">
-            <div class="author-info">
-              <div class="author-avatar">
-                ${post.member?.profileImage ?
-                  `<img src="${post.member.profileImage}" alt="${post.member.nickname}" class="avatar-image" />` :
-                  `<div class="avatar-placeholder"></div>`
-                }
+      <div class="post-detail-page">
+        <main class="post-detail-main">
+          <article class="post-detail">
+            <div class="post-header">
+              <div class="post-category">${post.category || 'TECH INSIGHT'}</div>
+              <h1 class="post-title">${post.title}</h1>
+              <div class="post-meta">
+                <span class="post-author">${post.author}</span>
+                <span class="post-divider">|</span>
+                <span class="post-date">${this.formatDate(post.date)}</span>
               </div>
-              <div class="author-details">
-                <span class="author-name">${post.member?.nickname || '작성자'}</span>
-                <span class="post-date">${formatDate(post.createdAt)}</span>
+              <div class="post-actions">
+                <button class="like-btn ${isLiked ? 'liked' : ''}" id="likeBtn">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 17.5L8.5 16.2C4 12.1 1 9.4 1 6.1C1 3.4 3.1 1.3 5.8 1.3C7.3 1.3 8.8 2 10 3.1C11.2 2 12.7 1.3 14.2 1.3C16.9 1.3 19 3.4 19 6.1C19 9.4 16 12.1 11.5 16.2L10 17.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span id="likeCount">${likeCount}</span>
+                </button>
               </div>
             </div>
-            ${this.isPostOwner() ? `
-              <div class="post-actions">
-                <button class="action-btn edit-btn" id="editBtn">수정</button>
-                <button class="action-btn delete-btn" id="deleteBtn">삭제</button>
+
+            ${post.thumbnail ? `
+              <div class="post-thumbnail">
+                <img src="${post.thumbnail}" alt="게시글 썸네일">
               </div>
             ` : ''}
-          </div>
 
-          <!-- 게시글 이미지 -->
-          ${post.imageUrl ? `
-            <div class="post-image-container">
-              <img src="${post.imageUrl}" alt="게시글 이미지" class="post-image">
+            <div class="post-content" id="postContent">
+              ${post.content || '<p>게시글 내용이 없습니다.</p>'}
             </div>
-          ` : ''}
+          </article>
 
-          <!-- 게시글 본문 -->
-          <div class="post-content">${post.content}</div>
-
-          <!-- 게시글 통계 -->
-          <div class="post-stats">
-            <button
-              class="like-button ${this.state.isLiked ? 'active' : ''}"
-              id="likeBtn"
-            >  
-              <span class="stat-value">${formatCount(post.likeCount)}</span>
-              <span class="stat-label">좋아요수</span>
-            </button>
-            <div class="stat-item">
-              <span class="stat-value">${formatCount(post.viewCount + 1)}</span>
-              <span class="stat-label">조회수</span>
+          <section class="recommended-posts">
+            <h3 class="section-title">추천 게시글</h3>
+            <div class="recommended-list" id="recommendedList">
+              ${this.renderRecommendedPosts()}
             </div>
-            <div class="stat-item">
-              <span class="stat-value">${formatCount(post.commentCount)}</span>
-              <span class="stat-label">댓글</span>
+          </section>
+
+          <section class="comments-section">
+            <div class="comments-header">
+              <h3 class="section-title">댓글 <span id="commentCount">${comments.length}</span>개</h3>
+              <div class="comments-sort">
+                <label for="sortSelect">정렬 기준</label>
+                <select id="sortSelect" class="sort-select">
+                  <option value="latest">날짜 오름차순</option>
+                  <option value="oldest">날짜 내림차순</option>
+                  <option value="likes">좋아요순</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </article>
 
-        <!-- 댓글 섹션 -->
-        ${this.renderCommentSection()}
+            <div class="comment-write">
+              <div class="comment-avatar">
+                <img src="https://via.placeholder.com/48/CCCCCC/666?text=U" alt="프로필">
+              </div>
+              <div class="comment-input-wrapper">
+                <textarea
+                  id="commentInput"
+                  class="comment-textarea"
+                  placeholder="댓글 달기..."
+                  rows="3"
+                >${commentText}</textarea>
+                <div class="comment-actions-bottom">
+                  <button class="comment-submit-btn" id="submitCommentBtn">댓글 작성</button>
+                </div>
+              </div>
+            </div>
 
-        ${this.renderDeleteModal()}
-        ${this.renderLoginModal()}
+            <div class="comments-list" id="commentsList">
+              ${this.renderComments()}
+            </div>
+          </section>
+        </main>
+
+        <button class="scroll-top-btn" id="scrollTopBtn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     `;
   }
 
-  renderCommentSection() {
-    // CommentSection 인스턴스가 없을 때만 생성 (재사용)
-    if (!this.commentSection) {
-      this.commentSection = new CommentSection({
-        postId: this.postId,
-        onCommentCountChange: (count) => {
-          // 댓글 개수 업데이트 (리렌더링 방지)
-          if (this.state.post && this.state.post.commentCount !== count) {
-            // 직접 state 업데이트 (setState 사용 안 함)
-            this.state.post.commentCount = count;
-            // 댓글 개수 표시 부분만 업데이트
-            const commentCountEl = this.$el?.querySelector('.post-stats .stat-item:last-child .stat-value');
-            if (commentCountEl) {
-              commentCountEl.textContent = formatCount(count);
-            }
+  renderRecommendedPosts() {
+    const { recommendedPosts } = this.state;
+
+    if (recommendedPosts.length === 0) {
+      return '<div style="text-align: center; color: #999; padding: 20px;">추천 게시글이 없습니다.</div>';
+    }
+
+    return recommendedPosts.map(post => `
+      <div class="recommended-item" data-post-id="${post.id}">
+        <div class="recommended-item-category">${post.category || 'TECH INSIGHT'}</div>
+        <div class="recommended-item-title">${post.title}</div>
+        <div class="recommended-item-meta">${this.formatDate(post.date)}</div>
+      </div>
+    `).join('');
+  }
+
+  renderComments() {
+    const { comments } = this.state;
+
+    if (comments.length === 0) {
+      return '<div style="text-align: center; color: #999; padding: 40px 0;">댓글이 없습니다.</div>';
+    }
+
+    return comments.map(comment => `
+      <div class="comment-item">
+        <div class="comment-avatar">
+          <img src="${comment.avatar || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}" alt="${comment.author}">
+        </div>
+        <div class="comment-content-wrapper">
+          <div class="comment-header">
+            <span class="comment-author">${comment.author}</span>
+            <span class="comment-date">${comment.date}</span>
+          </div>
+          <div class="comment-text">${comment.text}</div>
+          <div class="comment-actions-row">
+            <button class="comment-action-btn ${comment.likes > 0 ? 'liked' : ''}" data-comment-id="${comment.id}" data-action="like">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 14L7 13.1C3.2 9.68 1 7.72 1 5.5C1 3.72 2.36 2.5 4 2.5C5 2.5 6 3 6.5 3.7C7 3 8 2.5 9 2.5C10.64 2.5 12 3.72 12 5.5C12 7.72 9.8 9.68 6 13.1L5 14Z" stroke="currentColor" stroke-width="1.5" ${comment.likes > 0 ? 'fill="currentColor"' : ''}/>
+              </svg>
+              좋아요
+              ${comment.likes > 0 ? `<span>· ${comment.likes}</span>` : ''}
+            </button>
+            <button class="comment-action-btn" data-comment-id="${comment.id}" data-action="reply">
+              답글 달기
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async mounted() {
+    await this.$nextTick();
+
+    await this.loadPost();
+    await this.loadRecommendedPosts();
+    this.loadMockComments();
+
+    this.setupEventListeners();
+    this.initScrollTopButton();
+  }
+
+  async updated() {
+    await this.$nextTick();
+    this.setupEventListeners();
+  }
+
+  $nextTick() {
+    return new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  async loadPost() {
+    this.setState({ isLoading: true });
+
+    try {
+      const response = await getPostById(this.postId);
+
+      const post = {
+        id: response.postId,
+        title: response.title,
+        content: this.formatContent(response.content),
+        category: 'TECH INSIGHT',
+        author: response.member?.nickname || 'Anonymous',
+        date: response.createdAt,
+        thumbnail: response.imageUrl || 'https://via.placeholder.com/800x450/E8F5E9/4CAF50?text=Tech+Blog',
+        views: response.viewCount || 0
+      };
+
+      this.setState({
+        post,
+        likeCount: response.likeCount || 0,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Failed to load post:', error);
+      this.setState({ isLoading: false, post: null });
+    }
+  }
+
+  async loadRecommendedPosts() {
+    try {
+      const response = await getPosts({
+        page: 0,
+        size: 3
+      });
+
+      const recommendedPosts = response.items.map(post => ({
+        id: post.postId,
+        title: post.title,
+        category: 'TECH INSIGHT',
+        date: post.createdAt
+      }));
+
+      this.setState({ recommendedPosts });
+    } catch (error) {
+      console.error('Failed to load recommended posts:', error);
+    }
+  }
+
+  loadMockComments() {
+    const mockComments = [
+      {
+        id: 1,
+        author: '배태준',
+        avatar: 'https://via.placeholder.com/48/FF6B6B/FFF?text=배',
+        text: '언제 읽어도 좋은 글이네요. 감사합니다~!',
+        date: '4년',
+        likes: 0
+      },
+      {
+        id: 2,
+        author: '조백규',
+        avatar: 'https://via.placeholder.com/48/4ECDC4/FFF?text=조',
+        text: `옥시 모듈의 버전관리는 어떻게 하셨었나요?
+spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형태인데요.
+동일하게 버전을 관리하는 경우에는 멀티모듈 프로젝트에 있는 a, b 시스템 중 a 시스템의 버그로 인해 패치되는 경우 a, b 모두 버전이 올라가버리는 현상이 발생하는데요..
+또한 b 시스템은 수정이 안되어도 항상 최신버전을 유지하기 위해 같이 배포를 해줘야하는 상황이 발생할 것 같아서요.`,
+        date: '4년',
+        likes: 1
+      },
+      {
+        id: 3,
+        author: 'WooSeok Park',
+        avatar: 'https://via.placeholder.com/48/95E1D3/FFF?text=W',
+        text: '좋은 내용 감사합니다.',
+        date: '4년',
+        likes: 1
+      },
+      {
+        id: 4,
+        author: '최준현',
+        avatar: 'https://via.placeholder.com/48/F38181/FFF?text=최',
+        text: '잘봤습니다~',
+        date: '6년',
+        likes: 0
+      }
+    ];
+
+    this.setState({ comments: mockComments });
+  }
+
+  formatContent(content) {
+    if (!content) return '<p>게시글 내용이 없습니다.</p>';
+
+    const lines = content.split('\n');
+    let html = '';
+    let inCodeBlock = false;
+
+    for (let line of lines) {
+      if (line.trim() === '') {
+        if (!inCodeBlock) {
+          html += '<p></p>';
+        }
+        continue;
+      }
+
+      if (line.startsWith('```')) {
+        if (inCodeBlock) {
+          html += '</code></pre>';
+          inCodeBlock = false;
+        } else {
+          html += '<pre><code>';
+          inCodeBlock = true;
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        html += line + '\n';
+      } else if (line.startsWith('## ')) {
+        html += `<h2>${line.substring(3)}</h2>`;
+      } else if (line.startsWith('### ')) {
+        html += `<h3>${line.substring(4)}</h3>`;
+      } else {
+        html += `<p>${line}</p>`;
+      }
+    }
+
+    if (inCodeBlock) {
+      html += '</code></pre>';
+    }
+
+    return html;
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}년 ${month}월 ${day}일`;
+  }
+
+  setupEventListeners() {
+    const likeBtn = this.$$('#likeBtn');
+    const submitCommentBtn = this.$$('#submitCommentBtn');
+    const sortSelect = this.$$('#sortSelect');
+    const commentInput = this.$$('#commentInput');
+    const recommendedList = this.$$('#recommendedList');
+    const commentsList = this.$$('#commentsList');
+
+    if (likeBtn) {
+      likeBtn.replaceWith(likeBtn.cloneNode(true));
+      this.$$('#likeBtn').addEventListener('click', () => this.handleLikeClick());
+    }
+
+    if (submitCommentBtn) {
+      submitCommentBtn.replaceWith(submitCommentBtn.cloneNode(true));
+      this.$$('#submitCommentBtn').addEventListener('click', () => this.handleCommentSubmit());
+    }
+
+    if (sortSelect) {
+      sortSelect.replaceWith(sortSelect.cloneNode(true));
+      this.$$('#sortSelect').addEventListener('change', (e) => this.handleCommentSort(e.target.value));
+    }
+
+    if (commentInput) {
+      commentInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          this.handleCommentSubmit();
+        }
+      });
+      commentInput.addEventListener('input', (e) => {
+        this.state.commentText = e.target.value;
+      });
+    }
+
+    if (recommendedList) {
+      recommendedList.replaceWith(recommendedList.cloneNode(true));
+      this.$$('#recommendedList').addEventListener('click', (e) => {
+        const item = e.target.closest('.recommended-item');
+        if (item) {
+          const postId = item.dataset.postId;
+          this.handleRecommendedClick(postId);
+        }
+      });
+    }
+
+    if (commentsList) {
+      commentsList.replaceWith(commentsList.cloneNode(true));
+      this.$$('#commentsList').addEventListener('click', (e) => {
+        const btn = e.target.closest('.comment-action-btn');
+        if (btn) {
+          const commentId = parseInt(btn.dataset.commentId);
+          const action = btn.dataset.action;
+
+          if (action === 'like') {
+            this.handleCommentLike(commentId);
+          } else if (action === 'reply') {
+            this.handleCommentReply(commentId);
           }
         }
       });
     }
-    return this.commentSection.render();
   }
 
-  renderDeleteModal() {
-    const deleteModal = new Modal({
-      show: this.state.showDeleteModal,
-      title: '게시글을 삭제하시겠습니까?',
-      message: '삭제한 내용은 복구할 수 없습니다.',
-      id: 'deleteModal'
+  handleLikeClick() {
+    const { isLiked, likeCount } = this.state;
+
+    this.setState({
+      isLiked: !isLiked,
+      likeCount: isLiked ? likeCount - 1 : likeCount + 1
     });
-    return deleteModal.render();
   }
 
-  renderLoginModal() {
-    const loginModal = new Modal({
-      show: this.state.showLoginModal,
-      title: '로그인이 필요합니다',
-      message: '로그인을 했을 때만 좋아요를 누를 수 있습니다.\n로그인하시겠습니까?',
-      id: 'loginModal'
+  handleCommentSubmit() {
+    const commentInput = this.$$('#commentInput');
+    const text = commentInput.value.trim();
+
+    if (!text) {
+      alert('댓글 내용을 입력해주세요.');
+      return;
+    }
+
+    const newComment = {
+      id: this.state.comments.length + 1,
+      author: '익명 사용자',
+      avatar: 'https://via.placeholder.com/48/CCCCCC/666?text=U',
+      text: text,
+      date: '방금',
+      likes: 0
+    };
+
+    this.setState({
+      comments: [newComment, ...this.state.comments],
+      commentText: ''
     });
-    return loginModal.render();
+
+    alert('댓글이 작성되었습니다!');
   }
 
-  // 최초 마운트 시에만 1회 호출 (React의 componentDidMount와 동일)
-  mounted() {
-    // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(true);
-      window.headerComponent.showProfileIcon(true);
+  handleCommentSort(sortValue) {
+    const { comments } = this.state;
+    let sortedComments = [...comments];
+
+    if (sortValue === 'latest') {
+      sortedComments.sort((a, b) => b.id - a.id);
+    } else if (sortValue === 'oldest') {
+      sortedComments.sort((a, b) => a.id - b.id);
+    } else if (sortValue === 'likes') {
+      sortedComments.sort((a, b) => b.likes - a.likes);
     }
 
-    // URL에서 postId 추출 및 데이터 로딩 (1회만 실행됨)
-    const path = window.location.pathname;
-    const match = path.match(/\/posts\/(\d+)/);
-    if (match) {
-      this.postId = match[1];
-      this.loadPost();
-    }
-
-    // 이벤트 리스너 등록
-    this.setupEventListeners();
+    this.setState({ comments: sortedComments });
   }
 
-  // 업데이트 시마다 호출 (React의 componentDidUpdate와 동일)
-  updated() {
-    // DOM이 교체되므로 이벤트 리스너 재등록
-    this.setupEventListeners();
-  }
-
-  setupEventListeners() {
-    // 게시글 수정 버튼
-    const editBtn = this.$el.querySelector('#editBtn');
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        navigate(`/posts/${this.postId}/edit`);
-      });
-    }
-
-    // 게시글 삭제 버튼
-    const deleteBtn = this.$el.querySelector('#deleteBtn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => {
-        this.setState({ showDeleteModal: true });
-        document.body.classList.add('modal-active');
-      });
-    }
-
-    // 좋아요 버튼
-    const likeBtn = this.$el.querySelector('#likeBtn');
-    if (likeBtn) {
-      likeBtn.addEventListener('click', () => {
-        this.toggleLike();
-      });
-    }
-
-    // 게시글 삭제 모달 버튼
-    const deleteModal = this.$el.querySelector('#deleteModal');
-    if (deleteModal) {
-      deleteModal.addEventListener('click', (e) => {
-        const btn = e.target.closest('.modal-btn');
-        if (!btn) return;
-
-        const action = btn.dataset.action;
-        if (action === 'cancel') {
-          this.setState({ showDeleteModal: false });
-          document.body.classList.remove('modal-active');
-        } else if (action === 'confirm') {
-          this.deletePost();
-        }
-      });
-    }
-
-    // 로그인 모달 버튼
-    const loginModal = this.$el.querySelector('#loginModal');
-    if (loginModal) {
-      loginModal.addEventListener('click', (e) => {
-        const btn = e.target.closest('.modal-btn');
-        if (!btn) return;
-
-        const action = btn.dataset.action;
-        if (action === 'cancel') {
-          this.setState({ showLoginModal: false });
-          document.body.classList.remove('modal-active');
-        } else if (action === 'confirm') {
-          // 로그인 페이지로 이동
-          this.setState({ showLoginModal: false });
-          document.body.classList.remove('modal-active');
-          navigateReplace('/login');
-        }
-      });
-    }
-
-    // CommentSection의 DOM 요소 연결 및 초기화
-    if (this.commentSection) {
-      const commentSectionEl = this.$el.querySelector('.comment-section');
-      if (commentSectionEl) {
-        this.commentSection.$el = commentSectionEl;
-
-        // 최초 1회만 mounted() 호출 (댓글 로드 포함)
-        if (!this.commentSectionMounted) {
-          this.commentSectionMounted = true;
-          this.commentSection.mounted();
-        } else {
-          // 이후에는 이벤트 리스너만 재등록
-          this.commentSection.setupEventListeners();
-        }
+  handleCommentLike(commentId) {
+    const { comments } = this.state;
+    const updatedComments = comments.map(comment => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          likes: comment.likes > 0 ? 0 : 1
+        };
       }
-    }
+      return comment;
+    });
+
+    this.setState({ comments: updatedComments });
   }
 
+  handleCommentReply(commentId) {
+    alert(`댓글 ${commentId}번에 답글을 작성합니다.`);
+  }
+
+  handleRecommendedClick(postId) {
+    navigate(`/posts/${postId}`);
+  }
+
+  initScrollTopButton() {
+    const scrollTopBtn = this.$$('#scrollTopBtn');
+    if (!scrollTopBtn) return;
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        scrollTopBtn.classList.add('visible');
+      } else {
+        scrollTopBtn.classList.remove('visible');
+      }
+    });
+
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
 
   beforeUnmount() {
-    // 뒤로가기 버튼 숨김
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(false);
-    }
-    // 모달 스크롤 잠금 해제
-    document.body.classList.remove('modal-active');
   }
-
-  // 게시글 작성자 확인
-  isPostOwner() {
-    if (!this.state.post || !this.state.post.member) return false;
-    const currentUserId = AuthService.getCurrentUserId();
-    if (!currentUserId) return false;
-    return this.state.post.member.memberId === currentUserId;
-  }
-
-  // 게시글 로드
-  async loadPost() {
-    try {
-      // 현재 로그인한 사용자 ID 가져오기
-      const memberId = AuthService.getCurrentUserId();
-
-      const postData = await getPostById(this.postId, memberId);
-
-      this.setState({
-        post: postData,
-        // isLiked가 null이거나 undefined일 경우 false로 설정
-        isLiked: postData.isLiked === true,
-        isLoading: false
-      });
-    } catch (error) {
-      console.error('게시글 로드 실패:', error);
-      this.setState({ isLoading: false });
-      alert('게시글을 불러오는데 실패했습니다.');
-    }
-  }
-
-  // 좋아요 토글
-  async toggleLike() {
-    // 로그인 확인 - 로그인하지 않은 경우 모달 표시
-    if (!AuthService.isLoggedIn()) {
-      this.setState({ showLoginModal: true });
-      document.body.classList.add('modal-active');
-      return;
-    }
-
-    try {
-      const memberId = AuthService.getCurrentUserId();
-
-      const newIsLiked = !this.state.isLiked;
-      const likeCountDelta = newIsLiked ? 1 : -1;
-
-      // API 호출
-      if (newIsLiked) {
-        await likePost(this.postId, memberId);
-      } else {
-        await unlikePost(this.postId, memberId);
-      }
-
-      this.setState({
-        isLiked: newIsLiked,
-        post: {
-          ...this.state.post,
-          likeCount: this.state.post.likeCount + likeCountDelta
-        }
-      });
-    } catch (error) {
-      console.error('좋아요 처리 실패:', error);
-      alert('좋아요 처리에 실패했습니다.');
-    }
-  }
-
-  // 게시글 삭제
-  async deletePost() {
-    // 로그인 확인
-    if (!AuthService.requireAuth()) {
-      return;
-    }
-
-    try {
-      const memberId = AuthService.getCurrentUserId();
-
-      // API 호출
-      await deletePostAPI(this.postId, memberId);
-
-      alert('게시글이 삭제되었습니다.');
-      navigateReplace('/posts');
-    } catch (error) {
-      console.error('게시글 삭제 실패:', error);
-      alert('게시글 삭제에 실패했습니다.');
-    }
-  }
-
 }
 
 export default PostDetailPage;

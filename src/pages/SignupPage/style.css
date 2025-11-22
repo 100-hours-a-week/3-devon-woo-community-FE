@@ -1,137 +1,321 @@
-/* 회원가입 페이지 레이아웃 */
-#main .main-container {
-  justify-content: center;
-  align-items: center;
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
 }
 
-/* 회원가입 페이지 스타일 */
+.main-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
 .signup-wrapper {
   width: 100%;
-  max-width: 500px;
-  background-color: var(--color-background-white);
-  border-radius: var(--radius-xl);
-  padding: 48px 40px;
-  box-shadow: var(--shadow-md);
+  max-width: 480px;
 }
 
-.signup-title {
-  font-size: 28px;
+.page-title {
+  font-size: 48px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 40px;
+  color: #000;
   text-align: center;
+  margin-bottom: 16px;
 }
 
-/* 폼 스타일 */
+.page-subtitle {
+  font-size: 15px;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 48px;
+}
+
 .signup-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 24px;
 }
 
-/* 프로필 업로드 섹션 */
-.profile-group {
-  gap: var(--spacing-xs);
-}
-
-.profile-upload-section {
+.form-group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
+  gap: 8px;
 }
 
-.profile-image-container {
-  width: 120px;
-  height: 120px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-background-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-  transition: background-color var(--transition-fast);
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
 }
 
-.profile-image-container:hover {
-  background-color: var(--color-border-tertiary);
-}
-
-.profile-image {
+.form-input {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #333;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
 }
 
-.profile-placeholder {
-  color: var(--color-text-secondary);
+.form-input:focus {
+  background-color: #fff;
+  border-color: #667eea;
+}
+
+.form-input::placeholder {
+  color: #999;
+}
+
+.form-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-button .form-input {
+  flex: 1;
+}
+
+.btn-verify {
+  padding: 14px 20px;
+  border: 1px solid #667eea;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-verify:hover {
+  background-color: #667eea;
+  color: #fff;
+}
+
+.btn-verify:disabled {
+  background-color: #f5f5f5;
+  border-color: #e5e5e5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.btn-verify.success {
+  background-color: #4caf50;
+  border-color: #4caf50;
+  color: #fff;
+}
+
+.timer {
+  font-size: 13px;
+  color: #f44336;
+  font-weight: 600;
+  text-align: right;
+  min-height: 18px;
+}
+
+.help-text {
+  min-height: 18px;
+  font-size: 12px;
+  padding-left: 4px;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.help-text.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.help-text.error {
+  color: #f44336;
+}
+
+.help-text.success {
+  color: #4caf50;
+}
+
+.help-text.info {
+  color: #667eea;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  color: #999;
+  transition: color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.profile-input-hidden {
+.password-toggle:hover {
+  color: #667eea;
+}
+
+.password-toggle.active .eye-open {
   display: none;
 }
 
-.profile-delete-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--color-background-white);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  font-size: 12px;
+.password-toggle.active .eye-closed {
+  display: block !important;
+}
+
+.terms-group {
+  background-color: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 20px;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  position: relative;
 }
 
-.profile-delete-btn:hover {
-  background-color: var(--color-background);
-  border-color: var(--color-error);
-  color: var(--color-error);
+.checkbox-input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
 }
 
-/* 로그인 링크 섹션 */
-.login-link-section {
-  text-align: center;
-  margin-top: var(--spacing-sm);
+.checkbox-text {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.terms-link {
+  font-size: 13px;
+  color: #667eea;
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+.terms-divider {
+  height: 1px;
+  background-color: #e5e5e5;
+  margin: 8px 0;
+}
+
+#termsAll {
+  width: 22px;
+  height: 22px;
+}
+
+#termsAll + .checkbox-text {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-signup {
+  background-color: #000;
+  color: #fff;
+  margin-top: 8px;
+}
+
+.btn-signup:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.btn-signup:active:not(:disabled) {
+  background-color: #000;
+  transform: scale(0.98);
+}
+
+.btn-signup:disabled {
+  background-color: #e5e5e5;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .login-link {
+  text-align: center;
   font-size: 14px;
-  color: var(--color-text-primary);
+  color: #666;
+  margin-top: 32px;
+}
+
+.login-link a {
+  color: #667eea;
   text-decoration: none;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  display: inline-block;
-  transition: all var(--transition-fast);
+  font-weight: 600;
+  transition: opacity 0.2s ease;
 }
 
-.login-link:hover {
-  background-color: var(--color-background);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+.login-link a:hover {
+  opacity: 0.7;
+  text-decoration: underline;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .signup-wrapper {
-    padding: 32px 24px;
+  .main-container {
+    padding: 40px 20px;
   }
 
-  .signup-title {
-    font-size: 24px;
+  .signup-wrapper {
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 36px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
     margin-bottom: 32px;
   }
 
-  .signup-form {
-    gap: 20px;
+  .input-with-button {
+    flex-direction: column;
   }
 
-  .profile-image-container {
-    width: 100px;
-    height: 100px;
+  .btn-verify {
+    width: 100%;
   }
 }

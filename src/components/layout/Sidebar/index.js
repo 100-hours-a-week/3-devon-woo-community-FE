@@ -31,14 +31,14 @@ class Sidebar extends Component {
     const container = this.$$('#sidebarContent');
     if (!container) return;
 
-    container.innerHTML = '';
-
     const { children } = this.state;
     if (!children || children.length === 0) return;
 
     children.forEach(child => {
       if (child && typeof child.mount === 'function') {
-        child.mount(container);
+        const childWrapper = document.createElement('div');
+        container.appendChild(childWrapper);
+        child.mount(childWrapper);
       }
     });
   }

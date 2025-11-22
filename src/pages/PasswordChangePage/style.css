@@ -1,234 +1,363 @@
-/* 비밀번호 변경 페이지 레이아웃 */
-#main .main-container {
-  justify-content: center;
-  align-items: center;
+.password-change-page {
+  min-height: 100vh;
+  background-color: #f9fafb;
 }
 
-/* 비밀번호 변경 래퍼 */
-.password-wrapper {
-  width: 100%;
-  max-width: 480px;
-  background-color: var(--color-background-white);
-  border-radius: var(--radius-xl);
-  padding: 48px 40px;
-  box-shadow: var(--shadow-md);
+.main-container {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: calc(100vh - 72px - 100px);
+}
+
+.password-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.password-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
 }
 
 .password-title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 40px;
-  text-align: center;
+  color: #1f2937;
+  margin-bottom: 8px;
 }
 
-/* 폼 스타일 */
+.password-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
 .password-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 28px;
 }
 
-/* 폼 그룹 */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 8px;
 }
 
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* 입력 필드 */
-.form-input {
-  width: 100%;
-  padding: 14px var(--spacing-md);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-lg);
+.label-required {
+  color: #f44336;
   font-size: 14px;
-  font-family: inherit;
-  transition: border-color var(--transition-fast);
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.form-input::placeholder {
-  color: var(--color-text-tertiary);
-}
-
-/* 에러 상태 */
-.form-input.error {
-  border-color: var(--color-error);
-}
-
-.form-input.error:focus {
-  border-color: var(--color-error);
-}
-
-/* Helper Text */
-.helper-text {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  display: none;
-  min-height: 16px;
-  line-height: 1.4;
-}
-
-.helper-text.show {
-  display: block;
-}
-
-.form-input.error + .helper-text.show {
-  color: var(--color-error);
-}
-
-/* 제출 버튼 */
-.submit-btn {
-  width: 100%;
-  padding: var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
-  margin-top: var(--spacing-sm);
+.password-input-wrapper {
   position: relative;
 }
 
-/* 버튼 비활성화 상태 */
-.submit-btn:disabled {
-  background-color: var(--color-primary-disabled);
-  color: var(--color-text-white);
-  cursor: not-allowed;
-  opacity: 0.8;
+.form-input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  font-size: 15px;
+  color: #1f2937;
+  font-family: inherit;
+  transition: all 0.2s ease;
 }
 
-/* 버튼 활성화 상태 */
-.submit-btn:not(:disabled) {
-  background-color: var(--color-primary);
-  color: var(--color-text-white);
+.form-input:focus {
+  background-color: #ffffff;
+  border-color: #667eea;
+  outline: none;
 }
 
-.submit-btn:not(:disabled):hover {
-  background-color: var(--color-primary-hover);
+.form-input::placeholder {
+  color: #9ca3af;
 }
 
-/* 버튼 로딩 상태 */
-.submit-btn.loading {
-  background-color: var(--color-primary);
-  pointer-events: none;
+.form-input.error {
+  border-color: #f44336;
 }
 
-.submit-btn.loading .button-text {
-  opacity: 0;
-}
-
-.button-spinner {
+.password-toggle {
   position: absolute;
+  right: 12px;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: #6b7280;
+}
+
+.password-strength {
+  margin-top: 8px;
+}
+
+.strength-bar {
+  height: 6px;
+  background-color: #f9fafb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.strength-fill {
+  height: 100%;
+  width: 0;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-fill.weak {
+  width: 33%;
+  background-color: #f44336;
+}
+
+.strength-fill.medium {
+  width: 66%;
+  background-color: #ff9800;
+}
+
+.strength-fill.strong {
+  width: 100%;
+  background-color: #4caf50;
+}
+
+.strength-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.strength-text.weak {
+  color: #f44336;
+}
+
+.strength-text.medium {
+  color: #ff9800;
+}
+
+.strength-text.strong {
+  color: #4caf50;
+}
+
+.form-hint {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.form-error {
+  font-size: 13px;
+  color: #f44336;
+  min-height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #5568d3;
+}
+
+.btn-primary:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.toast {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  background-color: #4caf50;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.toast-icon {
   width: 20px;
   height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid var(--color-text-white);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-spinner svg {
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* 토스트 메시지 */
-.toast-message {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--color-text-primary);
-  color: var(--color-text-white);
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: var(--shadow-lg);
-  z-index: var(--z-index-toast);
-  animation: slideUp var(--transition-normal);
-}
-
-@keyframes slideUp {
   from {
-    bottom: 20px;
-    opacity: 0;
+    transform: rotate(0deg);
   }
   to {
-    bottom: 40px;
-    opacity: 1;
+    transform: rotate(360deg);
   }
 }
 
-/* 반응형 디자인 */
+.loading-spinner p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
 @media (max-width: 768px) {
-  .password-wrapper {
-    padding: var(--spacing-xl) var(--spacing-lg);
+  .main-container {
+    padding: 30px 16px;
+  }
+
+  .password-card {
+    padding: 32px 24px;
   }
 
   .password-title {
     font-size: 24px;
-    margin-bottom: var(--spacing-xl);
   }
 
-  .password-form {
-    gap: 20px;
-  }
-
-  .form-input {
-    padding: var(--spacing-xs) 14px;
+  .password-subtitle {
     font-size: 14px;
   }
 
-  .submit-btn {
-    padding: 14px;
-    font-size: 15px;
+  .password-form {
+    gap: 24px;
   }
 
-  .toast-message {
-    bottom: var(--spacing-lg);
-    padding: var(--spacing-xs) var(--spacing-lg);
-    font-size: 13px;
+  .form-actions {
+    flex-direction: column-reverse;
   }
-}
 
-/* 포커스 시 애니메이션 */
-.form-input:focus {
-  animation: focusPulse var(--transition-normal);
-}
-
-@keyframes focusPulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--color-focus-ring);
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
   }
-  100% {
-    box-shadow: 0 0 0 4px transparent;
+
+  .toast {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
   }
 }
 
-/* 에러 애니메이션 */
-.form-input.error {
-  animation: shake 0.4s ease;
-}
+@media (max-width: 480px) {
+  .password-card {
+    padding: 24px 16px;
+  }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  .password-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+  }
+
+  .password-title {
+    font-size: 22px;
+  }
+
+  .form-input {
+    padding: 12px 44px 12px 14px;
+    font-size: 14px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
 }
