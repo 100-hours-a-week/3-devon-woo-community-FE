@@ -1,75 +1,209 @@
-// 간단한 컴포넌트 베이스 클래스
 class Component {
   constructor(props = {}) {
     this.props = props;
     this.state = {};
     this.$el = null;
-    this._isMounted = false; // 마운트 상태 플래그
+    this._isMounted = false;
+    this._loadedStyles = new Set();
   }
 
-  // 스타일 동적 로드 (자식 클래스에서 호출)
   loadStyle(cssPath) {
-    const linkId = `${this.constructor.name.toLowerCase()}-style`;
-    if (!document.getElementById(linkId)) {
+    if (this._loadedStyles.has(cssPath)) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const linkId = `${this.constructor.name.toLowerCase()}-style`;
+
+      if (document.getElementById(linkId)) {
+        this._loadedStyles.add(cssPath);
+        resolve();
+        return;
+      }
+
       const link = document.createElement('link');
       link.id = linkId;
-      link.rel = 'stylesheet';
+      link.rel = 'preload';
+      link.as = 'style';
       link.href = cssPath;
+
+      link.onload = () => {
+        link.rel = 'stylesheet';
+        this._loadedStyles.add(cssPath);
+        resolve();
+      };
+
+      link.onerror = () => {
+        console.error(`Failed to load style: ${cssPath}`);
+        reject(new Error(`Style load failed: ${cssPath}`));
+      };
+
       document.head.appendChild(link);
-    }
+    });
   }
 
-  // HTML 문자열 반환 (자식 클래스에서 구현)
   render() {
     return '';
   }
 
-  // 상태 업데이트 및 리렌더링
-  setState(newState) {
+  setState(newState, callback) {
+    const prevState = { ...this.state };
     this.state = { ...this.state, ...newState };
+
+    if (this.shouldUpdate && !this.shouldUpdate(this.props, this.state, prevState)) {
+      return;
+    }
+
     this.update();
+
+    if (callback && typeof callback === 'function') {
+      callback();
+    }
   }
 
-  // DOM에 마운트
+  shouldUpdate() {
+    return true;
+  }
+
   mount(container) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = this.render();
-    this.$el = tempDiv.firstElementChild;
-    container.appendChild(this.$el);
-    this._isMounted = true;
-    this.mounted(); // 최초 마운트 시에만 호출
+    if (!container) {
+      console.error('Mount container is not provided');
+      return;
+    }
+
+    try {
+      const html = this.render();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html.trim();
+      this.$el = tempDiv.firstElementChild;
+
+      if (!this.$el) {
+        console.error('Render returned invalid HTML');
+        return;
+      }
+
+      container.appendChild(this.$el);
+      this._isMounted = true;
+      this.mounted();
+    } catch (error) {
+      console.error('Mount error:', error);
+      this.handleError(error);
+    }
   }
 
-  // 리렌더링
   update() {
+    if (!this.$el || !this._isMounted) return;
+
+    try {
+      const parent = this.$el.parentNode;
+      if (!parent) {
+        console.warn('Parent node not found during update');
+        return;
+      }
+
+      const html = this.render();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html.trim();
+      const newEl = tempDiv.firstElementChild;
+
+      if (!newEl) {
+        console.error('Update render returned invalid HTML');
+        return;
+      }
+
+      parent.replaceChild(newEl, this.$el);
+      this.$el = newEl;
+
+      this.updated();
+    } catch (error) {
+      console.error('Update error:', error);
+      this.handleError(error);
+    }
+  }
+
+  unmount() {
     if (!this.$el) return;
 
-    const parent = this.$el.parentNode;
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = this.render();
-    const newEl = tempDiv.firstElementChild;
+    try {
+      this.beforeUnmount();
 
-    parent.replaceChild(newEl, this.$el);
-    this.$el = newEl;
+      if (this.$el.parentNode) {
+        this.$el.parentNode.removeChild(this.$el);
+      }
 
-    // 업데이트 시에는 updated() 호출 (mounted()는 호출하지 않음)
-    this.updated();
+      this.$el = null;
+      this._isMounted = false;
+    } catch (error) {
+      console.error('Unmount error:', error);
+    }
   }
 
-  // 마운트 후 실행 (최초 1회만, 이벤트 리스너 등록, API 호출)
   mounted() {
-    // 자식 클래스에서 구현
   }
 
-  // 업데이트 후 실행 (이벤트 리스너 재등록)
   updated() {
-    // 기본적으로 아무것도 하지 않음
-    // 자식 클래스에서 필요시 구현
   }
 
-  // 언마운트 전 실행
   beforeUnmount() {
-    // 자식 클래스에서 구현
+  }
+
+  handleError(error) {
+    console.error(`Error in ${this.constructor.name}:`, error);
+  }
+
+  $$(selector) {
+    return this.$el ? this.$el.querySelector(selector) : null;
+  }
+
+  $$all(selector) {
+    return this.$el ? Array.from(this.$el.querySelectorAll(selector)) : [];
+  }
+
+  on(selector, event, handler, options = {}) {
+    if (!this.$el) return;
+
+    const element = typeof selector === 'string' ? this.$$(selector) : selector;
+    if (element) {
+      element.addEventListener(event, handler, options);
+    }
+  }
+
+  off(selector, event, handler) {
+    if (!this.$el) return;
+
+    const element = typeof selector === 'string' ? this.$$(selector) : selector;
+    if (element) {
+      element.removeEventListener(event, handler);
+    }
+  }
+
+  delegate(eventType, selector, handler) {
+    if (!this.$el) return;
+
+    const wrappedHandler = (e) => {
+      const target = e.target.closest(selector);
+      if (target && this.$el.contains(target)) {
+        handler.call(target, e);
+      }
+    };
+
+    this.$el.addEventListener(eventType, wrappedHandler);
+
+    return () => {
+      this.$el.removeEventListener(eventType, wrappedHandler);
+    };
+  }
+
+  emit(eventName, detail = {}) {
+    if (!this.$el) return;
+
+    const event = new CustomEvent(eventName, {
+      detail,
+      bubbles: true,
+      cancelable: true
+    });
+
+    this.$el.dispatchEvent(event);
   }
 }
 

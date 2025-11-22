@@ -1,5 +1,5 @@
 // Mock 여부 설정
-const USE_MOCK = false;
+const USE_MOCK = true;
 
 import MockServer from "./MockServer.js";
 

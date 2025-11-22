@@ -56,15 +56,18 @@ class Router {
 
   // 페이지 로드 (main 영역만 업데이트)
   loadPage(path) {
+    console.log('loadPage called with path:', path);
     let PageComponent = this.routes[path];
 
     // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
     if (!PageComponent) {
+      console.log('Exact route not found, trying dynamic route');
       PageComponent = this.matchDynamicRoute(path);
     }
 
     // 그래도 없으면 기본 페이지
     if (!PageComponent) {
+      console.log('Dynamic route not found, using default route');
       PageComponent = this.routes['/'];
     }
 
@@ -72,6 +75,8 @@ class Router {
       console.error('Page not found:', path);
       return;
     }
+
+    console.log('Page component found:', PageComponent.name);
 
     // 기존 페이지 정리
     if (this.currentPage && this.currentPage.beforeUnmount) {
@@ -81,9 +86,12 @@ class Router {
     // main 영역에만 새 페이지 마운트
     const main = document.getElementById('main');
     if (main) {
+      console.log('Mounting page to main container');
       main.innerHTML = '';
       this.currentPage = new PageComponent();
       this.currentPage.mount(main);
+    } else {
+      console.error('Main container not found');
     }
   }
 
