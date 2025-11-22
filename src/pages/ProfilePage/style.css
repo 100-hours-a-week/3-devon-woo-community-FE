@@ -1,0 +1,179 @@
+/* 프로필 페이지 레이아웃 */
+#main .main-container {
+  justify-content: center;
+  align-items: center;
+}
+
+/* 프로필 래퍼 */
+.profile-wrapper {
+  width: 100%;
+  max-width: 560px;
+  background-color: var(--color-background-white);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  box-shadow: var(--shadow-md);
+}
+
+.profile-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* 폼 스타일 */
+.form-input {
+  width: 100%;
+  padding: 14px var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* 에러 상태 */
+.form-input.error {
+  border-color: var(--color-error);
+}
+
+.form-input.error:focus {
+  border-color: var(--color-error);
+}
+
+/* Helper Text */
+.helper-text {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: none;
+  min-height: 16px;
+  line-height: 1.4;
+}
+
+.helper-text.show {
+  display: block;
+}
+
+.form-input.error + .helper-text.show {
+  color: var(--color-error);
+}
+
+/* 이메일 필드 (비활성화) */
+.form-input:disabled {
+  background-color: var(--color-background);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+/* 버튼 그룹 */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+/* 수정하기 버튼 */
+.submit-btn {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+
+.submit-btn:disabled {
+  background-color: var(--color-primary-disabled);
+  color: var(--color-text-white);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.submit-btn:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+
+.submit-btn:not(:disabled):hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* 회원 탈퇴 버튼 */
+.delete-account-btn {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-background-white);
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.delete-account-btn:hover {
+  background-color: var(--color-error-background);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .profile-wrapper {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .profile-title {
+    font-size: 24px;
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .profile-form {
+    gap: 20px;
+  }
+
+  .submit-btn,
+  .delete-account-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+/* 포커스 시 애니메이션 */
+.form-input:focus {
+  animation: focusPulse var(--transition-normal);
+}
+
+@keyframes focusPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-focus-ring);
+  }
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+/* 에러 애니메이션 */
+.form-input.error {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
