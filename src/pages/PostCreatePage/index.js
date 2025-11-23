@@ -33,21 +33,77 @@ class PostCreatePage extends Component {
     this.loadStyle('/src/pages/PostCreatePage/style.css');
   }
 
+  shouldUpdate(nextProps, nextState, prevState) {
+    const changedKeys = Object.keys(nextState).filter((key) => nextState[key] !== prevState[key]);
+    if (changedKeys.length === 0) return false;
+
+    // 입력 중일 때는 불필요한 리렌더를 막아 커서가 튀지 않도록 한다.
+    const contentOnlyChanged = changedKeys.every((key) => key === 'title' || key === 'content');
+    if (contentOnlyChanged && !nextState.isPreviewMode) {
+      return false;
+    }
+
+    return true;
+  }
+
+  update() {
+    const activeElement = document.activeElement;
+    const isTitleFocused = activeElement === this.titleInput;
+    const isContentFocused = activeElement === this.contentTextarea;
+    const selectionStart = isContentFocused && this.contentTextarea ? this.contentTextarea.selectionStart : null;
+    const selectionEnd = isContentFocused && this.contentTextarea ? this.contentTextarea.selectionEnd : null;
+
+    super.update();
+
+    if (isTitleFocused && this.titleInput) {
+      this.titleInput.focus();
+      return;
+    }
+
+    if (isContentFocused && this.contentTextarea) {
+      this.contentTextarea.focus();
+      if (selectionStart !== null && selectionEnd !== null) {
+        this.contentTextarea.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
+  }
+
   render() {
     return `
-      <main class="main-container">
-        <div class="editor-wrapper">
-            <div class="editor-header">
-                <input
-                    type="text"
-                    class="title-input"
-                    id="titleInput"
-                    placeholder="제목을 입력하세요"
-                    maxlength="200"
-                    value="${this.state.title}"
-                >
+      <div class="post-create-page">
+        <header class="compose-header">
+          <div class="compose-header-content">
+            <div class="compose-header-left">
+              <button class="icon-btn" id="backBtn" aria-label="뒤로 가기">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="compose-header-text">
+                <span class="compose-label">새 글 작성</span>
+              </div>
             </div>
+            <div class="compose-header-right">
+              <div class="autosave-status ${this.state.isSaving ? 'saving' : ''}" id="autosaveStatus">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="save-icon">
+                  <path d="M13.5 5.5L6 13L2.5 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="status-text">${this.state.autosaveStatusText}</span>
+                <span class="status-time">${this.state.autosaveStatusTime}</span>
+              </div>
+              <button class="btn-secondary" id="tempSaveBtn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M12.67 1H3.33A2.33 2.33 0 0 0 1 3.33v9.34A2.33 2.33 0 0 0 15 12.67V3.33A2.33 2.33 0 0 0 12.67 1zM11 15v-4.67H5V15M11 1v3.67H3.33" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                임시 저장
+              </button>
+              <button class="btn-primary" id="publishBtn">출간하기</button>
+            </div>
+          </div>
+        </header>
 
+        <main class="main-container">
+          <div class="editor-toolbar-row">
             <div class="toolbar" id="toolbar">
                 <div class="toolbar-group">
                     <button class="toolbar-btn" data-action="bold" title="Bold (Ctrl+B)">
@@ -158,6 +214,19 @@ class PostCreatePage extends Component {
                     </button>
                 </div>
             </div>
+          </div>
+
+          <div class="editor-wrapper">
+            <div class="editor-header">
+                <input
+                    type="text"
+                    class="title-input"
+                    id="titleInput"
+                    placeholder="제목을 입력하세요"
+                    maxlength="200"
+                    value="${this.state.title}"
+                >
+            </div>
 
             <div class="editor-container">
                 <div class="editor-pane ${!this.state.isPreviewMode ? 'active' : ''}" id="editorPane">
@@ -183,34 +252,12 @@ class PostCreatePage extends Component {
                     </div>
                 </div>
             </div>
-        </div>
-      </main>
-
-      <footer class="footer-actions">
-          <div class="footer-content">
-              <button class="btn-secondary" id="exitBtn">나가기</button>
-              <div class="footer-right">
-                  <div class="autosave-status ${this.state.isSaving ? 'saving' : ''}" id="autosaveStatus">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="save-icon">
-                          <path d="M13.5 5.5L6 13L2.5 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span class="status-text">${this.state.autosaveStatusText}</span>
-                      <span class="status-time">${this.state.autosaveStatusTime}</span>
-                  </div>
-                  <button class="btn-secondary" id="tempSaveBtn">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M12.67 1H3.33A2.33 2.33 0 0 0 1 3.33v9.34A2.33 2.33 0 0 0 15 12.67V3.33A2.33 2.33 0 0 0 12.67 1zM11 15v-4.67H5V15M11 1v3.67H3.33" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      임시 저장
-                  </button>
-                  <button class="btn-primary" id="publishBtn">출간하기</button>
-              </div>
           </div>
-      </footer>
+        </main>
 
-      <input type="file" id="imageInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" multiple>
+        <input type="file" id="imageInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" multiple>
 
-      <div class="image-upload-modal ${this.state.imageUploadModalActive ? 'active' : ''}" id="imageUploadModal">
+        <div class="image-upload-modal ${this.state.imageUploadModalActive ? 'active' : ''}" id="imageUploadModal">
           <div class="modal-backdrop"></div>
           <div class="modal-content">
               <div class="modal-header">
@@ -224,15 +271,16 @@ class PostCreatePage extends Component {
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-dasharray="50" stroke-dashoffset="25"/>
                             </svg>
-                          ` : (item.status === 'success' ? `
+                          ` : item.status === 'success' ? `
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M16.67 6L7.5 15.17 3.33 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 6l-7 8-5-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                           ` : `
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M10 18.33A8.33 8.33 0 1 0 10 1.67a8.33 8.33 0 0 0 0 16.66zM10 6.67V10M10 13.33h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 5v5m0 3v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
                             </svg>
-                          `)}
+                          `}
                       </div>
                       <div class="upload-progress-info">
                           <div class="upload-progress-name">${item.filename}</div>
@@ -245,14 +293,16 @@ class PostCreatePage extends Component {
                 `).join('')}
               </div>
           </div>
+        </div>
       </div>
     `;
   }
 
+
   mounted() {
     // Hide the main header
     if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: false });
+      window.headerComponent.hide?.() ?? window.headerComponent.setState({ isVisible: false });
     }
     this.initEditor();
     this.setupEventListeners();
@@ -264,9 +314,21 @@ class PostCreatePage extends Component {
   componentWillUnmount() {
     // Restore the main header
     if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: true });
+      window.headerComponent.show?.() ?? window.headerComponent.setState({ isVisible: true });
     }
     clearInterval(this.autosaveTimer);
+  }
+
+  updated() {
+    this.initEditor();
+    this.setupEventListeners();
+
+    // 미리보기 모드일 때는 컨텐츠를 즉시 다시 렌더링
+    if (this.state.isPreviewMode && this.previewContent) {
+      this.previewContent.innerHTML = this.state.content
+        ? this.parseMarkdown(this.state.content)
+        : '<p class="preview-placeholder">미리보기 내용이 여기에 표시됩니다</p>';
+    }
   }
 
   initEditor() {
@@ -340,20 +402,29 @@ class PostCreatePage extends Component {
       e.target.value = '';
     });
 
-    // Footer actions
-    this.$el.querySelector('#exitBtn').addEventListener('click', () => {
-      if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
-        navigateTo('/posts'); // Navigate to post list
-      }
-    });
+    // Header actions
+    const backBtn = this.$el.querySelector('#backBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
+          navigateTo('/posts');
+        }
+      });
+    }
 
-    this.$el.querySelector('#tempSaveBtn').addEventListener('click', () => {
-      this.saveDraftToBackend();
-    });
+    const tempSaveBtn = this.$el.querySelector('#tempSaveBtn');
+    if (tempSaveBtn) {
+      tempSaveBtn.addEventListener('click', () => {
+        this.saveDraftToBackend();
+      });
+    }
 
-    this.$el.querySelector('#publishBtn').addEventListener('click', () => {
-      this.navigateToPublish();
-    });
+    const publishBtn = this.$el.querySelector('#publishBtn');
+    if (publishBtn) {
+      publishBtn.addEventListener('click', () => {
+        this.navigateToPublish();
+      });
+    }
   }
 
   applyFormat(format) {

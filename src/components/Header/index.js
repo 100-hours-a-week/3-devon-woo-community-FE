@@ -202,6 +202,16 @@ class Header extends Component {
     this.currentPath = path;
   }
 
+  hide() {
+    if (!this.state.isVisible) return;
+    this.setState({ isVisible: false });
+  }
+
+  show() {
+    if (this.state.isVisible) return;
+    this.setState({ isVisible: true });
+  }
+
   showBackButton(show) {
     console.log('showBackButton called:', show);
   }
