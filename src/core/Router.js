@@ -1,3 +1,5 @@
+import { syncHeaderWithRoute } from '../services/HeaderService.js';
+
 // 간단한 클라이언트 사이드 라우터
 class Router {
   constructor() {
@@ -40,9 +42,7 @@ class Router {
     this.loadPage(path);
 
     // 헤더 상태 업데이트 (드롭다운 상태 등)
-    if (window.updateHeaderState) {
-      window.updateHeaderState();
-    }
+    syncHeaderWithRoute(path);
   }
 
   // 페이지 이동 (히스토리 스택에 추가하지 않고 현재 항목 대체)
@@ -51,9 +51,7 @@ class Router {
     this.loadPage(path);
 
     // 헤더 상태 업데이트 (드롭다운 상태 등)
-    if (window.updateHeaderState) {
-      window.updateHeaderState();
-    }
+    syncHeaderWithRoute(path);
   }
 
   // 페이지 로드 (main 영역만 업데이트)
@@ -62,6 +60,7 @@ class Router {
     let PageComponent = this.routes[path];
     let props = {};
     const cacheKey = path;
+    let shouldCache = true;
 
     // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
     if (!PageComponent) {
@@ -84,6 +83,11 @@ class Router {
       return;
     }
 
+    shouldCache = PageComponent.enableCache !== false;
+    if (!shouldCache) {
+      this.pageCache.delete(cacheKey);
+    }
+
     console.log('Page component found:', PageComponent.name);
 
     // 기존 페이지 정리 (컴포넌트 인스턴스는 캐시에 남겨 재사용)
@@ -98,11 +102,13 @@ class Router {
     if (main) {
       console.log('Mounting page to main container');
       main.innerHTML = '';
-      let pageInstance = this.pageCache.get(cacheKey);
+      let pageInstance = shouldCache ? this.pageCache.get(cacheKey) : null;
 
       if (!pageInstance) {
         pageInstance = new PageComponent(props);
-        this.pageCache.set(cacheKey, pageInstance);
+        if (shouldCache) {
+          this.pageCache.set(cacheKey, pageInstance);
+        }
       } else {
         pageInstance.props = { ...pageInstance.props, ...props };
       }

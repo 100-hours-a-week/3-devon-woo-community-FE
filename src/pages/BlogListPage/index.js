@@ -152,6 +152,9 @@ class BlogListPage extends Component {
       });
 
       this.sidebarComponent.mount(container);
+    } else if (!this.sidebarComponent._isMounted) {
+      container.innerHTML = '';
+      this.sidebarComponent.mount(container);
     }
   }
 
@@ -369,5 +372,7 @@ class BlogListPage extends Component {
     }
   }
 }
+
+BlogListPage.enableCache = false;
 
 export default BlogListPage;

@@ -8,6 +8,7 @@ import PostCreatePage from './pages/PostCreatePage/index.js';
 import PostDetailPage from './pages/PostDetailPage/index.js';
 import ProfilePage from './pages/ProfilePage/index.js';
 import PostPublishPage from './pages/PostPublishPage/index.js';
+import { registerHeader, syncHeaderWithRoute } from './services/HeaderService.js';
 
 // App 초기화
 function initApp() {
@@ -37,8 +38,7 @@ function initApp() {
 
   console.log('Global header mounted');
 
-  // 전역 Header 참조 (페이지에서 사용)
-  window.headerComponent = header;
+  registerHeader(header);
 
   // 라우터 생성 및 라우트 등록
   const router = createRouter();
@@ -60,20 +60,9 @@ function initApp() {
   console.log('Router initialized');
 
   // 라우트 변경 시 헤더 상태 업데이트
-  window.updateHeaderState = updateHeaderState;
-  updateHeaderState();
-  window.addEventListener('popstate', updateHeaderState);
-}
-
-// 헤더 상태 업데이트 함수
-function updateHeaderState() {
-  const path = window.location.pathname;
-  const headerComponent = window.headerComponent;
-
-  if (!headerComponent) return;
-
-  // 현재 페이지 경로만 업데이트 (드롭다운 활성화 상태용)
-  headerComponent.setCurrentPage(path);
+  const handleHeaderSync = () => syncHeaderWithRoute(window.location.pathname);
+  handleHeaderSync();
+  window.addEventListener('popstate', handleHeaderSync);
 }
 
 // DOM 로드 후 앱 초기화

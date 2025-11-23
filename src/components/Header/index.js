@@ -1,5 +1,6 @@
 import Component from '../../core/Component.js';
 import { navigate } from '../../core/Router.js';
+import { registerHeader } from '../../services/HeaderService.js';
 
 class Header extends Component {
   constructor(props) {
@@ -14,7 +15,7 @@ class Header extends Component {
       isVisible: true, // Add isVisible state
     };
 
-    window.headerComponent = this; // Make instance globally available
+    registerHeader(this);
     this.loadStyle('/src/components/Header/style.css');
   }
 
@@ -29,15 +30,12 @@ class Header extends Component {
   }
 
   render() {
-    if (!this.state.isVisible) {
-      return ''; // Render nothing if not visible
-    }
-
     const { variant } = this.state;
     const isMinimal = variant === 'minimal';
+    const visibilityStyle = this.state.isVisible ? '' : 'style="display: none;"';
 
     return `
-      <header class="header">
+      <header class="header" ${visibilityStyle}>
         <div class="header-content">
           <div class="logo-section">
             <h1 class="logo" id="logoLink">
@@ -218,6 +216,10 @@ class Header extends Component {
 
   showProfileIcon(show) {
     console.log('showProfileIcon called:', show);
+  }
+
+  refreshProfileImage() {
+    this.setState({ user: this.getUser() });
   }
 }
 

@@ -7,6 +7,7 @@ import Toast from '../../components/Toast/index.js';
 import Modal from '../../components/Modal/index.js';
 import { uploadProfileImage } from '../../utils/imageUpload.js';
 import { navigate } from '../../core/Router.js';
+import { withHeader, refreshHeaderProfileImage } from '../../services/HeaderService.js';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -157,10 +158,10 @@ class ProfilePage extends Component {
   // 최초 마운트 시에만 1회 호출
   mounted() {
     // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(true);
-      window.headerComponent.showProfileIcon(true);
-    }
+    withHeader((header) => {
+      header.showBackButton(true);
+      header.showProfileIcon(true);
+    });
 
     // 사용자 프로필 데이터 로딩 (1회만 실행됨)
     this.loadUserProfile();
@@ -248,9 +249,9 @@ class ProfilePage extends Component {
 
   beforeUnmount() {
     // 뒤로가기 버튼 숨김
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(false);
-    }
+    withHeader((header) => {
+      header.showBackButton(false);
+    });
     // body 클래스 정리
     document.body.classList.remove('modal-active');
   }
@@ -429,9 +430,7 @@ class ProfilePage extends Component {
       this.originalNickname = this.state.nickname;
 
       // 헤더의 프로필 이미지 리프레시
-      if (window.headerComponent) {
-        window.headerComponent.refreshProfileImage();
-      }
+      refreshHeaderProfileImage();
 
       // 버튼 비활성화 (변경사항이 없으므로)
       const submitBtn = this.$el.querySelector('#submitBtn');

@@ -2,6 +2,7 @@ import Component from '../../core/Component.js';
 import { navigateTo, navigateReplace } from '../../core/Router.js';
 import AuthService from '../../utils/AuthService.js';
 import { getCloudinarySignature } from '../../api/cloudinary.js';
+import { hideHeader, showHeader } from '../../services/HeaderService.js';
 
 const AUTOSAVE_INTERVAL = 30000;
 const STORAGE_KEY = 'postDraft';
@@ -302,9 +303,7 @@ class PostCreatePage extends Component {
 
   mounted() {
     // Hide the main header
-    if (window.headerComponent) {
-      window.headerComponent.hide?.() ?? window.headerComponent.setState({ isVisible: false });
-    }
+    hideHeader();
     this.initEditor();
     this.setupEventListeners();
     this.loadDraft();
@@ -312,11 +311,9 @@ class PostCreatePage extends Component {
     this.initKeyboardShortcuts();
   }
 
-  componentWillUnmount() {
+  beforeUnmount() {
     // Restore the main header
-    if (window.headerComponent) {
-      window.headerComponent.show?.() ?? window.headerComponent.setState({ isVisible: true });
-    }
+    showHeader();
     clearInterval(this.autosaveTimer);
   }
 

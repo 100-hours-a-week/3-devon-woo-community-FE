@@ -3,6 +3,7 @@ import { login } from '../../api/auth.js';
 import LoginRequest from '../../dto/request/auth/LoginRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigateTo, navigateReplace } from '../../core/Router.js';
+import { hideHeader, showHeader } from '../../services/HeaderService.js';
 
 const OAUTH_API_BASE_URL = 'http://localhost:8080';
 
@@ -119,18 +120,12 @@ class LoginPage extends Component {
   }
 
   mounted() {
-    // Hide the main header if it exists
-    if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: false });
-    }
+    hideHeader();
     this.setupEventListeners();
   }
 
-  componentWillUnmount() {
-    // Restore the main header when leaving the page
-    if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: true });
-    }
+  beforeUnmount() {
+    showHeader();
   }
 
   setupEventListeners() {

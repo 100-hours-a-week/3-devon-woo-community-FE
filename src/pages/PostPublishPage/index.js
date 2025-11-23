@@ -4,6 +4,7 @@ import AuthService from '../../utils/AuthService.js';
 import { getCloudinarySignature } from '../../api/cloudinary.js';
 import { createPost } from '../../api/posts.js';
 import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
+import { hideHeader, showHeader } from '../../services/HeaderService.js';
 
 const STORAGE_KEY = 'postDraft';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -290,16 +291,12 @@ class PostPublishPage extends Component {
   }
   
   mounted() {
-    if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: false });
-    }
+    hideHeader();
     this.setupEventListeners();
   }
 
-  componentWillUnmount() {
-    if (window.headerComponent) {
-      window.headerComponent.setState({ isVisible: true });
-    }
+  beforeUnmount() {
+    showHeader();
   }
 
   setupEventListeners() {

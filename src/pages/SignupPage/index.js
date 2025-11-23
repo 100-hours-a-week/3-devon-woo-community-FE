@@ -11,6 +11,7 @@ import {
   validatePasswordConfirm,
   validateNickname
 } from '../../validation/index.js';
+import { withHeader } from '../../services/HeaderService.js';
 
 class SignupPage extends Component {
   constructor(props) {
@@ -134,11 +135,10 @@ class SignupPage extends Component {
   }
 
   mounted() {
-    // 회원가입 페이지에서는 뒤로가기 버튼 표시
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(true);
-      window.headerComponent.showProfileIcon(false);
-    }
+    withHeader((header) => {
+      header.showBackButton(true);
+      header.showProfileIcon(false);
+    });
 
     this.setupEventListeners();
 
@@ -239,9 +239,9 @@ class SignupPage extends Component {
 
   beforeUnmount() {
     // 페이지 벗어날 때 뒤로가기 버튼 숨김
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(false);
-    }
+    withHeader((header) => {
+      header.showBackButton(false);
+    });
   }
 
   // 이메일 유효성 검사
