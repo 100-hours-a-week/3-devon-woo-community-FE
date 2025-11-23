@@ -464,7 +464,7 @@ class PostCreatePage extends Component {
     if (this.mode === 'edit') {
       await this.loadExistingPost();
     } else {
-      this.loadDraft();
+      this.promptRestoreDraft();
     }
   }
 
@@ -576,9 +576,20 @@ class PostCreatePage extends Component {
     });
 
     this.delegate('click', '#backBtn', () => {
-      if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
-        navigateTo('/posts');
+      if (this.hasUnsavedChanges()) {
+        const leavePage = window.confirm('작성 중인 내용이 있습니다. 페이지를 나가시겠습니까?');
+        if (!leavePage) return;
+
+        const keepDraft = window.confirm('임시 저장하시겠습니까? 확인을 누르면 저장된 상태로 이동하고, 취소하면 작성 중인 내용이 삭제됩니다.');
+        if (!keepDraft) {
+          this.clearDraft();
+        } else {
+          this.saveDraftToLocalStorage();
+        }
+      } else {
+        this.clearDraft();
       }
+      navigateTo('/posts');
     });
 
     this.delegate('click', '#tempSaveBtn', () => {
@@ -820,37 +831,95 @@ class PostCreatePage extends Component {
       title: this.state.title,
       content: this.state.content,
       images: this.state.uploadedImages,
+      summary: this.state.summary,
+      thumbnailUrl: this.state.thumbnailUrl,
+      visibility: this.state.visibility,
       lastSaved: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   }
 
-  loadDraft() {
+  promptRestoreDraft() {
+    const draft = this.getSavedDraft();
+    if (!draft) return;
+
+    const shouldLoad = window.confirm('이전에 작성하던 게시글이 있습니다. 불러오시겠습니까?');
+    if (!shouldLoad) {
+      this.clearDraft();
+      return;
+    }
+
+    this.applyDraft(draft);
+  }
+
+  getSavedDraft() {
     const draftJson = localStorage.getItem(STORAGE_KEY);
-    if (!draftJson) return;
-
+    if (!draftJson) return null;
     try {
-      const draft = JSON.parse(draftJson);
-      this.setState({
-        title: draft.title || '',
-        content: draft.content || '',
-        uploadedImages: draft.images || [],
-      });
+      return JSON.parse(draftJson);
+    } catch (error) {
+      console.error('Invalid draft data:', error);
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+  }
 
-      if (draft.lastSaved) {
-        const lastSaved = new Date(draft.lastSaved);
-        this.setState({
-          autosaveStatusTime: `${lastSaved.getHours()}:${String(lastSaved.getMinutes()).padStart(2, '0')}`
-        });
+  applyDraft(draft) {
+    this.setState({
+      title: draft.title || '',
+      content: draft.content || '',
+      uploadedImages: draft.images || [],
+      summary: draft.summary || '',
+      summaryCharCount: (draft.summary || '').length,
+      thumbnailUrl: draft.thumbnailUrl || null,
+      visibility: draft.visibility || 'public'
+    }, () => {
+      if (this.contentTextarea) {
+        this.contentTextarea.value = this.state.content;
+        this.autoResizeContent();
       }
-    } catch (e) {
-      console.error('Failed to load draft:', e);
+    });
+
+    if (draft.lastSaved) {
+      const lastSaved = new Date(draft.lastSaved);
+      this.setState({
+        autosaveStatusTime: `${lastSaved.getHours()}:${String(lastSaved.getMinutes()).padStart(2, '0')}`
+      });
     }
   }
 
   clearDraft() {
     localStorage.removeItem(STORAGE_KEY);
-    this.setState({ uploadedImages: [] });
+    this.setState({
+      uploadedImages: [],
+      summary: '',
+      summaryCharCount: 0,
+      thumbnailUrl: null
+    });
+  }
+
+  hasUnsavedChanges() {
+    if (this.mode === 'edit' && this.initialData) {
+      const baseTitle = this.initialData.title || '';
+      const baseContent = this.initialData.content || '';
+      const baseSummary = this.initialData.summary || '';
+      const baseThumbnail = this.initialData.thumbnail || null;
+
+      if (
+        baseTitle !== this.state.title ||
+        baseContent !== this.state.content ||
+        baseSummary !== this.state.summary ||
+        baseThumbnail !== this.state.thumbnailUrl
+      ) {
+        return true;
+      }
+    }
+    return Boolean(
+      this.state.title.trim() ||
+      this.state.content.trim() ||
+      (this.state.summary && this.state.summary.trim()) ||
+      this.state.uploadedImages.length
+    );
   }
 
   async handleImageFiles(files) {
