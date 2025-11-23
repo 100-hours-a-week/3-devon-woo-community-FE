@@ -96,33 +96,33 @@ class Header extends Component {
     }
 
     return `
-      <div class="profile-wrapper ${isProfileMenuOpen ? 'open' : ''}" id="profileDropdown">
-        <button type="button" class="profile-section" id="profileBtn" aria-haspopup="true" aria-expanded="${isProfileMenuOpen}">
-          <div class="profile-image">
+      <div class="header-profile ${isProfileMenuOpen ? 'open' : ''}" id="profileDropdown">
+        <button type="button" class="header-profile__button" id="profileBtn" aria-haspopup="true" aria-expanded="${isProfileMenuOpen}">
+          <div class="header-profile__avatar">
             <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
           </div>
-          <span class="profile-name">${user?.username || 'User'}</span>
+          <span class="header-profile__name">${user?.username || 'User'}</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
-        <div class="profile-menu" id="profileMenu">
-          <div class="profile-menu-header">
-            <div class="profile-menu-image">
+        <div class="header-profile__dropdown" id="profileMenu">
+          <div class="header-profile__dropdown-header">
+            <div class="header-profile__dropdown-avatar">
               <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
             </div>
             <div>
-              <p class="profile-menu-name">${user?.username || 'User'}</p>
-              <p class="profile-menu-email">${user?.email || ''}</p>
+              <p class="header-profile__dropdown-name">${user?.username || 'User'}</p>
+              <p class="header-profile__dropdown-email">${user?.email || ''}</p>
             </div>
           </div>
-          <div class="profile-menu-actions">
-            <button type="button" class="profile-menu-item" data-action="profile">프로필 보기</button>
-            <button type="button" class="profile-menu-item" data-action="editProfile">프로필 편집</button>
-            <button type="button" class="profile-menu-item" data-action="writePost">게시글 작성</button>
-            <button type="button" class="profile-menu-item" data-action="settings">설정</button>
+          <div class="header-profile__dropdown-actions">
+            <button type="button" class="header-profile__dropdown-item" data-action="profile">프로필 보기</button>
+            <button type="button" class="header-profile__dropdown-item" data-action="editProfile">프로필 편집</button>
+            <button type="button" class="header-profile__dropdown-item" data-action="writePost">게시글 작성</button>
+            <button type="button" class="header-profile__dropdown-item" data-action="settings">설정</button>
           </div>
-          <button type="button" class="profile-menu-item logout" data-action="logout">로그아웃</button>
+          <button type="button" class="header-profile__dropdown-item logout" data-action="logout">로그아웃</button>
         </div>
       </div>
     `;
@@ -210,7 +210,7 @@ class Header extends Component {
 
     if (profileMenu) {
       profileMenu.addEventListener('click', (e) => {
-        const item = e.target.closest('.profile-menu-item');
+        const item = e.target.closest('.header-profile__dropdown-item');
         if (!item) return;
         const action = item.dataset.action;
         this.handleProfileMenuAction(action);
@@ -308,6 +308,13 @@ class Header extends Component {
 
   refreshProfileImage() {
     this.setState({ user: this.getUser() });
+  }
+
+  updateAuthState() {
+    this.setState({
+      isAuthenticated: this.checkAuth(),
+      user: this.getUser()
+    });
   }
 }
 

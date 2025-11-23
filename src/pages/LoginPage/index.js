@@ -3,10 +3,10 @@ import { login } from '../../api/auth.js';
 import LoginRequest from '../../dto/request/auth/LoginRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigateTo, navigateReplace } from '../../core/Router.js';
-import { withHeader } from '../../services/HeaderService.js';
+import { withHeader, refreshAuthState } from '../../services/HeaderService.js';
 
 const OAUTH_API_BASE_URL = 'http://localhost:8080';
-
+const DEV_MODE = true;
 
 class LoginPage extends Component {
   constructor(props) {
@@ -205,13 +205,32 @@ class LoginPage extends Component {
     }
 
     try {
+      if (DEV_MODE) {
+        const dummyResponse = {
+          data: {
+            accessToken: 'dev-access-token',
+            refreshToken: 'dev-refresh-token',
+            member: {
+              id: 1,
+              email: email,
+              username: 'Dev User',
+              profileImage: 'https://i.pravatar.cc/150?img=33',
+              createdAt: new Date().toISOString()
+            }
+          }
+        };
+
+        AuthService.login(dummyResponse.data.accessToken, dummyResponse.data.refreshToken, dummyResponse.data.member);
+        refreshAuthState();
+        navigateReplace('/tech-blog');
+        return;
+      }
+
       const loginData = new LoginRequest({ email, password });
       const response = await login(loginData);
-      
+
       AuthService.login(response.data.accessToken, response.data.refreshToken, response.data.member);
-      
-      // new_design redirects to '.../tech-blog/blog.html'
-      // In SPA, this should be '/tech-blog'
+      refreshAuthState();
       navigateReplace('/tech-blog');
 
     } catch (error) {

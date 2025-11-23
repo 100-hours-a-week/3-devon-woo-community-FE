@@ -63,3 +63,11 @@ export function refreshHeaderProfileImage() {
     }
   });
 }
+
+export function refreshAuthState() {
+  withHeader((header) => {
+    if (header.updateAuthState) {
+      header.updateAuthState();
+    }
+  });
+}
