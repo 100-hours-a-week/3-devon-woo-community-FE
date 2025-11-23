@@ -1,34 +1,67 @@
 import { navigate } from '../core/Router.js';
+import { devAuthConfig, isDev } from '../config/env.js';
+
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_KEY = 'user';
+const DEFAULT_DEV_USER = {
+  id: 'dev-user',
+  email: 'dev@example.com',
+  nickname: '개발자',
+};
 
 /**
  * 로그인 상태 관리 서비스
  * localStorage를 사용하여 로그인 상태를 유지합니다.
  */
 class AuthService {
-  static STORAGE_KEY = 'user_id';
-
   /**
-   * 로그인 - userId를 localStorage에 저장
-   * @param {number} userId - 사용자 ID
+   * 로그인 - 토큰과 사용자 정보를 localStorage에 저장
+   * @param {string} accessToken
+   * @param {string} refreshToken
+   * @param {object} user
    */
-  static login(userId) {
-    localStorage.setItem(this.STORAGE_KEY, userId.toString());
+  static login(accessToken, refreshToken, user) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   /**
-   * 로그아웃 - localStorage에서 userId 제거
+   * 로그아웃 - localStorage에서 토큰과 사용자 정보 제거
    */
   static logout() {
-    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
   }
 
   /**
-   * 현재 로그인한 사용자 ID 조회
-   * @returns {number|null} 사용자 ID 또는 null (로그인하지 않은 경우)
+   * 액세스 토큰 조회
+   * @returns {string|null}
    */
-  static getCurrentUserId() {
-    const userId = localStorage.getItem(this.STORAGE_KEY);
-    return userId ? parseInt(userId, 10) : null;
+  static getAccessToken() {
+    this.bootstrapDevSession();
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  }
+
+  /**
+   * 리프레시 토큰 조회
+   * @returns {string|null}
+   */
+  static getRefreshToken() {
+    this.bootstrapDevSession();
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * 현재 사용자 정보 조회
+   * @returns {object|null}
+   */
+  static getUser() {
+    this.bootstrapDevSession();
+    const user = localStorage.getItem(USER_KEY);
+    return user ? JSON.parse(user) : null;
   }
 
   /**
@@ -36,7 +69,11 @@ class AuthService {
    * @returns {boolean} 로그인 여부
    */
   static isLoggedIn() {
-    return this.getCurrentUserId() !== null;
+    if (isDev && devAuthConfig.bypassAuth) {
+      this.bootstrapDevSession();
+      return true;
+    }
+    return !!this.getAccessToken();
   }
 
   /**
@@ -45,12 +82,29 @@ class AuthService {
    * @returns {boolean} 로그인 여부
    */
   static requireAuth() {
+    if (isDev && devAuthConfig.bypassAuth) {
+      this.bootstrapDevSession();
+      return true;
+    }
     if (!this.isLoggedIn()) {
       alert('로그인이 필요한 기능입니다.');
       navigate('/login');
       return false;
     }
     return true;
+  }
+
+  /**
+   * 개발 환경에서 자동 세션을 심어주는 함수
+   */
+  static bootstrapDevSession() {
+    if (!(isDev && devAuthConfig.bypassAuth)) return;
+    if (localStorage.getItem(ACCESS_TOKEN_KEY)) return;
+
+    const devUser = devAuthConfig.user || DEFAULT_DEV_USER;
+    const accessToken = devAuthConfig.accessToken || 'dev-access-token';
+    const refreshToken = devAuthConfig.refreshToken || 'dev-refresh-token';
+    this.login(accessToken, refreshToken, devUser);
   }
 }
 

@@ -9,6 +9,7 @@ import PostDetailPage from './pages/PostDetailPage/index.js';
 import PostEditPage from './pages/PostEditPage/index.js';
 import ProfilePage from './pages/ProfilePage/index.js';
 import PasswordChangePage from './pages/PasswordChangePage/index.js';
+import PostPublishPage from './pages/PostPublishPage/index.js';
 
 // App 초기화
 function initApp() {
@@ -50,6 +51,7 @@ function initApp() {
   router.addRoute('/signup', SignupPage);
   router.addRoute('/posts', BlogListPage);
   router.addRoute('/posts/create', PostCreatePage);
+  router.addRoute('/posts/publish', PostPublishPage);
   router.addRoute('/posts/:id', PostDetailPage);
   router.addRoute('/posts/:id/edit', PostEditPage);
   router.addRoute('/profile', ProfilePage);

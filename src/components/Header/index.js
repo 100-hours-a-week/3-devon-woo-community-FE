@@ -8,13 +8,31 @@ class Header extends Component {
     this.state = {
       variant: props.variant || 'full',
       searchQuery: '',
-      isSearchFocused: false
+      isSearchFocused: false,
+      isAuthenticated: this.checkAuth(),
+      user: this.getUser(),
+      isVisible: true, // Add isVisible state
     };
 
+    window.headerComponent = this; // Make instance globally available
     this.loadStyle('/src/components/Header/style.css');
   }
 
+  checkAuth() {
+    // Should be updated to use AuthService
+    return !!localStorage.getItem('accessToken');
+  }
+
+  getUser() {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  }
+
   render() {
+    if (!this.state.isVisible) {
+      return ''; // Render nothing if not visible
+    }
+
     const { variant } = this.state;
     const isMinimal = variant === 'minimal';
 
@@ -29,16 +47,17 @@ class Header extends Component {
 
           ${!isMinimal ? this.renderNav() : ''}
           ${!isMinimal ? this.renderSearch() : ''}
+          ${!isMinimal ? this.renderAuthSection() : ''}
         </div>
       </header>
     `;
   }
-
+  
   renderNav() {
     return `
       <nav class="nav-menu">
-        <a href="/posts" class="nav-link" data-route="/posts">Posts</a>
-        <a href="/about" class="nav-link" data-route="/about">About</a>
+        <a href="/" class="nav-link" data-route="/">Posts</a>
+        <a href="/posts/create" class="nav-link" data-route="/posts/create">About</a>
         <a href="/profile" class="nav-link" data-route="/profile">Profile</a>
       </nav>
     `;
@@ -63,6 +82,28 @@ class Header extends Component {
     `;
   }
 
+  renderAuthSection() {
+    const { isAuthenticated, user } = this.state;
+
+    if (!isAuthenticated) {
+      return `
+        <div class="auth-section">
+          <button class="auth-btn login-btn" id="loginBtn">로그인</button>
+          <button class="auth-btn signup-btn" id="signupBtn">회원가입</button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="profile-section" id="profileBtn">
+        <div class="profile-image">
+          <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+        </div>
+        <span class="profile-name">${user?.username || 'User'}</span>
+      </div>
+    `;
+  }
+
   mounted() {
     this.setupEventListeners();
   }
@@ -76,11 +117,14 @@ class Header extends Component {
     const navLinks = this.$$all('.nav-link');
     const searchInput = this.$$('#searchInput');
     const searchBtn = this.$$('#searchBtn');
+    const loginBtn = this.$$('#loginBtn');
+    const signupBtn = this.$$('#signupBtn');
+    const profileBtn = this.$$('#profileBtn');
 
     if (logoLink) {
       logoLink.addEventListener('click', (e) => {
         e.preventDefault();
-        navigate('/posts');
+        navigate('/');
       });
     }
 
@@ -117,6 +161,24 @@ class Header extends Component {
     if (searchBtn) {
       searchBtn.addEventListener('click', () => {
         this.handleSearch();
+      });
+    }
+
+    if (loginBtn) {
+      loginBtn.addEventListener('click', () => {
+        navigate('/login');
+      });
+    }
+
+    if (signupBtn) {
+      signupBtn.addEventListener('click', () => {
+        navigate('/signup');
+      });
+    }
+
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        navigate('/profile');
       });
     }
   }

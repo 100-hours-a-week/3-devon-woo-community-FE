@@ -1,322 +1,742 @@
 import Component from '../../core/Component.js';
-import { createPost } from '../../api/posts.js';
-import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
+import { navigateTo, navigateReplace } from '../../core/Router.js';
 import AuthService from '../../utils/AuthService.js';
-import { uploadPostImage, validateImageFile } from '../../utils/imageUpload.js';
-import { processPostImage } from '../../utils/imageProcessor.js';
-import { navigateReplace } from '../../core/Router.js';
+import { getCloudinarySignature } from '../../api/cloudinary.js';
+
+const AUTOSAVE_INTERVAL = 30000;
+const STORAGE_KEY = 'postDraft';
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 class PostCreatePage extends Component {
   constructor(props) {
     super(props);
+    if (!AuthService.isLoggedIn()) {
+      alert('로그인이 필요한 기능입니다.');
+      navigateReplace('/login');
+      return;
+    }
+
     this.state = {
       title: '',
       content: '',
-      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
-      imageUrl: '', // 미리보기 URL (Data URL)
-      showImagePreview: false
+      uploadedImages: [],
+      isPreviewMode: false,
+      autosaveStatusText: '모든 변경사항 저장됨',
+      autosaveStatusTime: '',
+      isSaving: false,
+      imageUploadModalActive: false,
+      imageUploadProgress: [],
     };
+
+    this.autosaveTimer = null;
     this.loadStyle('/src/pages/PostCreatePage/style.css');
   }
 
   render() {
     return `
-      <div class="main-container">
-        <div class="form-wrapper">
-          <h2 class="form-title">게시글 작성</h2>
-
-          <form class="post-form" id="postForm">
-            <!-- 제목 입력 -->
-            <div class="form-group">
-              <label for="titleInput" class="form-label">제목*</label>
-              <input
-                type="text"
-                id="titleInput"
-                class="form-input"
-                placeholder="제목을 입력해주세요. (최대 26글자)"
-                maxlength="26"
-                autocomplete="off"
-                value="${this.state.title}"
-              >
-              <div class="input-helper">
-                <span class="char-count ${this.state.title.length >= 26 ? 'warning' : ''}">
-                  <span class="current-count">${this.state.title.length}</span>/26
-                </span>
-              </div>
-            </div>
-
-            <!-- 내용 입력 -->
-            <div class="form-group">
-              <label for="contentInput" class="form-label">내용*</label>
-              <textarea
-                id="contentInput"
-                class="form-textarea"
-                placeholder="내용을 입력해주세요."
-                rows="10"
-              >${this.state.content}</textarea>
-              <div class="helper-text">
-                * helper text
-              </div>
-            </div>
-
-            <!-- 이미지 업로드 -->
-            <div class="form-group">
-              <label class="form-label">이미지</label>
-              <div class="image-upload-section">
-                <button type="button" class="image-upload-btn" id="imageUploadBtn">
-                  파일 선택
-                </button>
-                <span class="image-upload-text" id="imageUploadText">
-                  ${this.state.selectedImageFile ? this.state.selectedImageFile.name : '파일을 선택해주세요.'}
-                </span>
+      <main class="main-container">
+        <div class="editor-wrapper">
+            <div class="editor-header">
                 <input
-                  type="file"
-                  id="imageInput"
-                  class="image-input-hidden"
-                  accept="image/jpeg,image/png,image/gif,image/jpg"
+                    type="text"
+                    class="title-input"
+                    id="titleInput"
+                    placeholder="제목을 입력하세요"
+                    maxlength="200"
+                    value="${this.state.title}"
                 >
-              </div>
-
-              <!-- 이미지 미리보기 -->
-              ${this.state.showImagePreview ? `
-                <div class="image-preview-container" id="imagePreviewContainer">
-                  <img src="${this.state.imageUrl}" alt="미리보기" class="image-preview" id="imagePreview">
-                  <button type="button" class="image-remove-btn" id="imageRemoveBtn">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-              ` : ''}
             </div>
 
-            <!-- 제출 버튼 -->
-            <button
-              type="submit"
-              class="submit-btn"
-              id="submitBtn"
-              disabled
-            >
-              완료
-            </button>
-          </form>
+            <div class="toolbar" id="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="bold" title="Bold (Ctrl+B)">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M4 3h7a3.5 3.5 0 0 1 0 7H4V3z M4 10h8a3.5 3.5 0 0 1 0 7H4v-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="italic" title="Italic (Ctrl+I)">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M10 3h5M3 15h5M11 3l-4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="strikethrough" title="Strikethrough">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M3 9h12M7 3h7M6 15h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="h1" title="Heading 1">
+                        <span class="btn-text">H1</span>
+                    </button>
+                    <button class="toolbar-btn" data-action="h2" title="Heading 2">
+                        <span class="btn-text">H2</span>
+                    </button>
+                    <button class="toolbar-btn" data-action="h3" title="Heading 3">
+                        <span class="btn-text">H3</span>
+                    </button>
+                    <button class="toolbar-btn" data-action="h4" title="Heading 4">
+                        <span class="btn-text">H4</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="quote" title="Quote">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M3 9V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2zM11 9V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="code" title="Code Block">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M5 6l-3 3 3 3M13 6l3 3-3 3M11 3l-4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="link" title="Link (Ctrl+K)">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M7 11l4-4M8.5 5.5l-1-1a3.5 3.5 0 0 0-5 5l1 1M9.5 12.5l1 1a3.5 3.5 0 0 0 5-5l-1-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="ul" title="Unordered List">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <circle cx="3" cy="4.5" r="1" fill="currentColor"/>
+                            <circle cx="3" cy="9" r="1" fill="currentColor"/>
+                            <circle cx="3" cy="13.5" r="1" fill="currentColor"/>
+                            <path d="M7 4.5h8M7 9h8M7 13.5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="ol" title="Ordered List">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M2 3.5h2M3 3v3M7 4.5h8M7 9h8M7 13.5h8M2 8h3M2 13h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="checkbox" title="Checklist">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M3.5 4.5l1 1 1.5-2M9 4.5h7M9 13.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="2" y="11" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="image" title="Insert Image">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor"/>
+                            <path d="M16 11l-4-4-6 6-2-2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="divider" title="Horizontal Rule">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="toolbar-spacer"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn toggle-btn ${this.state.isPreviewMode ? 'active' : ''}" data-action="preview" title="Toggle Preview" id="previewToggle">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="9" cy="9" r="2" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        <span class="btn-text">미리보기</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-pane ${!this.state.isPreviewMode ? 'active' : ''}" id="editorPane">
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-overlay" id="uploadOverlay">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <path d="M24 36V16M16 24l8-8 8 8M8 40h32" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p>이미지를 여기에 드롭하세요</p>
+                        </div>
+                        <textarea
+                            class="content-textarea"
+                            id="contentTextarea"
+                            placeholder="내용을 입력하세요..."
+                            spellcheck="false"
+                        >${this.state.content}</textarea>
+                    </div>
+                </div>
+
+                <div class="preview-pane ${this.state.isPreviewMode ? 'active' : ''}" id="previewPane">
+                    <div class="preview-content" id="previewContent">
+                        ${this.state.content ? this.parseMarkdown(this.state.content) : '<p class="preview-placeholder">미리보기 내용이 여기에 표시됩니다</p>'}
+                    </div>
+                </div>
+            </div>
         </div>
+      </main>
+
+      <footer class="footer-actions">
+          <div class="footer-content">
+              <button class="btn-secondary" id="exitBtn">나가기</button>
+              <div class="footer-right">
+                  <div class="autosave-status ${this.state.isSaving ? 'saving' : ''}" id="autosaveStatus">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="save-icon">
+                          <path d="M13.5 5.5L6 13L2.5 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span class="status-text">${this.state.autosaveStatusText}</span>
+                      <span class="status-time">${this.state.autosaveStatusTime}</span>
+                  </div>
+                  <button class="btn-secondary" id="tempSaveBtn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M12.67 1H3.33A2.33 2.33 0 0 0 1 3.33v9.34A2.33 2.33 0 0 0 15 12.67V3.33A2.33 2.33 0 0 0 12.67 1zM11 15v-4.67H5V15M11 1v3.67H3.33" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      임시 저장
+                  </button>
+                  <button class="btn-primary" id="publishBtn">출간하기</button>
+              </div>
+          </div>
+      </footer>
+
+      <input type="file" id="imageInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" multiple>
+
+      <div class="image-upload-modal ${this.state.imageUploadModalActive ? 'active' : ''}" id="imageUploadModal">
+          <div class="modal-backdrop"></div>
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h3>이미지 업로드 중</h3>
+              </div>
+              <div class="upload-progress-list" id="uploadProgressList">
+                ${this.state.imageUploadProgress.map(item => `
+                  <div class="upload-progress-item">
+                      <div class="upload-progress-icon ${item.status === 'uploading' ? 'uploading' : (item.status === 'success' ? 'success' : 'error')}">
+                          ${item.status === 'uploading' ? `
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-dasharray="50" stroke-dashoffset="25"/>
+                            </svg>
+                          ` : (item.status === 'success' ? `
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M16.67 6L7.5 15.17 3.33 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          ` : `
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 18.33A8.33 8.33 0 1 0 10 1.67a8.33 8.33 0 0 0 0 16.66zM10 6.67V10M10 13.33h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          `)}
+                      </div>
+                      <div class="upload-progress-info">
+                          <div class="upload-progress-name">${item.filename}</div>
+                          <div class="upload-progress-bar">
+                              <div class="upload-progress-fill" style="width: ${item.progress}%"></div>
+                          </div>
+                          <div class="upload-progress-status">${item.message}</div>
+                      </div>
+                  </div>
+                `).join('')}
+              </div>
+          </div>
       </div>
     `;
   }
 
-  // 최초 마운트 시에만 1회 호출
   mounted() {
-    // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
+    // Hide the main header
     if (window.headerComponent) {
-      window.headerComponent.showBackButton(true);
-      window.headerComponent.showProfileIcon(true);
+      window.headerComponent.setState({ isVisible: false });
     }
-
-    // 이벤트 리스너 등록
+    this.initEditor();
     this.setupEventListeners();
-
-    // 초기 버튼 상태 체크
-    const submitBtn = this.$el.querySelector('#submitBtn');
-    this.updateSubmitButton(submitBtn);
+    this.loadDraft();
+    this.initAutoSave();
+    this.initKeyboardShortcuts();
   }
 
-  // 업데이트 시마다 호출
-  updated() {
-    // DOM이 교체되므로 이벤트 리스너 재등록
-    this.setupEventListeners();
-
-    // 버튼 상태 재체크
-    const submitBtn = this.$el.querySelector('#submitBtn');
-    this.updateSubmitButton(submitBtn);
+  componentWillUnmount() {
+    // Restore the main header
+    if (window.headerComponent) {
+      window.headerComponent.setState({ isVisible: true });
+    }
+    clearInterval(this.autosaveTimer);
   }
 
-  // 이벤트 리스너 설정
+  initEditor() {
+    this.titleInput = this.$el.querySelector('#titleInput');
+    this.contentTextarea = this.$el.querySelector('#contentTextarea');
+    this.previewContent = this.$el.querySelector('#previewContent');
+    this.previewPane = this.$el.querySelector('#previewPane');
+    this.editorPane = this.$el.querySelector('#editorPane');
+    this.previewToggle = this.$el.querySelector('#previewToggle');
+    this.autosaveStatus = this.$el.querySelector('#autosaveStatus');
+    this.uploadZone = this.$el.querySelector('#uploadZone');
+    this.uploadOverlay = this.$el.querySelector('#uploadOverlay');
+    this.imageInput = this.$el.querySelector('#imageInput');
+    this.imageUploadModal = this.$el.querySelector('#imageUploadModal');
+    this.uploadProgressList = this.$el.querySelector('#uploadProgressList');
+
+    this.titleInput.addEventListener('input', e => this.setState({ title: e.target.value }));
+    this.contentTextarea.addEventListener('input', e => this.setState({ content: e.target.value }));
+  }
+
   setupEventListeners() {
-    const titleInput = this.$el.querySelector('#titleInput');
-    const contentInput = this.$el.querySelector('#contentInput');
-    const imageUploadBtn = this.$el.querySelector('#imageUploadBtn');
-    const imageInput = this.$el.querySelector('#imageInput');
-    const form = this.$el.querySelector('#postForm');
-    const submitBtn = this.$el.querySelector('#submitBtn');
+    // Toolbar actions
+    this.$el.querySelector('#toolbar').addEventListener('click', (e) => {
+      const btn = e.target.closest('.toolbar-btn');
+      if (!btn) return;
 
-    // 제목 입력 - setState 없이 직접 업데이트
-    if (titleInput) {
-      titleInput.addEventListener('input', (e) => {
-        this.state.title = e.target.value;
-
-        // 글자 수 카운터 업데이트
-        const charCount = this.$el.querySelector('.current-count');
-        const charCountSpan = this.$el.querySelector('.char-count');
-        if (charCount) {
-          charCount.textContent = this.state.title.length;
-        }
-        if (charCountSpan) {
-          if (this.state.title.length >= 26) {
-            charCountSpan.classList.add('warning');
-          } else {
-            charCountSpan.classList.remove('warning');
-          }
-        }
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-    }
-
-    // 내용 입력 - setState 없이 직접 업데이트
-    if (contentInput) {
-      contentInput.addEventListener('input', (e) => {
-        this.state.content = e.target.value;
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-    }
-
-    // 이미지 업로드 버튼 클릭
-    if (imageUploadBtn && imageInput) {
-      imageUploadBtn.addEventListener('click', () => {
-        imageInput.click();
-      });
-    }
-
-    // 이미지 파일 선택
-    if (imageInput) {
-      imageInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // 파일 유효성 검사
-        const validation = validateImageFile(file, 'post');
-        if (!validation.valid) {
-          alert(validation.error);
-          imageInput.value = '';
-          return;
-        }
-
-        try {
-          // 이미지 처리 (리사이즈, WebP 변환)
-          console.log('[PostCreatePage] 이미지 처리 시작...');
-          const processedFile = await processPostImage(file);
-          console.log('[PostCreatePage] 이미지 처리 완료');
-
-          // FileReader로 미리보기 생성 (처리된 이미지)
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.setState({
-              selectedImageFile: processedFile, // 처리된 File 객체 저장
-              imageUrl: e.target.result, // 미리보기 URL
-              showImagePreview: true
-            });
-          };
-          reader.readAsDataURL(processedFile);
-        } catch (error) {
-          console.error('[PostCreatePage] 이미지 처리 실패:', error);
-          alert('이미지 처리에 실패했습니다.');
-          imageInput.value = '';
-        }
-      });
-    }
-
-    // 이미지 삭제 버튼 (이벤트 위임)
-    this.$el.addEventListener('click', (e) => {
-      const removeBtn = e.target.closest('#imageRemoveBtn');
-      if (removeBtn) {
-        this.setState({
-          selectedImageFile: null,
-          imageUrl: '',
-          showImagePreview: false
-        });
-        if (imageInput) {
-          imageInput.value = '';
-        }
+      const action = btn.dataset.action;
+      if (action === 'preview') {
+        this.togglePreview();
+      } else if (action === 'image') {
+        this.imageInput.click();
+      } else {
+        this.applyFormat(action);
       }
     });
 
-    // 폼 제출
-    if (form) {
-      form.addEventListener('submit', (e) => {
+    // Image upload drag & drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      this.uploadZone.addEventListener(eventName, (e) => {
         e.preventDefault();
-        this.handleSubmit();
+        e.stopPropagation();
       });
-    }
-  }
+    });
 
-  beforeUnmount() {
-    // 뒤로가기 버튼 숨김
-    if (window.headerComponent) {
-      window.headerComponent.showBackButton(false);
-      window.headerComponent.showProfileIcon(false);
-    }
-  }
+    ['dragenter', 'dragover'].forEach(eventName => {
+      this.uploadZone.addEventListener(eventName, () => {
+        this.uploadOverlay.classList.add('active');
+      });
+    });
 
-  // 폼 유효성 검사
-  isFormValid() {
-    return this.state.title.trim() !== '' && this.state.content.trim() !== '';
-  }
+    ['dragleave', 'drop'].forEach(eventName => {
+      this.uploadZone.addEventListener(eventName, () => {
+        this.uploadOverlay.classList.remove('active');
+      });
+    });
 
-  // 제출 버튼 활성화 상태 업데이트
-  updateSubmitButton(submitBtn) {
-    if (submitBtn) {
-      if (this.isFormValid()) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
+    this.uploadZone.addEventListener('drop', (e) => {
+      const files = Array.from(e.dataTransfer.files).filter(file =>
+        ALLOWED_IMAGE_TYPES.includes(file.type)
+      );
+      if (files.length > 0) {
+        this.handleImageFiles(files);
       }
-    }
+    });
+
+    this.imageInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        this.handleImageFiles(files);
+      }
+      e.target.value = '';
+    });
+
+    // Footer actions
+    this.$el.querySelector('#exitBtn').addEventListener('click', () => {
+      if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
+        navigateTo('/posts'); // Navigate to post list
+      }
+    });
+
+    this.$el.querySelector('#tempSaveBtn').addEventListener('click', () => {
+      this.saveDraftToBackend();
+    });
+
+    this.$el.querySelector('#publishBtn').addEventListener('click', () => {
+      this.navigateToPublish();
+    });
   }
 
-  // 폼 제출 처리
-  async handleSubmit() {
-    if (!this.isFormValid()) {
-      alert('제목, 내용을 모두 작성해주세요.');
-      return;
+  applyFormat(format) {
+    const textarea = this.contentTextarea;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+
+    let newText = '';
+    let cursorOffset = 0;
+
+    switch (format) {
+      case 'bold':
+        newText = `**${selectedText || '텍스트'}**`;
+        cursorOffset = selectedText ? newText.length : 2;
+        break;
+      case 'italic':
+        newText = `*${selectedText || '텍스트'}*`;
+        cursorOffset = selectedText ? newText.length : 1;
+        break;
+      case 'strikethrough':
+        newText = `~~${selectedText || '텍스트'}~~`;
+        cursorOffset = selectedText ? newText.length : 2;
+        break;
+      case 'h1':
+        newText = `\n# ${selectedText || '제목 1'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 2;
+        break;
+      case 'h2':
+        newText = `\n## ${selectedText || '제목 2'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 3;
+        break;
+      case 'h3':
+        newText = `\n### ${selectedText || '제목 3'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 4;
+        break;
+      case 'h4':
+        newText = `\n#### ${selectedText || '제목 4'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 5;
+        break;
+      case 'quote':
+        newText = `\n> ${selectedText || '인용문'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 2;
+        break;
+      case 'code':
+        newText = '\n```\n' + (selectedText || '코드') + '\n```\n';
+        cursorOffset = selectedText ? 4 + selectedText.length : 4;
+        break;
+      case 'link':
+        newText = `[${selectedText || '링크 텍스트'}](url)`;
+        cursorOffset = selectedText ? newText.length - 4 : 1;
+        break;
+      case 'ul':
+        newText = `\n- ${selectedText || '목록 항목'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 2;
+        break;
+      case 'ol':
+        newText = `\n1. ${selectedText || '목록 항목'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 3;
+        break;
+      case 'checkbox':
+        newText = `\n- [ ] ${selectedText || '할 일'}\n`;
+        cursorOffset = selectedText ? newText.length - 1 : 6;
+        break;
+      case 'divider':
+        newText = '\n---\n';
+        cursorOffset = newText.length;
+        break;
+      default:
+        return;
     }
 
-    // 로그인 확인
-    if (!AuthService.requireAuth()) {
-      return;
-    }
+    textarea.value = beforeText + newText + afterText;
+    textarea.focus();
+    textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
+
+    this.setState({ content: textarea.value });
+    this.triggerAutoSave();
+  }
+
+  togglePreview() {
+    this.setState({ isPreviewMode: !this.state.isPreviewMode });
+    // Render preview will be called automatically by updated() if needed
+  }
+
+  parseMarkdown(markdown) {
+    if (!markdown.trim()) return '';
+
+    let html = markdown;
+
+    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+
+    html = html.replace(/^- \[ \] (.*)$/gim, '<ul class="checklist"><li>$1</li></ul>');
+    html = html.replace(/^- \[x\] (.*)$/gim, '<ul class="checklist"><li class="checked">$1</li></ul>');
+    html = html.replace(/^- (.*)$/gim, '<ul><li>$1</li></ul>');
+    html = html.replace(/^\d+\. (.*)$/gim, '<ol><li>$1</li></ol>');
+
+    html = html.replace(/<\/ul>\s*<ul>/g, '');
+    html = html.replace(/<\/ul>\s*<ul class="checklist">/g, '');
+    html = html.replace(/<\/ul class="checklist">\s*<ul class="checklist">/g, '');
+    html = html.replace(/<\/ol>\s*<ol>/g, '');
+    html = html.replace(/<\/blockquote>\s*<blockquote>/g, '\n');
+
+    html = html.replace(/^---$/gim, '<hr>');
+
+    html = html.split('\n').map(line => {
+      if (line.trim() &&
+        !line.match(/^<(h[1-6]|ul|ol|li|blockquote|pre|hr|div)/) &&
+        !line.match(/<\/(h[1-6]|ul|ol|li|blockquote|pre|code|div)>$/)) {
+        return `<p>${line}</p>`;
+      }
+      return line;
+    }).join('\n');
+
+    return html;
+  }
+
+  initAutoSave() {
+    const autoSave = () => {
+      this.saveDraftToLocalStorage();
+      this.setState({ autosaveStatusText: '모든 변경사항 저장됨', isSaving: false });
+    };
+
+    // Initial setup for input event listeners for title and content
+    this.$el.querySelector('#titleInput').addEventListener('input', () => this.triggerAutoSave());
+    this.$el.querySelector('#contentTextarea').addEventListener('input', () => this.triggerAutoSave());
+
+    this.autosaveTimer = setInterval(autoSave, AUTOSAVE_INTERVAL);
+  }
+
+  triggerAutoSave() {
+    this.setState({ autosaveStatusText: '저장 중...', isSaving: true });
+    clearInterval(this.autosaveTimer);
+
+    setTimeout(() => {
+      this.saveDraftToLocalStorage();
+      const now = new Date();
+      this.setState({
+        autosaveStatusText: '모든 변경사항 저장됨',
+        autosaveStatusTime: `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`,
+        isSaving: false
+      });
+    }, 1000);
+
+    this.autosaveTimer = setInterval(() => {
+      this.saveDraftToLocalStorage();
+      const now = new Date();
+      this.setState({
+        autosaveStatusText: '모든 변경사항 저장됨',
+        autosaveStatusTime: `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`,
+        isSaving: false
+      });
+    }, AUTOSAVE_INTERVAL);
+  }
+
+  saveDraftToLocalStorage() {
+    const draft = {
+      title: this.state.title,
+      content: this.state.content,
+      images: this.state.uploadedImages,
+      lastSaved: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  }
+
+  loadDraft() {
+    const draftJson = localStorage.getItem(STORAGE_KEY);
+    if (!draftJson) return;
 
     try {
-      const memberId = AuthService.getCurrentUserId();
-      let imageUrl = null;
-
-      // 새로운 이미지 파일이 선택되었다면 업로드
-      if (this.state.selectedImageFile) {
-        console.log('[PostCreatePage] 이미지 업로드 시작...');
-
-        try {
-          // Cloudinary에 업로드
-          imageUrl = await uploadPostImage(this.state.selectedImageFile);
-          console.log('[PostCreatePage] 이미지 업로드 완료:', imageUrl);
-        } catch (uploadError) {
-          console.error('[PostCreatePage] 이미지 업로드 실패:', uploadError);
-          alert('이미지 업로드에 실패했습니다.');
-          return; // 업로드 실패 시 제출 중단
-        }
-      }
-
-      // PostCreateRequest DTO 생성
-      const postData = new PostCreateRequest({
-        memberId,
-        title: this.state.title,
-        content: this.state.content,
-        image: imageUrl // Cloudinary에 업로드된 이미지 URL
+      const draft = JSON.parse(draftJson);
+      this.setState({
+        title: draft.title || '',
+        content: draft.content || '',
+        uploadedImages: draft.images || [],
       });
 
-      // API 호출
-      const response = await createPost(postData);
-
-      alert('게시글이 작성되었습니다.');
-
-      // 작성 완료 후 게시글 상세 페이지로 이동
-      navigateReplace(`/posts/${response.postId}`);
-    } catch (error) {
-      console.error('게시글 작성 실패:', error);
-      alert('게시글 작성에 실패했습니다.');
+      if (draft.lastSaved) {
+        const lastSaved = new Date(draft.lastSaved);
+        this.setState({
+          autosaveStatusTime: `${lastSaved.getHours()}:${String(lastSaved.getMinutes()).padStart(2, '0')}`
+        });
+      }
+    } catch (e) {
+      console.error('Failed to load draft:', e);
     }
+  }
+
+  clearDraft() {
+    localStorage.removeItem(STORAGE_KEY);
+    this.setState({ uploadedImages: [] });
+  }
+
+  async handleImageFiles(files) {
+    this.setState({ imageUploadModalActive: true });
+    let newImageUploadProgress = [];
+
+    const cursorPosition = this.contentTextarea.selectionStart;
+    let insertText = '';
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`${file.name}은(는) 파일 크기가 너무 큽니다. (최대 10MB)`);
+        continue;
+      }
+
+      const progressItemIndex = newImageUploadProgress.length;
+      newImageUploadProgress.push({
+        filename: file.name,
+        progress: 0,
+        status: 'uploading',
+        message: '업로드 중...',
+      });
+      this.setState({ imageUploadProgress: newImageUploadProgress });
+
+      try {
+        const imageUrl = await this.uploadImage(file, progressItemIndex);
+        insertText += `\n![${file.name}](${imageUrl})\n`;
+        const updatedImages = [...this.state.uploadedImages, imageUrl];
+        this.setState({ uploadedImages: updatedImages });
+
+        newImageUploadProgress[progressItemIndex] = {
+          ...newImageUploadProgress[progressItemIndex],
+          progress: 100,
+          status: 'success',
+          message: '업로드 완료',
+        };
+        this.setState({ imageUploadProgress: newImageUploadProgress });
+      } catch (error) {
+        console.error('Upload failed:', error);
+        newImageUploadProgress[progressItemIndex] = {
+          ...newImageUploadProgress[progressItemIndex],
+          status: 'error',
+          message: error.message || '업로드 실패',
+        };
+        this.setState({ imageUploadProgress: newImageUploadProgress });
+      }
+    }
+
+    if (insertText) {
+      const beforeText = this.state.content.substring(0, cursorPosition);
+      const afterText = this.state.content.substring(cursorPosition);
+      const newContent = beforeText + insertText + afterText;
+      this.setState({ content: newContent });
+      this.contentTextarea.value = newContent; // Update textarea value directly
+      this.contentTextarea.focus();
+      this.triggerAutoSave();
+    }
+
+    setTimeout(() => {
+      this.setState({ imageUploadModalActive: false, imageUploadProgress: [] });
+    }, 2000);
+  }
+
+  async uploadImage(file, progressItemIndex) {
+    // Using existing cloudinary.js API service
+    const signData = await getCloudinarySignature('post');
+
+    // Simulate progress updates for demo
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += 10;
+      if (currentProgress < 90) {
+        let newProgress = [...this.state.imageUploadProgress];
+        if (newProgress[progressItemIndex]) {
+          newProgress[progressItemIndex].progress = currentProgress;
+          this.setState({ imageUploadProgress: newProgress });
+        }
+      } else {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    const formData = new FormData();
+    Object.keys(signData.uploadParams).forEach(key => {
+      formData.append(key, signData.uploadParams[key]);
+    });
+    formData.append('file', file);
+
+    const uploadResponse = await fetch(signData.uploadUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!uploadResponse.ok) {
+      clearInterval(interval);
+      throw new Error('이미지 업로드 실패');
+    }
+
+    const uploadResult = await uploadResponse.json();
+    clearInterval(interval);
+    return uploadResult.secure_url || uploadResult.url;
+  }
+
+  initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        this.applyFormat('bold');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault();
+        this.applyFormat('italic');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        this.applyFormat('link');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        this.saveDraftToBackend();
+      }
+    });
+  }
+
+  async saveDraftToBackend() {
+    const title = this.state.title.trim();
+    const content = this.state.content.trim();
+
+    if (!title || !content) {
+      alert('제목과 내용을 입력해주세요.');
+      return;
+    }
+
+    this.setState({ autosaveStatusText: '저장 중...', isSaving: true });
+
+    try {
+      // TODO: Implement actual backend save API call
+      console.log('Saving draft to backend:', { title, content, images: this.state.uploadedImages, isDraft: true });
+
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+
+      alert('임시 저장되었습니다.');
+      const now = new Date();
+      this.setState({
+        autosaveStatusText: '모든 변경사항 저장됨',
+        autosaveStatusTime: `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`,
+        isSaving: false
+      });
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('임시 저장에 실패했습니다.');
+      this.setState({
+        autosaveStatusText: '저장 실패',
+        isSaving: false
+      });
+    }
+  }
+
+  navigateToPublish() {
+    const title = this.state.title.trim();
+    const content = this.state.content.trim();
+
+    if (!title) {
+      alert('제목을 입력해주세요.');
+      this.$el.querySelector('#titleInput').focus();
+      return;
+    }
+
+    if (!content) {
+      alert('내용을 입력해주세요.');
+      this.$el.querySelector('#contentTextarea').focus();
+      return;
+    }
+
+    this.saveDraftToLocalStorage();
+    navigateTo('/posts/publish'); // Navigate to the publish page
   }
 }
 

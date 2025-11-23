@@ -146,6 +146,11 @@ export function navigate(path) {
   routerInstance.navigate(path);
 }
 
+// navigateTo 별칭 export (기존 코드 호환용)
+export function navigateTo(path) {
+  navigate(path);
+}
+
 // navigateReplace 함수 export
 export function navigateReplace(path) {
   if (!routerInstance) {
