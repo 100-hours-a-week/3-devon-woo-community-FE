@@ -15,6 +15,7 @@ class LoginPage extends Component {
       errorMessage: '',
       isPasswordVisible: false,
     };
+    this._eventsBound = false;
 
     // If already logged in, redirect to the main page
     if (AuthService.isLoggedIn()) {
@@ -133,52 +134,39 @@ class LoginPage extends Component {
   }
 
   setupEventListeners() {
-    const form = this.$el.querySelector('#loginForm');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleLogin();
-      });
-    }
+    if (this._eventsBound) return;
+    this._eventsBound = true;
 
-    const passwordToggle = this.$el.querySelector('#passwordToggle');
-    if (passwordToggle) {
-      passwordToggle.addEventListener('click', () => {
-        this.setState({ isPasswordVisible: !this.state.isPasswordVisible });
-      });
-    }
-    
-    // OAuth Buttons
-    const oauthContainer = this.$el.querySelector('.oauth-buttons');
-    if(oauthContainer) {
-      oauthContainer.addEventListener('click', e => {
-        const button = e.target.closest('.oauth-btn');
-        if(!button) return;
+    this.delegate('submit', '#loginForm', (e) => {
+      e.preventDefault();
+      this.handleLogin();
+    });
 
-        if (button.classList.contains('google')) this.handleOAuthLogin('google');
-        if (button.classList.contains('github')) this.handleOAuthLogin('github');
-        if (button.classList.contains('kakao')) this.handleOAuthLogin('kakao');
-        if (button.classList.contains('naver')) this.handleOAuthLogin('naver');
-      });
-    }
+    this.delegate('click', '#passwordToggle', () => {
+      this.setState({ isPasswordVisible: !this.state.isPasswordVisible });
+    });
 
-    const emailInput = this.$el.querySelector('#emailInput');
-    const passwordInput = this.$el.querySelector('#passwordInput');
-    if (emailInput) {
-      emailInput.addEventListener('input', () => this.hideError());
-    }
-    if (passwordInput) {
-      passwordInput.addEventListener('input', () => this.hideError());
-    }
+    this.delegate('click', '.oauth-btn', (e) => {
+      const button = e.target.closest('.oauth-btn');
+      if (!button) return;
 
-    // Handle navigation links
-    this.$el.addEventListener('click', e => {
-      if (e.target.matches('[data-link]')) {
-        e.preventDefault();
-        const href = e.target.getAttribute('href');
-        if (href) {
-          navigateTo(href);
-        }
+      if (button.classList.contains('google')) this.handleOAuthLogin('google');
+      if (button.classList.contains('github')) this.handleOAuthLogin('github');
+      if (button.classList.contains('kakao')) this.handleOAuthLogin('kakao');
+      if (button.classList.contains('naver')) this.handleOAuthLogin('naver');
+    });
+
+    this.delegate('input', '#emailInput, #passwordInput', () => {
+      this.hideError();
+    });
+
+    this.delegate('click', '[data-link]', (e) => {
+      e.preventDefault();
+      const link = e.target.closest('[data-link]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (href) {
+        navigateTo(href);
       }
     });
   }

@@ -3,6 +3,8 @@ class Router {
   constructor() {
     this.routes = {};
     this.currentPage = null;
+    this.currentPath = null;
+    this.pageCache = new Map();
   }
 
   // 라우트 등록
@@ -59,6 +61,7 @@ class Router {
     console.log('loadPage called with path:', path);
     let PageComponent = this.routes[path];
     let props = {};
+    const cacheKey = path;
 
     // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
     if (!PageComponent) {
@@ -83,9 +86,11 @@ class Router {
 
     console.log('Page component found:', PageComponent.name);
 
-    // 기존 페이지 정리
-    if (this.currentPage && this.currentPage.beforeUnmount) {
-      this.currentPage.beforeUnmount();
+    // 기존 페이지 정리 (컴포넌트 인스턴스는 캐시에 남겨 재사용)
+    if (this.currentPage) {
+      this.currentPage.unmount();
+      this.currentPage = null;
+      this.currentPath = null;
     }
 
     // main 영역에만 새 페이지 마운트
@@ -93,7 +98,17 @@ class Router {
     if (main) {
       console.log('Mounting page to main container');
       main.innerHTML = '';
-      this.currentPage = new PageComponent(props);
+      let pageInstance = this.pageCache.get(cacheKey);
+
+      if (!pageInstance) {
+        pageInstance = new PageComponent(props);
+        this.pageCache.set(cacheKey, pageInstance);
+      } else {
+        pageInstance.props = { ...pageInstance.props, ...props };
+      }
+
+      this.currentPage = pageInstance;
+      this.currentPath = cacheKey;
       this.currentPage.mount(main);
     } else {
       console.error('Main container not found');

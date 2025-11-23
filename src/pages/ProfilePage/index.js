@@ -27,6 +27,7 @@ class ProfilePage extends Component {
     this.profileImageUploader = null; // ProfileImageUploader 인스턴스
     this.toast = null; // Toast 인스턴스
     this.deleteModal = null; // Modal 인스턴스
+    this._eventsBound = false;
   }
 
   render() {
@@ -174,19 +175,58 @@ class ProfilePage extends Component {
 
   // 업데이트 시마다 호출
   updated() {
-    // DOM이 교체되므로 이벤트 리스너 재등록
-    this.setupEventListeners();
-
     // 버튼 상태 재체크
     const submitBtn = this.$el.querySelector('#submitBtn');
     this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
-    const nicknameInput = this.$el.querySelector('#nicknameInput');
-    const form = this.$el.querySelector('#profileForm');
-    const deleteAccountBtn = this.$el.querySelector('#deleteAccountBtn');
     const submitBtn = this.$el.querySelector('#submitBtn');
+
+    if (!this._eventsBound) {
+      this._eventsBound = true;
+
+      this.delegate('input', '#nicknameInput', (e) => {
+        this.state.nickname = e.target.value;
+        this.state.nicknameError = '';
+        this.state.isNicknameValid = true;
+
+        const helperText = this.$el.querySelector('#nicknameHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+
+        e.target.classList.remove('error');
+        this.updateSubmitButton(this.$el.querySelector('#submitBtn'));
+      });
+
+      this.delegate('blur', '#nicknameInput', () => {
+        this.checkNicknameValidity();
+      });
+
+      this.delegate('submit', '#profileForm', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+
+      this.delegate('click', '#deleteAccountBtn', () => {
+        this.setState({ showDeleteModal: true });
+        document.body.classList.add('modal-active');
+      });
+
+      this.delegate('click', '#deleteModal .modal-btn', (e) => {
+        const btn = e.target.closest('.modal-btn');
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+        if (action === 'cancel') {
+          this.setState({ showDeleteModal: false });
+          document.body.classList.remove('modal-active');
+        } else if (action === 'confirm') {
+          this.handleDeleteAccount();
+        }
+      });
+    }
 
     // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
     if (this.profileImageUploader) {
@@ -203,64 +243,6 @@ class ProfilePage extends Component {
       if (toastEl) {
         this.toast.$el = toastEl;
       }
-    }
-
-    // 닉네임 입력 - setState 없이 직접 업데이트
-    if (nicknameInput) {
-      nicknameInput.addEventListener('input', (e) => {
-        this.state.nickname = e.target.value;
-        this.state.nicknameError = '';
-        this.state.isNicknameValid = true;
-
-        // 헬퍼 텍스트 숨김
-        const helperText = this.$el.querySelector('#nicknameHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        // 입력 필드 에러 상태 제거
-        nicknameInput.classList.remove('error');
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-
-      nicknameInput.addEventListener('blur', () => {
-        this.checkNicknameValidity();
-      });
-    }
-
-    // 폼 제출
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSubmit();
-      });
-    }
-
-    // 회원 탈퇴 버튼
-    if (deleteAccountBtn) {
-      deleteAccountBtn.addEventListener('click', () => {
-        this.setState({ showDeleteModal: true });
-        document.body.classList.add('modal-active');
-      });
-    }
-
-    // 모달 버튼 (이벤트 위임)
-    const deleteModal = this.$el.querySelector('#deleteModal');
-    if (deleteModal) {
-      deleteModal.addEventListener('click', (e) => {
-        const btn = e.target.closest('.modal-btn');
-        if (!btn) return;
-
-        const action = btn.dataset.action;
-        if (action === 'cancel') {
-          this.setState({ showDeleteModal: false });
-          document.body.classList.remove('modal-active');
-        } else if (action === 'confirm') {
-          this.handleDeleteAccount();
-        }
-      });
     }
   }
 

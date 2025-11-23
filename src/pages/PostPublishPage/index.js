@@ -59,6 +59,7 @@ class PostPublishPage extends Component {
     };
 
     this.loadStyle('/src/pages/PostPublishPage/style.css');
+    this._eventsBound = false;
   }
 
   loadDraft() {
@@ -302,81 +303,86 @@ class PostPublishPage extends Component {
   }
 
   setupEventListeners() {
-    this.$el.querySelector('#summaryInput').addEventListener('input', e => {
+    if (this._eventsBound) return;
+    this._eventsBound = true;
+
+    this.delegate('input', '#summaryInput', (e) => {
       this.setState({ summary: e.target.value, summaryCharCount: e.target.value.length });
     });
 
-    this.$el.querySelector('#tagsContainer').addEventListener('click', () => {
-      this.$el.querySelector('#tagsInput').focus();
-    });
-    
-    this.$el.querySelector('#tagsInput').addEventListener('input', e => {
-        const query = e.target.value;
-        const suggestions = MOCK_TAGS.filter(tag =>
-            tag.toLowerCase().includes(query.toLowerCase()) && !this.state.tags.includes(tag)
-        ).slice(0, 5);
-        this.setState({ tagInput: query, tagSuggestions: suggestions });
-    });
-    
-    this.$el.querySelector('#tagsInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter' && this.state.tagInput.trim()) {
-            e.preventDefault();
-            this.addTag(this.state.tagInput.trim());
-        }
+    this.delegate('click', '#tagsContainer', () => {
+      const tagsInput = this.$el.querySelector('#tagsInput');
+      tagsInput?.focus();
     });
 
-    this.$el.querySelector('#tagsSuggestions').addEventListener('click', e => {
-        if (e.target.classList.contains('tag-suggestion-item')) {
-            this.addTag(e.target.dataset.tag);
-        }
-    });
-    
-    this.$el.querySelector('#selectedTags').addEventListener('click', e => {
-        if (e.target.closest('.remove-tag-btn')) {
-            const tagChip = e.target.closest('.tag-chip');
-            this.removeTag(tagChip.dataset.tag);
-        }
+    this.delegate('input', '#tagsInput', (e) => {
+      const query = e.target.value;
+      const suggestions = MOCK_TAGS.filter(tag =>
+        tag.toLowerCase().includes(query.toLowerCase()) && !this.state.tags.includes(tag)
+      ).slice(0, 5);
+      this.setState({ tagInput: query, tagSuggestions: suggestions });
     });
 
-    this.$el.querySelector('#uploadThumbnailBtn').addEventListener('click', () => {
-      this.$el.querySelector('#thumbnailInput').click();
+    this.delegate('keydown', '#tagsInput', (e) => {
+      if (e.key === 'Enter' && this.state.tagInput.trim()) {
+        e.preventDefault();
+        this.addTag(this.state.tagInput.trim());
+      }
     });
 
-    this.$el.querySelector('#thumbnailInput').addEventListener('change', e => {
+    this.delegate('click', '#tagsSuggestions .tag-suggestion-item', (e) => {
+      const item = e.target.closest('.tag-suggestion-item');
+      if (item) {
+        this.addTag(item.dataset.tag);
+      }
+    });
+
+    this.delegate('click', '#selectedTags .remove-tag-btn', (e) => {
+      const tagChip = e.target.closest('.tag-chip');
+      if (tagChip) {
+        this.removeTag(tagChip.dataset.tag);
+      }
+    });
+
+    this.delegate('click', '#uploadThumbnailBtn', () => {
+      this.$el.querySelector('#thumbnailInput')?.click();
+    });
+
+    this.delegate('change', '#thumbnailInput', (e) => {
       const file = e.target.files[0];
       this.handleThumbnailUpload(file);
       e.target.value = '';
     });
 
-    this.$el.querySelector('#removeThumbnailBtn').addEventListener('click', () => {
+    this.delegate('click', '#removeThumbnailBtn', () => {
       this.setState({ thumbnailUrl: null });
     });
 
-    this.$el.querySelector('#seriesSelect').addEventListener('change', e => {
+    this.delegate('change', '#seriesSelect', (e) => {
       this.setState({ selectedSeriesId: e.target.value || null });
     });
 
-    this.$el.querySelector('#createSeriesBtn').addEventListener('click', () => {
+    this.delegate('click', '#createSeriesBtn', () => {
       this.setState({ isSeriesModalActive: true });
     });
 
-    this.$el.querySelector('#closeSeriesModal').addEventListener('click', () => this.setState({ isSeriesModalActive: false }));
-    this.$el.querySelector('#cancelSeriesBtn').addEventListener('click', () => this.setState({ isSeriesModalActive: false }));
-    this.$el.querySelector('#seriesModal .modal-backdrop').addEventListener('click', () => this.setState({ isSeriesModalActive: false }));
-    this.$el.querySelector('#createSeriesSubmitBtn').addEventListener('click', () => this.createSeries());
+    this.delegate('click', '#closeSeriesModal', () => this.setState({ isSeriesModalActive: false }));
+    this.delegate('click', '#cancelSeriesBtn', () => this.setState({ isSeriesModalActive: false }));
+    this.delegate('click', '#seriesModal .modal-backdrop', () => this.setState({ isSeriesModalActive: false }));
+    this.delegate('click', '#createSeriesSubmitBtn', () => this.createSeries());
 
-    this.$el.querySelectorAll('input[name="visibility"]').forEach(radio => {
-      radio.addEventListener('change', e => this.setState({ visibility: e.target.value }));
-    });
-    
-    this.$el.querySelector('#cancelBtn').addEventListener('click', () => {
-        if (confirm('작성을 취소하시겠습니까? 작성 페이지로 돌아갑니다.')) {
-            navigateTo('/posts/create');
-        }
+    this.delegate('change', 'input[name="visibility"]', (e) => {
+      this.setState({ visibility: e.target.value });
     });
 
-    this.$el.querySelector('#publishBtn').addEventListener('click', () => {
-        this.publishPost();
+    this.delegate('click', '#cancelBtn', () => {
+      if (confirm('작성을 취소하시겠습니까? 작성 페이지로 돌아갑니다.')) {
+        navigateTo('/posts/create');
+      }
+    });
+
+    this.delegate('click', '#publishBtn', () => {
+      this.publishPost();
     });
   }
 

@@ -19,6 +19,7 @@ class PostDetailPage extends Component {
 
     this.postId = props.id || props.postId;
     this.loadStyle('/src/pages/PostDetailPage/style.css');
+    this._eventsBound = false;
   }
 
   render() {
@@ -195,11 +196,6 @@ class PostDetailPage extends Component {
     this.initScrollTopButton();
   }
 
-  async updated() {
-    await this.$nextTick();
-    this.setupEventListeners();
-  }
-
   $nextTick() {
     return new Promise(resolve => setTimeout(resolve, 0));
   }
@@ -347,66 +343,46 @@ spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형
   }
 
   setupEventListeners() {
-    const likeBtn = this.$$('#likeBtn');
-    const submitCommentBtn = this.$$('#submitCommentBtn');
-    const sortSelect = this.$$('#sortSelect');
-    const commentInput = this.$$('#commentInput');
-    const recommendedList = this.$$('#recommendedList');
-    const commentsList = this.$$('#commentsList');
+    if (this._eventsBound) return;
+    this._eventsBound = true;
 
-    if (likeBtn) {
-      likeBtn.replaceWith(likeBtn.cloneNode(true));
-      this.$$('#likeBtn').addEventListener('click', () => this.handleLikeClick());
-    }
+    this.delegate('click', '#likeBtn', () => this.handleLikeClick());
 
-    if (submitCommentBtn) {
-      submitCommentBtn.replaceWith(submitCommentBtn.cloneNode(true));
-      this.$$('#submitCommentBtn').addEventListener('click', () => this.handleCommentSubmit());
-    }
+    this.delegate('click', '#submitCommentBtn', () => this.handleCommentSubmit());
 
-    if (sortSelect) {
-      sortSelect.replaceWith(sortSelect.cloneNode(true));
-      this.$$('#sortSelect').addEventListener('change', (e) => this.handleCommentSort(e.target.value));
-    }
+    this.delegate('change', '#sortSelect', (e) => this.handleCommentSort(e.target.value));
 
-    if (commentInput) {
-      commentInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-          this.handleCommentSubmit();
+    this.delegate('keydown', '#commentInput', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        this.handleCommentSubmit();
+      }
+    });
+
+    this.delegate('input', '#commentInput', (e) => {
+      this.state.commentText = e.target.value;
+    });
+
+    this.delegate('click', '#recommendedList .recommended-item', (e) => {
+      const item = e.target.closest('.recommended-item');
+      if (item) {
+        const postId = item.dataset.postId;
+        this.handleRecommendedClick(postId);
+      }
+    });
+
+    this.delegate('click', '#commentsList .comment-action-btn', (e) => {
+      const btn = e.target.closest('.comment-action-btn');
+      if (btn) {
+        const commentId = parseInt(btn.dataset.commentId, 10);
+        const action = btn.dataset.action;
+
+        if (action === 'like') {
+          this.handleCommentLike(commentId);
+        } else if (action === 'reply') {
+          this.handleCommentReply(commentId);
         }
-      });
-      commentInput.addEventListener('input', (e) => {
-        this.state.commentText = e.target.value;
-      });
-    }
-
-    if (recommendedList) {
-      recommendedList.replaceWith(recommendedList.cloneNode(true));
-      this.$$('#recommendedList').addEventListener('click', (e) => {
-        const item = e.target.closest('.recommended-item');
-        if (item) {
-          const postId = item.dataset.postId;
-          this.handleRecommendedClick(postId);
-        }
-      });
-    }
-
-    if (commentsList) {
-      commentsList.replaceWith(commentsList.cloneNode(true));
-      this.$$('#commentsList').addEventListener('click', (e) => {
-        const btn = e.target.closest('.comment-action-btn');
-        if (btn) {
-          const commentId = parseInt(btn.dataset.commentId);
-          const action = btn.dataset.action;
-
-          if (action === 'like') {
-            this.handleCommentLike(commentId);
-          } else if (action === 'reply') {
-            this.handleCommentReply(commentId);
-          }
-        }
-      });
-    }
+      }
+    });
   }
 
   handleLikeClick() {

@@ -23,6 +23,7 @@ class BlogListPage extends Component {
 
     this.pageSize = 20;
     this.loadStyle('/src/pages/BlogListPage/style.css');
+    this._eventsBound = false;
   }
 
   render() {
@@ -113,7 +114,6 @@ class BlogListPage extends Component {
     await this.$nextTick();
     this.renderPosts();
     this.renderPaginationPages();
-    this.setupEventListeners();
   }
 
   $nextTick() {
@@ -225,57 +225,39 @@ class BlogListPage extends Component {
   }
 
   setupEventListeners() {
-    const prevBtn = this.$$('#prevBtn');
-    const nextBtn = this.$$('#nextBtn');
-    const paginationPages = this.$$('#paginationPages');
-    const searchClearBtn = this.$$('#searchClearBtn');
-    const blogListGrid = this.$$('#blogListGrid');
+    if (this._eventsBound) return;
+    this._eventsBound = true;
 
-    if (prevBtn) {
-      prevBtn.replaceWith(prevBtn.cloneNode(true));
-      this.$$('#prevBtn').addEventListener('click', () => {
-        if (this.state.currentPage > 1) {
-          this.goToPage(this.state.currentPage - 1);
-        }
-      });
-    }
+    this.delegate('click', '#prevBtn', () => {
+      if (this.state.currentPage > 1) {
+        this.goToPage(this.state.currentPage - 1);
+      }
+    });
 
-    if (nextBtn) {
-      nextBtn.replaceWith(nextBtn.cloneNode(true));
-      this.$$('#nextBtn').addEventListener('click', () => {
-        if (this.state.currentPage < this.state.totalPages) {
-          this.goToPage(this.state.currentPage + 1);
-        }
-      });
-    }
+    this.delegate('click', '#nextBtn', () => {
+      if (this.state.currentPage < this.state.totalPages) {
+        this.goToPage(this.state.currentPage + 1);
+      }
+    });
 
-    if (paginationPages) {
-      paginationPages.replaceWith(paginationPages.cloneNode(true));
-      this.$$('#paginationPages').addEventListener('click', (e) => {
-        const pageBtn = e.target.closest('.pagination__page');
-        if (pageBtn) {
-          const page = parseInt(pageBtn.dataset.page, 10);
-          this.goToPage(page);
-        }
-      });
-    }
+    this.delegate('click', '#paginationPages .pagination__page', (e) => {
+      const pageBtn = e.target.closest('.pagination__page');
+      if (pageBtn) {
+        const page = parseInt(pageBtn.dataset.page, 10);
+        this.goToPage(page);
+      }
+    });
 
-    if (searchClearBtn) {
-      searchClearBtn.addEventListener('click', () => {
-        navigate('/posts');
-      });
-    }
+    this.delegate('click', '#searchClearBtn', () => {
+      navigate('/posts');
+    });
 
-    if (blogListGrid) {
-      blogListGrid.replaceWith(blogListGrid.cloneNode(true));
-      this.$$('#blogListGrid').addEventListener('click', (e) => {
-        const postItem = e.target.closest('.post-item');
-        if (postItem) {
-          const postId = postItem.dataset.postId;
-          this.handlePostClick(postId);
-        }
-      });
-    }
+    this.delegate('click', '#blogListGrid .post-item', (e) => {
+      const postItem = e.target.closest('.post-item');
+      if (!postItem) return;
+      const postId = postItem.dataset.postId;
+      this.handlePostClick(postId);
+    });
   }
 
   handlePostClick(postId) {

@@ -31,6 +31,7 @@ class PostCreatePage extends Component {
 
     this.autosaveTimer = null;
     this.loadStyle('/src/pages/PostCreatePage/style.css');
+    this._eventsBound = false;
   }
 
   shouldUpdate(nextProps, nextState, prevState) {
@@ -345,13 +346,23 @@ class PostCreatePage extends Component {
     this.imageUploadModal = this.$el.querySelector('#imageUploadModal');
     this.uploadProgressList = this.$el.querySelector('#uploadProgressList');
 
-    this.titleInput.addEventListener('input', e => this.setState({ title: e.target.value }));
-    this.contentTextarea.addEventListener('input', e => this.setState({ content: e.target.value }));
   }
 
   setupEventListeners() {
-    // Toolbar actions
-    this.$el.querySelector('#toolbar').addEventListener('click', (e) => {
+    if (this._eventsBound) return;
+    this._eventsBound = true;
+
+    this.delegate('input', '#titleInput', (e) => {
+      this.setState({ title: e.target.value });
+      this.triggerAutoSave();
+    });
+
+    this.delegate('input', '#contentTextarea', (e) => {
+      this.setState({ content: e.target.value });
+      this.triggerAutoSave();
+    });
+
+    this.delegate('click', '#toolbar', (e) => {
       const btn = e.target.closest('.toolbar-btn');
       if (!btn) return;
 
@@ -359,33 +370,32 @@ class PostCreatePage extends Component {
       if (action === 'preview') {
         this.togglePreview();
       } else if (action === 'image') {
-        this.imageInput.click();
+        this.imageInput?.click();
       } else {
         this.applyFormat(action);
       }
     });
 
-    // Image upload drag & drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      this.uploadZone.addEventListener(eventName, (e) => {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+      this.delegate(eventName, '#uploadZone', (e) => {
         e.preventDefault();
         e.stopPropagation();
       });
     });
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-      this.uploadZone.addEventListener(eventName, () => {
-        this.uploadOverlay.classList.add('active');
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      this.delegate(eventName, '#uploadZone', () => {
+        this.uploadOverlay?.classList.add('active');
       });
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      this.uploadZone.addEventListener(eventName, () => {
-        this.uploadOverlay.classList.remove('active');
+    ['dragleave', 'drop'].forEach((eventName) => {
+      this.delegate(eventName, '#uploadZone', () => {
+        this.uploadOverlay?.classList.remove('active');
       });
     });
 
-    this.uploadZone.addEventListener('drop', (e) => {
+    this.delegate('drop', '#uploadZone', (e) => {
       const files = Array.from(e.dataTransfer.files).filter(file =>
         ALLOWED_IMAGE_TYPES.includes(file.type)
       );
@@ -394,7 +404,7 @@ class PostCreatePage extends Component {
       }
     });
 
-    this.imageInput.addEventListener('change', (e) => {
+    this.delegate('change', '#imageInput', (e) => {
       const files = Array.from(e.target.files);
       if (files.length > 0) {
         this.handleImageFiles(files);
@@ -402,29 +412,19 @@ class PostCreatePage extends Component {
       e.target.value = '';
     });
 
-    // Header actions
-    const backBtn = this.$el.querySelector('#backBtn');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
-          navigateTo('/posts');
-        }
-      });
-    }
+    this.delegate('click', '#backBtn', () => {
+      if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
+        navigateTo('/posts');
+      }
+    });
 
-    const tempSaveBtn = this.$el.querySelector('#tempSaveBtn');
-    if (tempSaveBtn) {
-      tempSaveBtn.addEventListener('click', () => {
-        this.saveDraftToBackend();
-      });
-    }
+    this.delegate('click', '#tempSaveBtn', () => {
+      this.saveDraftToBackend();
+    });
 
-    const publishBtn = this.$el.querySelector('#publishBtn');
-    if (publishBtn) {
-      publishBtn.addEventListener('click', () => {
-        this.navigateToPublish();
-      });
-    }
+    this.delegate('click', '#publishBtn', () => {
+      this.navigateToPublish();
+    });
   }
 
   applyFormat(format) {
@@ -566,10 +566,6 @@ class PostCreatePage extends Component {
       this.saveDraftToLocalStorage();
       this.setState({ autosaveStatusText: '모든 변경사항 저장됨', isSaving: false });
     };
-
-    // Initial setup for input event listeners for title and content
-    this.$el.querySelector('#titleInput').addEventListener('input', () => this.triggerAutoSave());
-    this.$el.querySelector('#contentTextarea').addEventListener('input', () => this.triggerAutoSave());
 
     this.autosaveTimer = setInterval(autoSave, AUTOSAVE_INTERVAL);
   }

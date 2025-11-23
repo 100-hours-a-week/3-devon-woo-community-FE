@@ -28,6 +28,7 @@ class SignupPage extends Component {
     };
     this.loadStyle('/src/pages/SignupPage/style.css');
     this.profileImageUploader = null; // ProfileImageUploader 인스턴스
+    this._eventsBound = false;
   }
 
   render() {
@@ -147,20 +148,84 @@ class SignupPage extends Component {
   }
 
   updated() {
-    this.setupEventListeners();
-
     // 버튼 상태 재체크
     const submitBtn = this.$el.querySelector('#submitBtn');
     this.updateSubmitButton(submitBtn);
   }
 
   setupEventListeners() {
-    const emailInput = this.$el.querySelector('#emailInput');
-    const passwordInput = this.$el.querySelector('#passwordInput');
-    const passwordConfirmInput = this.$el.querySelector('#passwordConfirmInput');
-    const nicknameInput = this.$el.querySelector('#nicknameInput');
-    const submitBtn = this.$el.querySelector('#submitBtn');
-    const form = this.$el.querySelector('#signupForm');
+    if (!this._eventsBound) {
+      this._eventsBound = true;
+
+      this.delegate('input', '#emailInput', (e) => {
+        this.state.email = e.target.value;
+        this.state.emailError = '';
+        const helperText = this.$el.querySelector('#emailHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+        e.target.classList.remove('error');
+        const submitBtn = this.$el.querySelector('#submitBtn');
+        this.updateSubmitButton(submitBtn);
+      });
+
+      this.delegate('blur', '#emailInput', () => {
+        this.checkEmailValidity();
+      });
+
+      this.delegate('input', '#passwordInput', (e) => {
+        this.state.password = e.target.value;
+        this.state.passwordError = '';
+        const helperText = this.$el.querySelector('#passwordHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+        e.target.classList.remove('error');
+        const submitBtn = this.$el.querySelector('#submitBtn');
+        this.updateSubmitButton(submitBtn);
+      });
+
+      this.delegate('blur', '#passwordInput', () => {
+        this.checkPasswordValidity();
+      });
+
+      this.delegate('input', '#passwordConfirmInput', (e) => {
+        this.state.passwordConfirm = e.target.value;
+        this.state.passwordConfirmError = '';
+        const helperText = this.$el.querySelector('#passwordConfirmHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+        e.target.classList.remove('error');
+        const submitBtn = this.$el.querySelector('#submitBtn');
+        this.updateSubmitButton(submitBtn);
+      });
+
+      this.delegate('blur', '#passwordConfirmInput', () => {
+        this.checkPasswordConfirmValidity();
+      });
+
+      this.delegate('input', '#nicknameInput', (e) => {
+        this.state.nickname = e.target.value;
+        this.state.nicknameError = '';
+        const helperText = this.$el.querySelector('#nicknameHelper');
+        if (helperText) {
+          helperText.classList.remove('show');
+        }
+        e.target.classList.remove('error');
+        const submitBtn = this.$el.querySelector('#submitBtn');
+        this.updateSubmitButton(submitBtn);
+      });
+
+      this.delegate('blur', '#nicknameInput', () => {
+        this.checkNicknameValidity();
+      });
+
+      this.delegate('submit', '#signupForm', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
+      });
+    }
 
     // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
     if (this.profileImageUploader) {
@@ -169,110 +234,6 @@ class SignupPage extends Component {
         this.profileImageUploader.$el = uploaderEl;
         this.profileImageUploader.setupEventListeners();
       }
-    }
-
-    // 이메일 입력
-    if (emailInput) {
-      emailInput.addEventListener('input', (e) => {
-        this.state.email = e.target.value;
-        this.state.emailError = '';
-
-        // 헬퍼 텍스트 숨김
-        const helperText = this.$el.querySelector('#emailHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        // 입력 필드 에러 상태 제거
-        emailInput.classList.remove('error');
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-
-      emailInput.addEventListener('blur', () => {
-        this.checkEmailValidity();
-      });
-    }
-
-    // 비밀번호 입력
-    if (passwordInput) {
-      passwordInput.addEventListener('input', (e) => {
-        this.state.password = e.target.value;
-        this.state.passwordError = '';
-
-        // 헬퍼 텍스트 숨김
-        const helperText = this.$el.querySelector('#passwordHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        // 입력 필드 에러 상태 제거
-        passwordInput.classList.remove('error');
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-
-      passwordInput.addEventListener('blur', () => {
-        this.checkPasswordValidity();
-      });
-    }
-
-    // 비밀번호 확인 입력
-    if (passwordConfirmInput) {
-      passwordConfirmInput.addEventListener('input', (e) => {
-        this.state.passwordConfirm = e.target.value;
-        this.state.passwordConfirmError = '';
-
-        // 헬퍼 텍스트 숨김
-        const helperText = this.$el.querySelector('#passwordConfirmHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        // 입력 필드 에러 상태 제거
-        passwordConfirmInput.classList.remove('error');
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-
-      passwordConfirmInput.addEventListener('blur', () => {
-        this.checkPasswordConfirmValidity();
-      });
-    }
-
-    // 닉네임 입력
-    if (nicknameInput) {
-      nicknameInput.addEventListener('input', (e) => {
-        this.state.nickname = e.target.value;
-        this.state.nicknameError = '';
-
-        // 헬퍼 텍스트 숨김
-        const helperText = this.$el.querySelector('#nicknameHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        // 입력 필드 에러 상태 제거
-        nicknameInput.classList.remove('error');
-
-        // 버튼 활성화 상태 업데이트
-        this.updateSubmitButton(submitBtn);
-      });
-
-      nicknameInput.addEventListener('blur', () => {
-        this.checkNicknameValidity();
-      });
-    }
-
-    // 폼 제출
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSubmit();
-      });
     }
   }
 
