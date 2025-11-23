@@ -2,6 +2,8 @@ import Component from '../../core/Component.js';
 import { navigateTo, navigateReplace } from '../../core/Router.js';
 import AuthService from '../../utils/AuthService.js';
 import { getCloudinarySignature } from '../../api/cloudinary.js';
+import { createPost } from '../../api/posts.js';
+import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
 import { hideHeader, showHeader } from '../../services/HeaderService.js';
 
 const AUTOSAVE_INTERVAL = 30000;
@@ -12,6 +14,13 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'
 class PostCreatePage extends Component {
   constructor(props) {
     super(props);
+    this.mode = props.mode || 'create';
+    this.postId = props.postId || null;
+    this.initialData = props.initialData || null;
+    this.loadPostHandler = typeof props.loadPost === 'function' ? props.loadPost : null;
+    this.publishExecutor = typeof props.onPublish === 'function' ? props.onPublish : null;
+    this.afterPublish = typeof props.onPublishSuccess === 'function' ? props.onPublishSuccess : null;
+
     if (!AuthService.isLoggedIn()) {
       alert('로그인이 필요한 기능입니다.');
       navigateReplace('/login');
@@ -28,6 +37,13 @@ class PostCreatePage extends Component {
       isSaving: false,
       imageUploadModalActive: false,
       imageUploadProgress: [],
+      showPublishModal: false,
+      summary: '',
+      summaryCharCount: 0,
+      thumbnailUrl: null,
+      visibility: 'public',
+      isPublishing: false,
+      commentSetting: 'allow'
     };
 
     this.autosaveTimer = null;
@@ -82,7 +98,7 @@ class PostCreatePage extends Component {
                 </svg>
               </button>
               <div class="compose-header-text">
-                <span class="compose-label">새 글 작성</span>
+                <span class="compose-label">${this.mode === 'edit' ? '글 수정' : '새 글 작성'}</span>
               </div>
             </div>
             <div class="compose-header-right">
@@ -258,6 +274,7 @@ class PostCreatePage extends Component {
         </main>
 
         <input type="file" id="imageInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" multiple>
+        <input type="file" id="thumbnailInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
 
         <div class="image-upload-modal ${this.state.imageUploadModalActive ? 'active' : ''}" id="imageUploadModal">
           <div class="modal-backdrop"></div>
@@ -296,6 +313,103 @@ class PostCreatePage extends Component {
               </div>
           </div>
         </div>
+
+        <div class="publish-modal ${this.state.showPublishModal ? 'active' : ''}" id="publishModal">
+          <div class="publish-modal__overlay" data-publish-close="true"></div>
+          <div class="publish-modal__sheet">
+            <div class="publish-modal__top">
+              <div class="publish-modal__heading">
+                <p class="publish-modal__eyebrow">발행</p>
+                <h3 class="publish-modal__title">게시글 설정</h3>
+              </div>
+              <div class="publish-modal__actions-top">
+                <button type="button" class="publish-modal__link" id="openCclSetting">CCL 설정</button>
+                <button type="button" class="publish-modal__close" id="publishModalClose" aria-label="닫기">&times;</button>
+              </div>
+            </div>
+            <div class="publish-modal__divider"></div>
+            <div class="publish-modal__grid">
+              <div class="publish-modal__main">
+                <div class="publish-row">
+                  <div class="publish-row__label">제목</div>
+                  <div class="publish-row__value">${this.state.title || '제목을 입력하세요'}</div>
+                </div>
+
+                <div class="publish-row">
+                  <div class="publish-row__label">기본</div>
+                  <div class="publish-row__value">
+                    <div class="publish-radio-row">
+                      ${['basic', 'public', 'protected', 'private'].map((key) => {
+                        const labels = {
+                          basic: '기본',
+                          public: '공개',
+                          protected: '공개(보호)',
+                          private: '비공개'
+                        };
+                        const checked = this.state.visibility === key ? 'checked' : '';
+                        return `
+                          <label class="publish-radio">
+                            <input type="radio" name="publishVisibility" value="${key}" ${checked}>
+                            <span>${labels[key]}</span>
+                          </label>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="publish-row">
+                  <div class="publish-row__label">댓글</div>
+                  <div class="publish-row__value">
+                    <select id="commentSetting" class="publish-select">
+                      <option value="allow" ${this.state.commentSetting === 'allow' ? 'selected' : ''}>댓글 허용</option>
+                      <option value="disallow" ${this.state.commentSetting === 'disallow' ? 'selected' : ''}>댓글 비허용</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="publish-row publish-row--textarea">
+                  <div class="publish-row__label">간단 소개</div>
+                  <div class="publish-row__value">
+                    <textarea
+                      id="summaryInput"
+                      class="publish-row__textarea"
+                      maxlength="150"
+                      placeholder="게시글을 간단히 소개해보세요 (최대 150자)"
+                    >${this.state.summary}</textarea>
+                    <span class="publish-row__count">
+                      <span id="summaryCharCount">${this.state.summaryCharCount}</span> / 150
+                    </span>
+                  </div>
+                </div>
+
+                <div class="publish-row">
+                  <div class="publish-row__label">URL</div>
+                  <div class="publish-row__value muted">https://blog.example.com/${encodeURIComponent(this.state.title || '제목')}</div>
+                </div>
+              </div>
+
+              <div class="publish-modal__side">
+                <div class="publish-thumbnail ${this.state.thumbnailUrl ? 'has-image' : ''}" id="thumbnailPreview">
+                  ${this.state.thumbnailUrl ? `<img src="${this.state.thumbnailUrl}" alt="썸네일">` : `
+                    <div class="thumbnail-placeholder">
+                      <span>대표 이미지 추가</span>
+                    </div>
+                  `}
+                </div>
+                <button type="button" class="publish-thumb-btn" id="thumbnailSelectBtn">이미지 선택</button>
+                <button type="button" class="publish-thumb-remove ${this.state.thumbnailUrl ? '' : 'is-hidden'}" id="removeThumbnailBtn">제거</button>
+              </div>
+            </div>
+
+            <div class="publish-modal__actions">
+              <button type="button" class="btn-secondary" id="publishModalCancel">취소</button>
+              <button type="button" class="btn-primary" id="confirmPublishBtn" ${this.state.isPublishing ? 'disabled' : ''}>
+                ${this.state.isPublishing ? '출간 중...' : '출간하기'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -306,7 +420,7 @@ class PostCreatePage extends Component {
     hideHeader();
     this.initEditor();
     this.setupEventListeners();
-    this.loadDraft();
+    this.initializeContent();
     this.initAutoSave();
     this.initKeyboardShortcuts();
   }
@@ -315,6 +429,7 @@ class PostCreatePage extends Component {
     // Restore the main header
     showHeader();
     clearInterval(this.autosaveTimer);
+    document.body.classList.remove('publish-modal-active');
   }
 
   updated() {
@@ -342,7 +457,57 @@ class PostCreatePage extends Component {
     this.imageInput = this.$el.querySelector('#imageInput');
     this.imageUploadModal = this.$el.querySelector('#imageUploadModal');
     this.uploadProgressList = this.$el.querySelector('#uploadProgressList');
+    this.autoResizeContent();
+  }
 
+  async initializeContent() {
+    if (this.mode === 'edit') {
+      await this.loadExistingPost();
+    } else {
+      this.loadDraft();
+    }
+  }
+
+  async loadExistingPost() {
+    try {
+      let data = this.initialData;
+      if (!data && this.loadPostHandler) {
+        data = await this.loadPostHandler(this.postId);
+      }
+      if (!data) return;
+
+      const nextState = {
+        title: data.title || '',
+        content: data.content || '',
+        uploadedImages: data.images || [],
+        summary: data.summary || '',
+        summaryCharCount: (data.summary || '').length,
+        thumbnailUrl: data.thumbnail || null,
+        visibility: data.visibility || 'public'
+      };
+
+      this.setState(nextState, () => {
+        if (this.contentTextarea) {
+          this.contentTextarea.value = this.state.content;
+          this.autoResizeContent();
+        }
+      });
+    } catch (error) {
+      console.error('Failed to load post for editing:', error);
+      alert('게시글 정보를 불러오지 못했습니다.');
+    }
+  }
+
+  autoResizeContent() {
+    if (!this.contentTextarea) return;
+    requestAnimationFrame(() => {
+      if (!this.contentTextarea) return;
+      const textarea = this.contentTextarea;
+      textarea.style.height = 'auto';
+      const minHeight = 400;
+      const nextHeight = Math.max(textarea.scrollHeight, minHeight);
+      textarea.style.height = `${nextHeight}px`;
+    });
   }
 
   setupEventListeners() {
@@ -357,6 +522,7 @@ class PostCreatePage extends Component {
     this.delegate('input', '#contentTextarea', (e) => {
       this.setState({ content: e.target.value });
       this.triggerAutoSave();
+      this.autoResizeContent();
     });
 
     this.delegate('click', '#toolbar', (e) => {
@@ -421,6 +587,63 @@ class PostCreatePage extends Component {
 
     this.delegate('click', '#publishBtn', () => {
       this.navigateToPublish();
+    });
+
+    this.delegate('click', '#publishModalClose', () => {
+      this.closePublishModal();
+    });
+
+    this.delegate('click', '#openCclSetting', () => {
+      alert('CCL 설정 기능은 준비 중입니다.');
+    });
+
+    this.delegate('click', '#publishModalCancel', () => {
+      this.closePublishModal();
+    });
+
+    this.delegate('click', '[data-publish-close]', () => {
+      this.closePublishModal();
+    });
+
+    this.delegate('input', '#summaryInput', (e) => {
+      this.state.summary = e.target.value;
+      this.state.summaryCharCount = e.target.value.length;
+      this.updateSummaryCount();
+    });
+
+    this.delegate('click', '#thumbnailSelectBtn', () => {
+      const input = this.$el.querySelector('#thumbnailInput');
+      if (input) {
+        input.click();
+      }
+    });
+
+    this.delegate('change', '#thumbnailInput', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        this.handleThumbnailUpload(file);
+      }
+      e.target.value = '';
+    });
+
+    this.delegate('click', '#removeThumbnailBtn', () => {
+      if (!this.state.thumbnailUrl) return;
+      this.state.thumbnailUrl = null;
+      this.updateThumbnailPreview();
+    });
+
+    this.delegate('change', 'input[name="publishVisibility"]', (e) => {
+      const input = e.target;
+      if (!input) return;
+      this.state.visibility = input.value;
+    });
+
+    this.delegate('change', '#commentSetting', (e) => {
+      this.state.commentSetting = e.target.value;
+    });
+
+    this.delegate('click', '#confirmPublishBtn', () => {
+      this.submitPublish();
     });
   }
 
@@ -657,6 +880,12 @@ class PostCreatePage extends Component {
         insertText += `\n![${file.name}](${imageUrl})\n`;
         const updatedImages = [...this.state.uploadedImages, imageUrl];
         this.setState({ uploadedImages: updatedImages });
+        if (!this.state.thumbnailUrl) {
+          this.state.thumbnailUrl = imageUrl;
+          if (this.state.showPublishModal) {
+            this.updateThumbnailPreview();
+          }
+        }
 
         newImageUploadProgress[progressItemIndex] = {
           ...newImageUploadProgress[progressItemIndex],
@@ -683,6 +912,7 @@ class PostCreatePage extends Component {
       this.setState({ content: newContent });
       this.contentTextarea.value = newContent; // Update textarea value directly
       this.contentTextarea.focus();
+      this.autoResizeContent();
       this.triggerAutoSave();
     }
 
@@ -789,18 +1019,149 @@ class PostCreatePage extends Component {
 
     if (!title) {
       alert('제목을 입력해주세요.');
-      this.$el.querySelector('#titleInput').focus();
+      this.$el.querySelector('#titleInput')?.focus();
       return;
     }
 
     if (!content) {
       alert('내용을 입력해주세요.');
-      this.$el.querySelector('#contentTextarea').focus();
+      this.$el.querySelector('#contentTextarea')?.focus();
       return;
     }
 
-    this.saveDraftToLocalStorage();
-    navigateTo('/posts/publish'); // Navigate to the publish page
+    if (!this.state.thumbnailUrl && this.state.uploadedImages?.length > 0) {
+      this.state.thumbnailUrl = this.state.uploadedImages[0];
+    }
+
+    const summaryCharCount = this.state.summary.length;
+    this.setState({
+      showPublishModal: true,
+      summaryCharCount
+    });
+    document.body.classList.add('publish-modal-active');
+  }
+
+  closePublishModal(force = false) {
+    if (!force && this.state.isPublishing) return;
+    if (!this.state.showPublishModal) return;
+    document.body.classList.remove('publish-modal-active');
+    this.setState({ showPublishModal: false });
+  }
+
+  updateSummaryCount() {
+    const counter = this.$el?.querySelector('#summaryCharCount');
+    if (counter) {
+      counter.textContent = `${this.state.summaryCharCount}`;
+    }
+  }
+
+  updateThumbnailPreview() {
+    const preview = this.$el?.querySelector('#thumbnailPreview');
+    if (!preview) return;
+    if (this.state.thumbnailUrl) {
+      preview.classList.add('has-image');
+      preview.innerHTML = `<img src="${this.state.thumbnailUrl}" alt="썸네일">`;
+    } else {
+      preview.classList.remove('has-image');
+      preview.innerHTML = `
+        <div class="thumbnail-placeholder">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            <path d="M28 20l-7-7-10 10-4-4-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>썸네일 이미지를 선택하세요</p>
+        </div>
+      `;
+    }
+    const removeBtn = this.$el?.querySelector('#removeThumbnailBtn');
+    if (removeBtn) {
+      if (this.state.thumbnailUrl) {
+        removeBtn.classList.remove('is-hidden');
+      } else {
+        removeBtn.classList.add('is-hidden');
+      }
+    }
+  }
+
+  async handleThumbnailUpload(file) {
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE) {
+      alert('10MB 이하의 이미지 파일(JPEG, PNG, GIF, WebP)만 업로드할 수 있습니다.');
+      return;
+    }
+
+    try {
+      const signData = await getCloudinarySignature('post');
+      const formData = new FormData();
+      Object.keys(signData.uploadParams).forEach((key) => formData.append(key, signData.uploadParams[key]));
+      formData.append('file', file);
+
+      const uploadResponse = await fetch(signData.uploadUrl, { method: 'POST', body: formData });
+      if (!uploadResponse.ok) {
+        throw new Error('썸네일 업로드 실패');
+      }
+
+      const uploadResult = await uploadResponse.json();
+      this.state.thumbnailUrl = uploadResult.secure_url || uploadResult.url;
+      this.updateThumbnailPreview();
+    } catch (error) {
+      console.error('Thumbnail upload failed:', error);
+      alert(error.message || '썸네일 업로드에 실패했습니다.');
+    }
+  }
+
+  async submitPublish() {
+    if (this.state.isPublishing) return;
+
+    const title = this.state.title.trim();
+    const content = this.state.content.trim();
+
+    if (!title || !content) {
+      alert('제목과 내용을 입력해주세요.');
+      return;
+    }
+
+    const payload = new PostCreateRequest({
+      memberId: AuthService.getUser()?.id,
+      title,
+      content,
+      image: this.state.thumbnailUrl || this.state.uploadedImages[0] || null,
+      summary: this.state.summary.trim() || null,
+      visibility: this.state.visibility,
+      commentsAllowed: this.state.commentSetting === 'allow',
+      isDraft: false
+    });
+
+    this.setState({ isPublishing: true });
+
+    try {
+      const executor = this.publishExecutor || this.createNewPost;
+      const response = await executor(payload, {
+        mode: this.mode,
+        postId: this.postId
+      });
+      localStorage.removeItem(STORAGE_KEY);
+      alert('게시글이 성공적으로 출간되었습니다!');
+      this.closePublishModal(true);
+      if (this.afterPublish) {
+        this.afterPublish(response);
+      } else if (response?.data?.id) {
+        navigateReplace(`/posts/${response.data.id}`);
+      } else {
+        navigateReplace('/posts');
+      }
+    } catch (error) {
+      console.error('Failed to publish post:', error);
+      alert('게시글 출간에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      this.setState({ isPublishing: false });
+    }
+  }
+
+  async createNewPost(payload) {
+    return createPost(payload);
   }
 }
 
