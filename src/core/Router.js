@@ -1,8 +1,12 @@
+import { syncHeaderWithRoute } from '../services/HeaderService.js';
+
 // 간단한 클라이언트 사이드 라우터
 class Router {
   constructor() {
     this.routes = {};
     this.currentPage = null;
+    this.currentPath = null;
+    this.pageCache = new Map();
   }
 
   // 라우트 등록
@@ -38,9 +42,7 @@ class Router {
     this.loadPage(path);
 
     // 헤더 상태 업데이트 (드롭다운 상태 등)
-    if (window.updateHeaderState) {
-      window.updateHeaderState();
-    }
+    syncHeaderWithRoute(path);
   }
 
   // 페이지 이동 (히스토리 스택에 추가하지 않고 현재 항목 대체)
@@ -49,22 +51,30 @@ class Router {
     this.loadPage(path);
 
     // 헤더 상태 업데이트 (드롭다운 상태 등)
-    if (window.updateHeaderState) {
-      window.updateHeaderState();
-    }
+    syncHeaderWithRoute(path);
   }
 
   // 페이지 로드 (main 영역만 업데이트)
   loadPage(path) {
+    console.log('loadPage called with path:', path);
     let PageComponent = this.routes[path];
+    let props = {};
+    const cacheKey = path;
+    let shouldCache = true;
 
     // 정확히 일치하는 라우트가 없으면 동적 라우트 검색
     if (!PageComponent) {
-      PageComponent = this.matchDynamicRoute(path);
+      console.log('Exact route not found, trying dynamic route');
+      const result = this.matchDynamicRoute(path);
+      if (result) {
+        PageComponent = result.component;
+        props = result.params;
+      }
     }
 
     // 그래도 없으면 기본 페이지
     if (!PageComponent) {
+      console.log('Dynamic route not found, using default route');
       PageComponent = this.routes['/'];
     }
 
@@ -73,29 +83,64 @@ class Router {
       return;
     }
 
-    // 기존 페이지 정리
-    if (this.currentPage && this.currentPage.beforeUnmount) {
-      this.currentPage.beforeUnmount();
+    shouldCache = PageComponent.enableCache !== false;
+    if (!shouldCache) {
+      this.pageCache.delete(cacheKey);
+    }
+
+    console.log('Page component found:', PageComponent.name);
+
+    // 기존 페이지 정리 (컴포넌트 인스턴스는 캐시에 남겨 재사용)
+    if (this.currentPage) {
+      this.currentPage.unmount();
+      this.currentPage = null;
+      this.currentPath = null;
     }
 
     // main 영역에만 새 페이지 마운트
     const main = document.getElementById('main');
     if (main) {
+      console.log('Mounting page to main container');
       main.innerHTML = '';
-      this.currentPage = new PageComponent();
+      let pageInstance = shouldCache ? this.pageCache.get(cacheKey) : null;
+
+      if (!pageInstance) {
+        pageInstance = new PageComponent(props);
+        if (shouldCache) {
+          this.pageCache.set(cacheKey, pageInstance);
+        }
+      } else {
+        pageInstance.props = { ...pageInstance.props, ...props };
+      }
+
+      this.currentPage = pageInstance;
+      this.currentPath = cacheKey;
       this.currentPage.mount(main);
+    } else {
+      console.error('Main container not found');
     }
   }
 
   // 동적 라우트 매칭
   matchDynamicRoute(path) {
     for (const routePath in this.routes) {
-      // :id 같은 동적 파라미터를 정규식으로 변환
-      const pattern = routePath.replace(/:\w+/g, '(\\d+)');
+      const paramNames = [];
+      const pattern = routePath.replace(/:(\w+)/g, (match, paramName) => {
+        paramNames.push(paramName);
+        return '(\\d+)';
+      });
       const regex = new RegExp(`^${pattern}$`);
+      const match = path.match(regex);
 
-      if (regex.test(path)) {
-        return this.routes[routePath];
+      if (match) {
+        const params = {};
+        paramNames.forEach((name, index) => {
+          params[name] = match[index + 1];
+        });
+        return {
+          component: this.routes[routePath],
+          params
+        };
       }
     }
     return null;
@@ -120,6 +165,11 @@ export function navigate(path) {
     return;
   }
   routerInstance.navigate(path);
+}
+
+// navigateTo 별칭 export (기존 코드 호환용)
+export function navigateTo(path) {
+  navigate(path);
 }
 
 // navigateReplace 함수 export

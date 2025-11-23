@@ -8,13 +8,35 @@ class PostCreateRequest {
    * @param {number} params.memberId - 작성자 ID
    * @param {string} params.title - 제목
    * @param {string} params.content - 내용
-   * @param {string} [params.image] - 이미지 URL
+   * @param {string} [params.image] - 대표 이미지 URL
+   * @param {string} [params.summary] - 요약
+   * @param {string[]} [params.tags] - 태그 목록
+   * @param {number|null} [params.seriesId] - 시리즈 ID
+   * @param {string} [params.visibility='public'] - 공개 범위
+   * @param {boolean} [params.isDraft=false] - 임시 저장 여부
    */
-  constructor({ memberId, title, content, image }) {
+  constructor({
+    memberId,
+    title,
+    content,
+    image,
+    summary,
+    tags = [],
+    seriesId = null,
+    visibility = 'public',
+    isDraft = false,
+    commentsAllowed = true
+  }) {
     this.memberId = memberId;
     this.title = title;
     this.content = content;
     this.image = image;
+    this.summary = summary;
+    this.tags = Array.isArray(tags) ? tags : [];
+    this.seriesId = seriesId;
+    this.visibility = visibility;
+    this.isDraft = isDraft;
+    this.commentsAllowed = commentsAllowed;
   }
 
   /**
@@ -47,6 +69,12 @@ class PostCreateRequest {
       title: `${titles[index]} #${seed}`,
       content: contents[index],
       image: `https://picsum.photos/seed/createpost${seed}/800/400`,
+      summary: contents[index].slice(0, 120),
+      tags: ['JavaScript', 'Architecture'],
+      seriesId: null,
+      visibility: 'public',
+      isDraft: false,
+      commentsAllowed: true
     });
   }
 
@@ -60,6 +88,12 @@ class PostCreateRequest {
       title: "My First Post",
       content: "This is the content of my first post.",
       image: "https://picsum.photos/seed/createpost1/800/400",
+      summary: "This is the content of my first post.",
+      tags: ['JavaScript'],
+      seriesId: null,
+      visibility: 'public',
+      isDraft: false,
+      commentsAllowed: true
     });
   }
 }

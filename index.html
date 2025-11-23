@@ -3,12 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>아무 말 대잔치</title>
+  <meta name="description" content="Tech Blog - 기술 블로그 커뮤니티">
+  <meta name="theme-color" content="#000000">
+  <title>Tech Blog</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link rel="stylesheet" href="/src/styles/theme.css">
   <link rel="stylesheet" href="/src/styles/global.css">
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/src/app.js"></script>
+
+  <script>
+    console.log('=== INITIAL SCRIPT LOADED ===');
+    console.log('App container:', document.getElementById('app'));
+  </script>
+
+  <script type="module">
+    console.log('=== MODULE SCRIPT STARTED ===');
+    try {
+      const module = await import('/src/app.js');
+      console.log('=== APP.JS LOADED ===', module);
+    } catch (error) {
+      console.error('=== FAILED TO LOAD APP.JS ===');
+      console.error('Error:', error);
+      console.error('Message:', error.message);
+      console.error('Stack:', error.stack);
+      document.getElementById('app').innerHTML = `
+        <div style="padding: 20px; background: #ffebee; border: 1px solid #f44336; border-radius: 4px; margin: 20px;">
+          <h2 style="color: #c62828; margin: 0 0 10px 0;">Failed to load application</h2>
+          <p style="margin: 0; color: #666;"><strong>Error:</strong> ${error.message}</p>
+          <pre style="margin: 10px 0 0 0; padding: 10px; background: white; overflow: auto;">${error.stack}</pre>
+        </div>
+      `;
+    }
+  </script>
 </body>
 </html>

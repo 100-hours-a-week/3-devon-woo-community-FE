@@ -1,23 +1,12 @@
 import MemberResponse from "../member/MemberResponse.js";
+import { mockSummaries } from "./mockContents.js";
 
-/**
- * 게시글 요약 응답 DTO (목록용)
- * @class PostSummaryResponse
- */
 class PostSummaryResponse {
-  /**
-   * @param {Object} params
-   * @param {number} params.postId - 게시글 ID
-   * @param {string} params.title - 제목
-   * @param {MemberResponse} params.member - 작성자 정보
-   * @param {string} params.createdAt - 생성 시각 (ISO 8601 형식)
-   * @param {number} params.viewCount - 조회수
-   * @param {number} params.likeCount - 좋아요 수
-   * @param {number} params.commentCount - 댓글 수
-   */
   constructor({
     postId,
     title,
+    summary,
+    thumbnail,
     member,
     createdAt,
     viewCount,
@@ -26,6 +15,8 @@ class PostSummaryResponse {
   }) {
     this.postId = postId;
     this.title = title;
+    this.summary = summary;
+    this.thumbnail = thumbnail;
     this.member = member;
     this.createdAt = createdAt;
     this.viewCount = viewCount;
@@ -45,11 +36,19 @@ class PostSummaryResponse {
       "Node.js 비동기 프로그래밍",
       "웹 개발 트렌드 2025",
       "TypeScript로 마이그레이션하기",
+      "Transactional Outbox 패턴으로 메시지 발행 보장하기",
       "CSS Grid 완벽 가이드",
       "REST API 설계 원칙",
       "도커로 개발 환경 구성하기",
       "Git 브랜치 전략",
-      "테스트 주도 개발 입문",
+    ];
+
+    const summaries = [
+      ...mockSummaries,
+      "CSS Grid를 활용한 현대적인 레이아웃 구성 방법을 배웁니다.",
+      "확장 가능한 REST API를 설계하는 핵심 원칙들을 소개합니다.",
+      "도커를 활용하여 일관된 개발 환경을 구성하는 방법을 알아봅니다.",
+      "효과적인 Git 브랜치 전략으로 협업 워크플로우를 개선하세요."
     ];
 
     const index = (seed - 1) % titles.length;
@@ -61,6 +60,8 @@ class PostSummaryResponse {
     return new PostSummaryResponse({
       postId: seed,
       title: titles[index],
+      summary: summaries[index],
+      thumbnail: `https://picsum.photos/seed/post${seed}/800/400`,
       member: MemberResponse.createDummy((seed % 8) + 1),
       createdAt,
       viewCount: Math.floor(Math.random() * 1000) + 10,
@@ -76,7 +77,9 @@ class PostSummaryResponse {
   static createDefault() {
     return new PostSummaryResponse({
       postId: 1,
-      title: "My First Post",
+      title: "JavaScript 최신 기능 소개",
+      summary: mockSummaries[0],
+      thumbnail: "https://picsum.photos/seed/post1/800/400",
       member: MemberResponse.createDefault(),
       createdAt: new Date().toISOString(),
       viewCount: 42,
