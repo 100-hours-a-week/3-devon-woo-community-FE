@@ -44,14 +44,14 @@
 - Newsletter/email subscriptions are still mocked via `NewsletterSubscribe`’s callback; wiring this to a backend remains future work.
 
 ## 4. Current gaps / reuse opportunities
-- **Post detail resiliency**: `PostDetailPage` still swaps in a markdown mock if the API fails. Replacing this with a user-facing error (and optionally cached content) will make failures obvious. Recommended posts could also use the `tags` metadata now available on `PostResponse`.
+- **Post detail resiliency**: `PostDetailPage` still swaps in a markdown mock if the API fails. Replacing this with a user-facing error (and possibly cached content) will make failures obvious, and the `Toast` component should report the failure while cached content keeps the last successful detail available briefly.
 - **Client-side sorting/filtering**: Blog/Profile pages continue to page/filter in memory. Once the backend is available, forward the `search`/`sort` parameters through `getPosts` so totals and pagination are authoritative.
 - **Newsletter & OAuth**: `NewsletterSubscribe` resolves via `setTimeout`, and OAuth buttons simply redirect without state. Hooking these into actual endpoints (or centralized mocks) plus surfaced toasts keeps UX consistent.
-- **Publish UX polish**: PostPublishPage now consumes tag/series APIs and extended DTOs, but it still depends on `alert/confirm` and a bespoke overlay. Reuse `Toast`/`Modal`/`LoadingSpinner` for consistent feedback and better accessibility.
-- **Error surfaces**: Many async flows (series creation, Cloudinary upload, recommended posts fetch) log errors but do not notify the user. Centralizing error reporting via the Toast system is the next logical reuse opportunity.
+- **Publish UX polish**: PostPublishPage now consumes tag/series APIs and extended DTOs, but it still depends on `alert/confirm` and a bespoke overlay. Replace those with the shared `Toast`/`Modal`/`LoadingSpinner` components for consistent feedback and a11y.
+- **Error surfaces**: Many async flows (series creation, Cloudinary upload, recommended posts fetch) log errors but never inform the user. Centralize these failures through a toast-based error helper so callers can easily notify users.
 
 ## 5. Next actions
-1. Replace the PostDetail markdown fallback with proper error/loading states and optionally cache the last successful response for offline use.
+1. Replace the PostDetail markdown fallback with proper error/loading states (cached when possible) and surface failures via `Toast`.
 2. Push Blog/Profile sorting, searching, and pagination down to the API once the backend endpoints are reachable.
 3. Wire newsletter/OAuth flows to real endpoints (or the mock server) and surface their results via the shared Toast component.
 4. Adopt the shared Modal/Toast/LoadingSpinner components inside Publish flows and other long-running mutations instead of `alert`/`confirm`.
