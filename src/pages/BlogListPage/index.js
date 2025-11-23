@@ -268,13 +268,18 @@ class BlogListPage extends Component {
   }
 
   async goToPage(page) {
-    this.setState({ currentPage: page });
+    this.state.currentPage = page;
     await this.loadPosts();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async loadPosts() {
-    this.setState({ isLoading: true });
+    if (!this.state.isLoading && this.$el) {
+      this.state.isLoading = true;
+      this.renderPosts();
+    } else {
+      this.state.isLoading = true;
+    }
 
     try {
       const response = await getPosts({
@@ -302,14 +307,15 @@ class BlogListPage extends Component {
         );
       }
 
-      this.setState({
-        posts: filteredPosts,
-        totalPages: response.totalPages,
-        isLoading: false
-      });
+      this.state.posts = filteredPosts;
+      this.state.totalPages = response.totalPages;
+      this.state.isLoading = false;
+      this.renderPosts();
+      this.renderPaginationPages();
     } catch (error) {
       console.error('Failed to load posts:', error);
-      this.setState({ isLoading: false });
+      this.state.isLoading = false;
+      this.renderPosts();
     }
   }
 
@@ -327,8 +333,7 @@ class BlogListPage extends Component {
         url: `/posts/${post.postId}`
       }));
 
-      this.setState({ topPosts });
-
+      this.state.topPosts = topPosts;
       if (this.topPostsComponent) {
         this.topPostsComponent.setState({ posts: topPosts });
       }
@@ -347,8 +352,7 @@ class BlogListPage extends Component {
       { name: 'TensorFlow', count: 22 }
     ];
 
-    this.setState({ tags: mockTags });
-
+    this.state.tags = mockTags;
     if (this.tagCloudComponent) {
       this.tagCloudComponent.setState({ tags: mockTags });
     }
