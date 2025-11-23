@@ -3,7 +3,7 @@ import { login } from '../../api/auth.js';
 import LoginRequest from '../../dto/request/auth/LoginRequest.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigateTo, navigateReplace } from '../../core/Router.js';
-import { hideHeader, showHeader } from '../../services/HeaderService.js';
+import { withHeader } from '../../services/HeaderService.js';
 
 const OAUTH_API_BASE_URL = 'http://localhost:8080';
 
@@ -30,10 +30,10 @@ class LoginPage extends Component {
   render() {
     // The main container and wrapper are now part of the component's template
     return `
-      <div class="main-container">
-        <div class="login-wrapper">
+      <div class="login-page">
+        <div class="main-container">
+          <div class="login-wrapper">
             <h2 class="page-title">로그인</h2>
-            <p class="page-subtitle">하나의 아이디로 넥슨 관계사를<br>전부 지원할 수 있습니다.</p>
 
             <form class="login-form" id="loginForm">
                 <div class="form-group">
@@ -79,7 +79,6 @@ class LoginPage extends Component {
             </div>
 
             <div class="oauth-section">
-                <p class="oauth-label">소셜 계정으로 로그인</p>
                 <div class="oauth-buttons">
                     <button type="button" class="oauth-btn google" aria-label="구글로 로그인" title="구글로 로그인">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -114,18 +113,28 @@ class LoginPage extends Component {
             <div class="signup-link">
                 처음 지원하실경우엔 <a href="/signup" data-link>회원가입</a>이 필요합니다.
             </div>
+          </div>
         </div>
       </div>
     `;
   }
 
   mounted() {
-    hideHeader();
+    withHeader((header) => {
+      header.show();
+      header.setVariant('minimal');
+      header.showBackButton(false);
+      header.showProfileIcon(false);
+    });
     this.setupEventListeners();
   }
 
   beforeUnmount() {
-    showHeader();
+    withHeader((header) => {
+      header.setVariant('full');
+      header.showBackButton(false);
+      header.showProfileIcon(false);
+    });
   }
 
   setupEventListeners() {

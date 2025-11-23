@@ -1,475 +1,486 @@
 import Component from '../../core/Component.js';
-import { getMemberProfile, updateMemberProfile, deleteMember } from '../../api/members.js';
-import MemberUpdateRequest from '../../dto/request/member/MemberUpdateRequest.js';
+import { getMemberProfile } from '../../api/members.js';
+import { getPosts } from '../../api/posts.js';
 import AuthService from '../../utils/AuthService.js';
-import ProfileImageUploader from '../../components/ProfileImageUploader/index.js';
-import Toast from '../../components/Toast/index.js';
-import Modal from '../../components/Modal/index.js';
-import { uploadProfileImage } from '../../utils/imageUpload.js';
 import { navigate } from '../../core/Router.js';
-import { withHeader, refreshHeaderProfileImage } from '../../services/HeaderService.js';
+import { withHeader } from '../../services/HeaderService.js';
+import { getProfileExtras } from '../../utils/profileExtrasStorage.js';
+
+const POSTS_PER_PAGE = 5;
+const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile';
+const DEFAULT_DEVELOPER_PROFILE = {
+  nickname: '홍길동',
+  handle: 'Backend Developer / Java Enthusiast',
+  bio: 'MSA 기반 백엔드 아키텍처와 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다.',
+  role: 'Backend Engineer',
+  company: 'Codestate Labs',
+  location: 'Seoul, Korea'
+};
+const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS'];
+const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화'];
+const DEFAULT_SOCIAL_LINKS = {
+  github: 'https://github.com/codestate-dev',
+  website: 'https://blog.codestate.dev',
+  linkedin: 'https://www.linkedin.com/in/codestate',
+  notion: 'https://codestate.notion.site/portfolio'
+};
 
 class ProfilePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: '',
-      nickname: '',
-      profileImage: null,
-      profileImageUrl: '',
-      selectedImageFile: null, // 선택된 File 객체 (제출 시 업로드)
-      nicknameError: '',
-      isNicknameValid: true,
-      showDeleteModal: false,
-      isLoading: true
+      isLoading: true,
+      profile: {
+        nickname: '',
+        handle: '',
+        bio: '',
+        profileImageUrl: '',
+        role: '',
+        company: '',
+        location: '',
+        primaryStack: [],
+        interests: [],
+        socialLinks: {
+          github: '',
+          website: '',
+          linkedin: '',
+          notion: ''
+        }
+      },
+      posts: [],
+      currentPage: 1,
+      sort: 'latest',
+      showScrollTop: false,
+      isOwner: true
     };
-    this.loadStyle('/src/pages/ProfilePage/style.css');
-    this.originalNickname = '';
-    this.profileImageUploader = null; // ProfileImageUploader 인스턴스
-    this.toast = null; // Toast 인스턴스
-    this.deleteModal = null; // Modal 인스턴스
+
     this._eventsBound = false;
+    this.handleScroll = this.handleScroll.bind(this);
+    this.loadStyle('/src/pages/ProfilePage/style.css');
   }
 
   render() {
     if (this.state.isLoading) {
       return `
-        <div class="main-container">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
-          </div>
+        <div class="profile-page loading">
+          <div class="loading-spinner"></div>
         </div>
       `;
     }
 
+    const posts = this.getPaginatedPosts();
+    const totalPages = this.getTotalPages();
+
     return `
-      <div class="main-container">
-        <div class="profile-wrapper">
-          <h2 class="profile-title">회원정보수정</h2>
-
-          <form class="profile-form" id="profileForm">
-            <!-- 프로필 이미지 -->
-            <div class="form-group">
-              ${this.renderProfileImageUploader()}
-            </div>
-
-            <!-- 이메일 (읽기 전용) -->
-            <div class="form-group">
-              <label for="emailInput" class="form-label">이메일</label>
-              <input
-                type="email"
-                id="emailInput"
-                class="form-input"
-                value="${this.state.email}"
-                disabled
-              >
-            </div>
-
-            <!-- 닉네임 -->
-            <div class="form-group">
-              <label for="nicknameInput" class="form-label">닉네임</label>
-              <input
-                type="text"
-                id="nicknameInput"
-                class="form-input ${this.state.nicknameError ? 'error' : ''}"
-                placeholder="닉네임을 입력해주세요"
-                maxlength="10"
-                value="${this.state.nickname}"
-              >
-              <p class="helper-text ${this.state.nicknameError ? 'show' : ''}" id="nicknameHelper">
-                ${this.state.nicknameError}
-              </p>
-            </div>
-
-            <!-- 버튼 그룹 -->
-            <div class="button-group">
-              <button
-                type="submit"
-                class="submit-btn"
-                id="submitBtn"
-                disabled
-              >
-                수정하기
-              </button>
-              <button
-                type="button"
-                class="delete-account-btn"
-                id="deleteAccountBtn"
-              >
-                회원 탈퇴
-              </button>
-            </div>
-          </form>
+      <div class="profile-page">
+        <div class="main-container">
+          ${this.renderProfileCard()}
+          ${this.renderPostsSection(posts, totalPages)}
         </div>
 
-        <!-- 회원 탈퇴 모달 -->
-        ${this.renderDeleteModal()}
-
-        <!-- 토스트 메시지 -->
-        ${this.renderToast()}
+        <button class="scroll-top-btn ${this.state.showScrollTop ? 'visible' : ''}" id="scrollTopBtn" aria-label="맨 위로 이동">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
       </div>
     `;
   }
 
-  renderDeleteModal() {
-    if (!this.deleteModal) {
-      this.deleteModal = new Modal({
-        show: this.state.showDeleteModal,
-        title: '회원 탈퇴',
-        message: '정말로 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.',
-        id: 'deleteModal'
-      });
-    } else {
-      this.deleteModal.props.show = this.state.showDeleteModal;
-    }
-    return this.deleteModal.render();
+  renderProfileCard() {
+    const { profile, isOwner } = this.state;
+    const primaryStack = profile.primaryStack || [];
+    const interests = profile.interests || [];
+    const socialLinks = profile.socialLinks || {};
+
+    return `
+      <section class="profile-card">
+        <div class="profile-cover"></div>
+        <div class="profile-card__body">
+          <div class="profile-card__main">
+            <div class="profile-avatar">
+              <img src="${this.escapeHTML(profile.profileImageUrl || DEFAULT_PROFILE_IMAGE)}" alt="${this.escapeHTML(profile.nickname || '프로필')}" />
+            </div>
+            <div class="profile-summary">
+              <div class="profile-summary__row">
+                <div>
+                  <h1 class="profile-name">${this.escapeHTML(profile.nickname || '사용자')}</h1>
+                  ${profile.handle ? `<p class="profile-handle">${this.escapeHTML(profile.handle)}</p>` : ''}
+                </div>
+                ${isOwner ? `
+                  <button class="profile-edit-icon" id="editProfileBtn" aria-label="프로필 수정">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M12.5 2.75L15.25 5.5m-6.57 7.32l-4.18 1.16 1.16-4.18 6.82-6.82a1.5 1.5 0 0 1 2.12 0l1.72 1.72a1.5 1.5 0 0 1 0 2.12l-7.64 7.64z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
+              <ul class="profile-details">
+                ${profile.role ? `<li>${this.escapeHTML(profile.role)}</li>` : ''}
+                ${profile.company ? `<li>${this.escapeHTML(profile.company)}</li>` : ''}
+                ${profile.location ? `<li>${this.escapeHTML(profile.location)}</li>` : ''}
+              </ul>
+              ${socialLinks.website ? `
+                <a href="${this.escapeHTML(socialLinks.website)}" class="profile-website" target="_blank" rel="noopener noreferrer">
+                  ${this.escapeHTML(socialLinks.website)}
+                </a>
+              ` : ''}
+            </div>
+          </div>
+
+          ${profile.bio ? `<p class="profile-bio">${this.escapeHTML(profile.bio)}</p>` : ''}
+
+          ${this.renderInfoGrid([
+            this.renderInfoItem('직무', profile.role),
+            this.renderInfoItem('소속', profile.company),
+            this.renderInfoItem('위치', profile.location)
+          ])}
+        </div>
+
+        ${primaryStack.length ? `
+          <div class="profile-section">
+            <h3>주요 기술 스택</h3>
+            <div class="skills-list">
+              ${primaryStack.map((skill) => `<span class="skill-chip">${this.escapeHTML(skill)}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${interests.length ? `
+          <div class="profile-section">
+            <h3>관심 분야</h3>
+            <ul class="interest-list">
+              ${interests.map((interest) => `<li>${this.escapeHTML(interest)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        ${this.renderSocialLinks(socialLinks)}
+      </section>
+    `;
   }
 
-  renderToast() {
-    if (!this.toast) {
-      this.toast = new Toast({
-        show: false,
-        message: ''
-      });
-    }
-    return this.toast.render();
+  renderInfoItem(label, value, isLink = false) {
+    if (!value) return '';
+    const content = isLink
+      ? `<a href="${this.escapeHTML(value)}" target="_blank" rel="noopener noreferrer">${this.escapeHTML(value)}</a>`
+      : `<span>${this.escapeHTML(value)}</span>`;
+    return `
+      <div class="info-item">
+        <span class="info-label">${label}</span>
+        ${content}
+      </div>
+    `;
   }
 
-  renderProfileImageUploader() {
-    if (!this.profileImageUploader) {
-      this.profileImageUploader = new ProfileImageUploader({
-        imageUrl: this.state.profileImageUrl,
-        onFileSelected: (file) => {
-          // File 객체만 저장 (업로드는 제출 시)
-          this.state.selectedImageFile = file;
-
-          // 버튼 활성화 상태 업데이트
-          const submitBtn = this.$el.querySelector('#submitBtn');
-          this.updateSubmitButton(submitBtn);
-        }
-      });
-    } else {
-      // state 변경 시 이미지 URL 업데이트
-      this.profileImageUploader.state.imageUrl = this.state.profileImageUrl;
-    }
-    return this.profileImageUploader.render();
+  renderInfoGrid(items = []) {
+    const content = items.filter(Boolean).join('');
+    if (!content) return '';
+    return `
+      <div class="profile-info-grid">
+        ${content}
+      </div>
+    `;
   }
 
-  // 최초 마운트 시에만 1회 호출
-  mounted() {
-    // Header 설정: 뒤로가기 표시, 프로필 아이콘 표시
+  renderSocialLinks(links = {}) {
+    const labelMap = {
+      github: 'GitHub',
+      website: 'Website',
+      linkedin: 'LinkedIn',
+      notion: 'Notion'
+    };
+    const items = Object.entries(links)
+      .filter(([key, value]) => value && labelMap[key])
+      .map(([key, value]) => `
+        <a href="${this.escapeHTML(value)}" target="_blank" rel="noopener noreferrer">
+          ${labelMap[key]}
+        </a>
+      `);
+
+    if (!items.length) return '';
+
+    return `
+      <div class="profile-section">
+        <h3>링크</h3>
+        <div class="social-links">
+          ${items.join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  renderPostsSection(posts, totalPages) {
+    return `
+      <section class="posts-section">
+        <div class="posts-header">
+          <h2>기술 블로그</h2>
+          <div class="sort-options">
+            <button class="sort-btn ${this.state.sort === 'latest' ? 'active' : ''}" data-sort="latest">최신순</button>
+            <button class="sort-btn ${this.state.sort === 'popular' ? 'active' : ''}" data-sort="popular">인기순</button>
+            <button class="sort-btn ${this.state.sort === 'views' ? 'active' : ''}" data-sort="views">조회순</button>
+          </div>
+        </div>
+        ${posts.length ? `
+          <div class="posts-list" id="postsList">
+            ${posts.map((post) => `
+              <article class="post-card" data-post-id="${post.id}">
+                <h3 class="post-card-title">${this.escapeHTML(post.title)}</h3>
+                <div class="post-card-date">${this.formatDate(post.date)}</div>
+                <p class="post-card-excerpt">${this.escapeHTML(post.excerpt)}</p>
+              </article>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="empty-state">게시글이 없습니다.</div>
+        `}
+        ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
+      </section>
+    `;
+  }
+
+  renderPagination(totalPages) {
+    const buttons = this.getPaginationButtons(totalPages);
+    return `
+      <div class="pagination" id="pagination">
+        <button class="pagination-btn" id="prevBtn" ${this.state.currentPage === 1 ? 'disabled' : ''}>&lt;</button>
+        <div class="pagination-numbers">
+          ${buttons.join('')}
+        </div>
+        <button class="pagination-btn" id="nextBtn" ${this.state.currentPage >= totalPages ? 'disabled' : ''}>&gt;</button>
+      </div>
+    `;
+  }
+
+  getPaginationButtons(totalPages) {
+    const { currentPage } = this.state;
+    const maxVisible = 5;
+    const pages = [];
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let page = start; page <= end; page += 1) {
+      pages.push(`
+        <button class="pagination-number ${page === currentPage ? 'active' : ''}" data-page="${page}">
+          ${page}
+        </button>
+      `);
+    }
+
+    return pages;
+  }
+
+  async mounted() {
     withHeader((header) => {
-      header.showBackButton(true);
-      header.showProfileIcon(true);
+      header.show();
+      header.setVariant('full');
     });
 
-    // 사용자 프로필 데이터 로딩 (1회만 실행됨)
-    this.loadUserProfile();
-
-    // 이벤트 리스너 등록
+    await this.loadProfileData();
     this.setupEventListeners();
-
-    // 초기 버튼 상태 체크
-    const submitBtn = this.$el.querySelector('#submitBtn');
-    this.updateSubmitButton(submitBtn);
+    window.addEventListener('scroll', this.handleScroll);
   }
 
-  // 업데이트 시마다 호출
   updated() {
-    // 버튼 상태 재체크
-    const submitBtn = this.$el.querySelector('#submitBtn');
-    this.updateSubmitButton(submitBtn);
-  }
-
-  setupEventListeners() {
-    const submitBtn = this.$el.querySelector('#submitBtn');
-
-    if (!this._eventsBound) {
-      this._eventsBound = true;
-
-      this.delegate('input', '#nicknameInput', (e) => {
-        this.state.nickname = e.target.value;
-        this.state.nicknameError = '';
-        this.state.isNicknameValid = true;
-
-        const helperText = this.$el.querySelector('#nicknameHelper');
-        if (helperText) {
-          helperText.classList.remove('show');
-        }
-
-        e.target.classList.remove('error');
-        this.updateSubmitButton(this.$el.querySelector('#submitBtn'));
-      });
-
-      this.delegate('blur', '#nicknameInput', () => {
-        this.checkNicknameValidity();
-      });
-
-      this.delegate('submit', '#profileForm', (e) => {
-        e.preventDefault();
-        this.handleSubmit();
-      });
-
-      this.delegate('click', '#deleteAccountBtn', () => {
-        this.setState({ showDeleteModal: true });
-        document.body.classList.add('modal-active');
-      });
-
-      this.delegate('click', '#deleteModal .modal-btn', (e) => {
-        const btn = e.target.closest('.modal-btn');
-        if (!btn) return;
-
-        const action = btn.dataset.action;
-        if (action === 'cancel') {
-          this.setState({ showDeleteModal: false });
-          document.body.classList.remove('modal-active');
-        } else if (action === 'confirm') {
-          this.handleDeleteAccount();
-        }
-      });
-    }
-
-    // ProfileImageUploader의 DOM 요소 연결 및 이벤트 리스너 등록
-    if (this.profileImageUploader) {
-      const uploaderEl = this.$el.querySelector('.profile-image-uploader');
-      if (uploaderEl) {
-        this.profileImageUploader.$el = uploaderEl;
-        this.profileImageUploader.setupEventListeners();
-      }
-    }
-
-    // Toast의 DOM 요소 연결
-    if (this.toast) {
-      const toastEl = this.$el.querySelector('.toast-message');
-      if (toastEl) {
-        this.toast.$el = toastEl;
-      }
-    }
+    this.setupEventListeners();
   }
 
   beforeUnmount() {
-    // 뒤로가기 버튼 숨김
-    withHeader((header) => {
-      header.showBackButton(false);
-    });
-    // body 클래스 정리
-    document.body.classList.remove('modal-active');
+    window.removeEventListener('scroll', this.handleScroll);
   }
 
-  // 사용자 프로필 로드
-  async loadUserProfile() {
-    // 로그인 확인
+  async loadProfileData() {
     if (!AuthService.requireAuth()) {
-      return;
-    }
-
-    try {
-      const memberId = AuthService.getCurrentUserId();
-      const profile = await getMemberProfile(memberId);
-
-      this.originalNickname = profile.nickname;
-
-      this.setState({
-        email: profile.email || '',
-        nickname: profile.nickname,
-        profileImageUrl: profile.profileImage || '',
-        isLoading: false
-      });
-    } catch (error) {
-      console.error('프로필 로드 실패:', error);
       this.setState({ isLoading: false });
-      alert('프로필을 불러오는데 실패했습니다.');
-    }
-  }
-
-  // 닉네임 유효성 검사 (blur 이벤트용)
-  checkNicknameValidity() {
-    const nickname = this.state.nickname.trim();
-
-    // 빈 값 검사
-    if (!nickname) {
-      this.setState({
-        nicknameError: '*닉네임을 입력해주세요.',
-        isNicknameValid: false
-      });
-      return false;
-    }
-
-    // 길이 검사
-    if (nickname.length > 10) {
-      this.setState({
-        nicknameError: '*닉네임은 최대 10자까지 작성 가능합니다.',
-        isNicknameValid: false
-      });
-      return false;
-    }
-
-    // 에러가 있었거나 유효하지 않은 상태였을 때만 setState 호출
-    // (불필요한 리렌더링 방지)
-    if (this.state.nicknameError || !this.state.isNicknameValid) {
-      this.setState({
-        nicknameError: '',
-        isNicknameValid: true
-      });
-    }
-
-    return true;
-  }
-
-  // 닉네임 중복 체크 (제출 시에만 수행)
-  async checkNicknameDuplicate() {
-    const nickname = this.state.nickname.trim();
-
-    // 닉네임이 변경되지 않았으면 중복 체크 생략
-    if (nickname === this.originalNickname) {
-      return true;
-    }
-
-    // 중복 체크 (API 호출)
-    try {
-      // TODO: API 호출
-      // const response = await apiGet(`/api/v1/users/check-nickname?nickname=${nickname}`);
-      // const isDuplicate = response.isDuplicate;
-
-      // 임시: 중복 체크 (실제로는 API 응답 사용)
-      const isDuplicate = false;
-
-      if (isDuplicate) {
-        this.setState({
-          nicknameError: '*중복된 닉네임입니다.',
-          isNicknameValid: false
-        });
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('닉네임 중복 체크 실패:', error);
-      return false;
-    }
-  }
-
-  // 폼 유효성 검사
-  isFormValid() {
-    const hasValidNickname = this.state.nickname.trim() !== '' && this.state.isNicknameValid;
-    const nicknameChanged = this.state.nickname.trim() !== this.originalNickname;
-    const imageChanged = this.state.selectedImageFile !== null;
-    return hasValidNickname && (nicknameChanged || imageChanged);
-  }
-
-  // 제출 버튼 활성화 상태 업데이트
-  updateSubmitButton(submitBtn) {
-    if (submitBtn) {
-      if (this.isFormValid()) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
-      }
-    }
-  }
-
-  // 폼 제출 처리
-  async handleSubmit() {
-    if (!this.isFormValid()) {
-      return;
-    }
-
-    // 로그인 확인
-    if (!AuthService.requireAuth()) {
-      return;
-    }
-
-    // 중복 체크 (닉네임이 변경된 경우에만)
-    const isDuplicateValid = await this.checkNicknameDuplicate();
-    if (!isDuplicateValid) {
       return;
     }
 
     try {
       const memberId = AuthService.getCurrentUserId();
-      let imageUrl = this.state.profileImageUrl || null;
+      const [profileResponse, postsResponse] = await Promise.all([
+        getMemberProfile(memberId),
+        getPosts({ page: 0, size: 50 })
+      ]);
 
-      // 새로운 이미지 파일이 선택되었다면 업로드
-      if (this.state.selectedImageFile) {
-        console.log('[ProfilePage] 이미지 업로드 시작...');
+      const extras = getProfileExtras(memberId);
+      const normalizedPosts = this.normalizePosts(postsResponse?.items || [], memberId);
 
-        try {
-          // Cloudinary에 업로드
-          imageUrl = await uploadProfileImage(this.state.selectedImageFile);
-          console.log('[ProfilePage] 이미지 업로드 완료:', imageUrl);
+      const primaryStack = Array.isArray(extras.primaryStack)
+        ? extras.primaryStack
+        : Array.isArray(extras.skills)
+          ? extras.skills
+          : [];
+      const interests = Array.isArray(extras.interests) ? extras.interests : [];
 
-          // 업로드 완료 후 state 업데이트
-          this.state.profileImageUrl = imageUrl;
-          this.state.selectedImageFile = null;
-
-          if (this.toast) {
-            this.toast.show('프로필 이미지가 업로드되었습니다.');
+      this.setState({
+        isLoading: false,
+        profile: {
+          nickname: profileResponse?.nickname || DEFAULT_DEVELOPER_PROFILE.nickname,
+          handle: extras.handle || DEFAULT_DEVELOPER_PROFILE.handle,
+          bio: extras.bio || DEFAULT_DEVELOPER_PROFILE.bio,
+          profileImageUrl: profileResponse?.profileImage || DEFAULT_PROFILE_IMAGE,
+          role: extras.role || DEFAULT_DEVELOPER_PROFILE.role,
+          company: extras.company || DEFAULT_DEVELOPER_PROFILE.company,
+          location: extras.location || DEFAULT_DEVELOPER_PROFILE.location,
+          primaryStack: primaryStack.length ? primaryStack : DEFAULT_PRIMARY_STACK,
+          interests: interests.length ? interests : DEFAULT_INTERESTS,
+          socialLinks: {
+            github: extras.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
+            website: extras.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
+            linkedin: extras.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
+            notion: extras.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion
           }
-        } catch (uploadError) {
-          console.error('[ProfilePage] 이미지 업로드 실패:', uploadError);
-          if (this.toast) {
-            this.toast.show('이미지 업로드에 실패했습니다.', 'error');
-          }
-          return; // 업로드 실패 시 제출 중단
+        },
+        posts: normalizedPosts
+      });
+    } catch (error) {
+      console.error('Failed to load profile data:', error);
+      this.setState({ isLoading: false });
+    }
+  }
+
+  normalizePosts(items, memberId) {
+    const filtered = items.filter((post) => `${post.member?.memberId}` === `${memberId}`);
+    const source = filtered.length ? filtered : items;
+
+    if (!source.length) {
+      return Array.from({ length: 5 }, (_, idx) => ({
+        id: idx + 1,
+        title: `새로운 기술 노트 ${idx + 1}`,
+        excerpt: '아직 게시글이 없어요. 첫 번째 글을 작성해보세요.',
+        date: new Date(Date.now() - idx * 86400000).toISOString(),
+        likes: 0,
+        views: 0,
+        comments: 0
+      }));
+    }
+
+    return source.map((post) => ({
+      id: post.postId,
+      title: post.title,
+      excerpt: this.generateExcerpt(post.title),
+      date: post.createdAt,
+      likes: post.likeCount || 0,
+      views: post.viewCount || 0,
+      comments: post.commentCount || 0
+    }));
+  }
+
+  generateExcerpt(title = '') {
+    return `${title}에 대한 생각을 정리했습니다.`;
+  }
+
+  setupEventListeners() {
+    if (!this._eventsBound) {
+      this._eventsBound = true;
+
+      this.delegate('click', '.sort-btn', (event) => {
+        const button = event.target.closest('.sort-btn');
+        if (!button || !this.$el?.contains(button)) return;
+        const { sort } = button.dataset;
+        if (sort && sort !== this.state.sort) {
+          this.setState({ sort, currentPage: 1 });
         }
-      }
-
-      // MemberUpdateRequest DTO 생성
-      const updateData = new MemberUpdateRequest({
-        nickname: this.state.nickname,
-        profileImage: imageUrl
       });
 
-      // API 호출
-      await updateMemberProfile(memberId, updateData);
+      this.delegate('click', '.pagination-number', (event) => {
+        const button = event.target.closest('.pagination-number');
+        if (!button) return;
+        const page = Number(button.dataset.page);
+        if (Number.isFinite(page)) {
+          this.setState({ currentPage: page });
+        }
+      });
 
-      // 성공 시 토스트 메시지 표시
-      this.showToast();
+      this.delegate('click', '#prevBtn', () => {
+        if (this.state.currentPage > 1) {
+          this.setState({ currentPage: this.state.currentPage - 1 });
+        }
+      });
 
-      // originalNickname 업데이트 (다음 변경 감지를 위해)
-      this.originalNickname = this.state.nickname;
+      this.delegate('click', '#nextBtn', () => {
+        const totalPages = this.getTotalPages();
+        if (this.state.currentPage < totalPages) {
+          this.setState({ currentPage: this.state.currentPage + 1 });
+        }
+      });
 
-      // 헤더의 프로필 이미지 리프레시
-      refreshHeaderProfileImage();
+      this.delegate('click', '.post-card', (event) => {
+        const card = event.target.closest('.post-card');
+        if (!card) return;
+        const postId = card.dataset.postId;
+        if (postId) {
+          navigate(`/posts/${postId}`);
+        }
+      });
 
-      // 버튼 비활성화 (변경사항이 없으므로)
-      const submitBtn = this.$el.querySelector('#submitBtn');
-      this.updateSubmitButton(submitBtn);
-    } catch (error) {
-      console.error('프로필 수정 실패:', error);
-      alert('프로필 수정에 실패했습니다.');
+      this.delegate('click', '#editProfileBtn', () => {
+        navigate('/profile/edit');
+      });
+      this.delegate('click', '#scrollTopBtn', (event) => {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     }
   }
 
-  // 회원 탈퇴 처리
-  async handleDeleteAccount() {
+  getProcessedPosts() {
+    const posts = [...this.state.posts];
+    const { sort } = this.state;
+
+    if (sort === 'latest') {
+      return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    if (sort === 'popular') {
+      return posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    }
+    if (sort === 'views') {
+      return posts.sort((a, b) => (b.views || 0) - (a.views || 0));
+    }
+    return posts;
+  }
+
+  getPaginatedPosts() {
+    const posts = this.getProcessedPosts();
+    const start = (this.state.currentPage - 1) * POSTS_PER_PAGE;
+    return posts.slice(start, start + POSTS_PER_PAGE);
+  }
+
+  getTotalPages() {
+    const totalPosts = this.getProcessedPosts().length || 1;
+    return Math.max(1, Math.ceil(totalPosts / POSTS_PER_PAGE));
+  }
+
+  handleScroll() {
+    const shouldShow = window.scrollY > 200;
+    if (shouldShow !== this.state.showScrollTop) {
+      this.setState({ showScrollTop: shouldShow });
+    }
+  }
+
+  formatDate(isoString) {
+    if (!isoString) return '';
     try {
-      const memberId = AuthService.getCurrentUserId();
-
-      // API 호출
-      await deleteMember(memberId);
-
-      // 성공 시
-      alert('회원 탈퇴가 완료되었습니다.');
-
-      // 로그아웃 처리
-      AuthService.logout();
-
-      // 로그인 페이지로 이동
-      navigate('/login');
+      const date = new Date(isoString);
+      return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
     } catch (error) {
-      console.error('회원 탈퇴 실패:', error);
-      alert('회원 탈퇴에 실패했습니다.');
-      this.setState({ showDeleteModal: false });
-      document.body.classList.remove('modal-active');
+      return isoString;
     }
   }
 
-  // 토스트 메시지 표시
-  showToast(message = '수정 완료') {
-    if (this.toast) {
-      this.toast.show(message);
-    }
+  escapeHTML(value) {
+    if (typeof value !== 'string') return '';
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
 

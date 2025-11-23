@@ -7,6 +7,7 @@ import BlogListPage from './pages/BlogListPage/index.js';
 import PostCreatePage from './pages/PostCreatePage/index.js';
 import PostDetailPage from './pages/PostDetailPage/index.js';
 import ProfilePage from './pages/ProfilePage/index.js';
+import ProfileEditPage from './pages/ProfileEditPage/index.js';
 import PostPublishPage from './pages/PostPublishPage/index.js';
 import { registerHeader, syncHeaderWithRoute } from './services/HeaderService.js';
 
@@ -52,6 +53,7 @@ function initApp() {
   router.addRoute('/posts/publish', PostPublishPage);
   router.addRoute('/posts/:id', PostDetailPage);
   router.addRoute('/profile', ProfilePage);
+  router.addRoute('/profile/edit', ProfileEditPage);
 
   console.log('Routes registered');
 

@@ -1,6 +1,7 @@
 import Component from '../../core/Component.js';
 import { navigate } from '../../core/Router.js';
 import { registerHeader } from '../../services/HeaderService.js';
+import AuthService from '../../utils/AuthService.js';
 
 class Header extends Component {
   constructor(props) {
@@ -12,21 +13,23 @@ class Header extends Component {
       isSearchFocused: false,
       isAuthenticated: this.checkAuth(),
       user: this.getUser(),
-      isVisible: true, // Add isVisible state
+      isProfileMenuOpen: false,
+      isVisible: true
     };
+
+    this.handleDocumentClick = this.handleDocumentClick.bind(this);
+    this._documentListenerAttached = false;
 
     registerHeader(this);
     this.loadStyle('/src/components/Header/style.css');
   }
 
   checkAuth() {
-    // Should be updated to use AuthService
-    return !!localStorage.getItem('accessToken');
+    return AuthService.isLoggedIn();
   }
 
   getUser() {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    return AuthService.getUser();
   }
 
   render() {
@@ -45,7 +48,7 @@ class Header extends Component {
 
           ${!isMinimal ? this.renderNav() : ''}
           ${!isMinimal ? this.renderSearch() : ''}
-          ${!isMinimal ? this.renderAuthSection() : ''}
+          ${this.renderAuthSection(isMinimal)}
         </div>
       </header>
     `;
@@ -80,11 +83,11 @@ class Header extends Component {
     `;
   }
 
-  renderAuthSection() {
-    const { isAuthenticated, user } = this.state;
+  renderAuthSection(isMinimal) {
+    const { isAuthenticated, user, isProfileMenuOpen } = this.state;
 
     if (!isAuthenticated) {
-      return `
+      return isMinimal ? '' : `
         <div class="auth-section">
           <button class="auth-btn login-btn" id="loginBtn">로그인</button>
           <button class="auth-btn signup-btn" id="signupBtn">회원가입</button>
@@ -93,11 +96,34 @@ class Header extends Component {
     }
 
     return `
-      <div class="profile-section" id="profileBtn">
-        <div class="profile-image">
-          <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+      <div class="profile-wrapper ${isProfileMenuOpen ? 'open' : ''}" id="profileDropdown">
+        <button type="button" class="profile-section" id="profileBtn" aria-haspopup="true" aria-expanded="${isProfileMenuOpen}">
+          <div class="profile-image">
+            <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+          </div>
+          <span class="profile-name">${user?.username || 'User'}</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <div class="profile-menu" id="profileMenu">
+          <div class="profile-menu-header">
+            <div class="profile-menu-image">
+              <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+            </div>
+            <div>
+              <p class="profile-menu-name">${user?.username || 'User'}</p>
+              <p class="profile-menu-email">${user?.email || ''}</p>
+            </div>
+          </div>
+          <div class="profile-menu-actions">
+            <button type="button" class="profile-menu-item" data-action="profile">프로필 보기</button>
+            <button type="button" class="profile-menu-item" data-action="editProfile">프로필 편집</button>
+            <button type="button" class="profile-menu-item" data-action="writePost">게시글 작성</button>
+            <button type="button" class="profile-menu-item" data-action="settings">설정</button>
+          </div>
+          <button type="button" class="profile-menu-item logout" data-action="logout">로그아웃</button>
         </div>
-        <span class="profile-name">${user?.username || 'User'}</span>
       </div>
     `;
   }
@@ -118,6 +144,7 @@ class Header extends Component {
     const loginBtn = this.$$('#loginBtn');
     const signupBtn = this.$$('#signupBtn');
     const profileBtn = this.$$('#profileBtn');
+    const profileMenu = this.$$('#profileMenu');
 
     if (logoLink) {
       logoLink.addEventListener('click', (e) => {
@@ -175,9 +202,24 @@ class Header extends Component {
     }
 
     if (profileBtn) {
-      profileBtn.addEventListener('click', () => {
-        navigate('/profile');
+      profileBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.toggleProfileMenu();
       });
+    }
+
+    if (profileMenu) {
+      profileMenu.addEventListener('click', (e) => {
+        const item = e.target.closest('.profile-menu-item');
+        if (!item) return;
+        const action = item.dataset.action;
+        this.handleProfileMenuAction(action);
+      });
+    }
+
+    if (!this._documentListenerAttached) {
+      document.addEventListener('click', this.handleDocumentClick);
+      this._documentListenerAttached = true;
     }
   }
 
@@ -190,6 +232,52 @@ class Header extends Component {
 
   setVariant(variant) {
     this.setState({ variant });
+  }
+
+  toggleProfileMenu() {
+    this.setState({ isProfileMenuOpen: !this.state.isProfileMenuOpen });
+  }
+
+  closeProfileMenu() {
+    if (this.state.isProfileMenuOpen) {
+      this.setState({ isProfileMenuOpen: false });
+    }
+  }
+
+  handleProfileMenuAction(action) {
+    if (!action) return;
+
+    switch (action) {
+      case 'profile':
+        navigate('/profile');
+        break;
+      case 'editProfile':
+        navigate('/profile/edit');
+        break;
+      case 'writePost':
+        navigate('/posts/create');
+        break;
+      case 'settings':
+        navigate('/posts');
+        break;
+      case 'logout':
+        AuthService.logout();
+        this.setState({ isAuthenticated: false, user: null });
+        navigate('/login');
+        break;
+      default:
+        break;
+    }
+
+    this.closeProfileMenu();
+  }
+
+  handleDocumentClick(e) {
+    if (!this.state.isProfileMenuOpen) return;
+    const dropdown = this.$$('#profileDropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+      this.closeProfileMenu();
+    }
   }
 
   clearSearch() {

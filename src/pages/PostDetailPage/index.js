@@ -2,6 +2,7 @@ import Component from '../../core/Component.js';
 import Header from '../../components/Header/index.js';
 import { getPostById, getPosts } from '../../api/posts.js';
 import { navigate } from '../../core/Router.js';
+import { parseMarkdown } from '../../utils/markdown.js';
 
 class PostDetailPage extends Component {
   constructor(props = {}) {
@@ -78,7 +79,7 @@ class PostDetailPage extends Component {
             ` : ''}
 
             <div class="post-content" id="postContent">
-              ${post.content || '<p>게시글 내용이 없습니다.</p>'}
+              ${post.contentHtml || '<p>게시글 내용이 없습니다.</p>'}
             </div>
           </article>
 
@@ -209,7 +210,8 @@ class PostDetailPage extends Component {
       const post = {
         id: response.postId,
         title: response.title,
-        content: this.formatContent(response.content),
+        contentMarkdown: response.content,
+        contentHtml: parseMarkdown(response.content || ''),
         category: 'TECH INSIGHT',
         author: response.member?.nickname || 'Anonymous',
         date: response.createdAt,
@@ -224,7 +226,7 @@ class PostDetailPage extends Component {
       });
     } catch (error) {
       console.error('Failed to load post:', error);
-      this.setState({ isLoading: false, post: null });
+      this.loadMockPost();
     }
   }
 
@@ -246,6 +248,51 @@ class PostDetailPage extends Component {
     } catch (error) {
       console.error('Failed to load recommended posts:', error);
     }
+  }
+
+  loadMockPost() {
+    const mockMarkdown = `# 마크다운으로 작성된 샘플 포스트
+
+복잡한 에디터 없이 **간단한 마크다운**으로도 충분히 구성할 수 있습니다.
+
+## 1. 왜 마크다운인가?
+- 텍스트 기반
+- 버전 관리에 용이
+- 협업 툴과 높은 호환성
+
+> "텍스트는 코드다." 라는 말이 있듯이, 마크다운은 문서를 코드처럼 다루게 해 줍니다.
+
+### 코드 블록
+\`\`\`js
+function greet(name) {
+  return \`안녕하세요, \${name}님!\`;
+}
+\`\`\`
+
+### 이미지
+![Mock](https://via.placeholder.com/960x480/F5F7FB/111?text=Markdown+Preview)
+
+---
+
+표준 HTML 태그와 섞여도 안전하게 렌더링되도록 파싱하고 있습니다.`;
+
+    const post = {
+      id: 'mock',
+      title: '마크다운 샘플 게시글',
+      contentMarkdown: mockMarkdown,
+      contentHtml: parseMarkdown(mockMarkdown),
+      category: 'TECH INSIGHT',
+      author: 'Mock Writer',
+      date: new Date().toISOString(),
+      thumbnail: 'https://via.placeholder.com/800x450/EEF2FF/4B5BDC?text=Markdown+Mock',
+      views: 123
+    };
+
+    this.setState({
+      post,
+      likeCount: 12,
+      isLoading: false
+    });
   }
 
   loadMockComments() {
@@ -288,50 +335,6 @@ spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형
     ];
 
     this.setState({ comments: mockComments });
-  }
-
-  formatContent(content) {
-    if (!content) return '<p>게시글 내용이 없습니다.</p>';
-
-    const lines = content.split('\n');
-    let html = '';
-    let inCodeBlock = false;
-
-    for (let line of lines) {
-      if (line.trim() === '') {
-        if (!inCodeBlock) {
-          html += '<p></p>';
-        }
-        continue;
-      }
-
-      if (line.startsWith('```')) {
-        if (inCodeBlock) {
-          html += '</code></pre>';
-          inCodeBlock = false;
-        } else {
-          html += '<pre><code>';
-          inCodeBlock = true;
-        }
-        continue;
-      }
-
-      if (inCodeBlock) {
-        html += line + '\n';
-      } else if (line.startsWith('## ')) {
-        html += `<h2>${line.substring(3)}</h2>`;
-      } else if (line.startsWith('### ')) {
-        html += `<h3>${line.substring(4)}</h3>`;
-      } else {
-        html += `<p>${line}</p>`;
-      }
-    }
-
-    if (inCodeBlock) {
-      html += '</code></pre>';
-    }
-
-    return html;
   }
 
   formatDate(dateString) {

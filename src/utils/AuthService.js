@@ -4,6 +4,7 @@ import { devAuthConfig, isDev } from '../config/env.js';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
+const DEV_BOOTSTRAP_DISABLED_KEY = 'devBootstrapDisabled';
 const DEFAULT_DEV_USER = {
   id: 'dev-user',
   email: 'dev@example.com',
@@ -25,6 +26,7 @@ class AuthService {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    localStorage.removeItem(DEV_BOOTSTRAP_DISABLED_KEY);
   }
 
   /**
@@ -34,6 +36,9 @@ class AuthService {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    if (isDev && devAuthConfig.bypassAuth) {
+      localStorage.setItem(DEV_BOOTSTRAP_DISABLED_KEY, 'true');
+    }
   }
 
   /**
@@ -61,7 +66,14 @@ class AuthService {
   static getUser() {
     this.bootstrapDevSession();
     const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
+    if (!user || user === 'undefined') return null;
+    try {
+      return JSON.parse(user);
+    } catch (error) {
+      console.warn('[AuthService] Failed to parse user from storage:', error);
+      localStorage.removeItem(USER_KEY);
+      return null;
+    }
   }
 
   /**
@@ -71,9 +83,27 @@ class AuthService {
   static isLoggedIn() {
     if (isDev && devAuthConfig.bypassAuth) {
       this.bootstrapDevSession();
-      return true;
     }
-    return !!this.getAccessToken();
+    return !!localStorage.getItem(ACCESS_TOKEN_KEY);
+  }
+
+  /**
+   * 현재 로그인한 사용자의 ID를 숫자로 반환
+   * 백엔드 연동 전까지는 기본값 1을 사용
+   * @param {number} [defaultId=1]
+   * @returns {number}
+   */
+  static getCurrentUserId(defaultId = 1) {
+    const user = this.getUser();
+    if (!user) return defaultId;
+
+    const rawId = user.memberId ?? user.id;
+    if (typeof rawId === 'number' && !Number.isNaN(rawId)) {
+      return rawId;
+    }
+
+    const parsed = parseInt(rawId, 10);
+    return Number.isNaN(parsed) ? defaultId : parsed;
   }
 
   /**
@@ -99,6 +129,7 @@ class AuthService {
    */
   static bootstrapDevSession() {
     if (!(isDev && devAuthConfig.bypassAuth)) return;
+    if (localStorage.getItem(DEV_BOOTSTRAP_DISABLED_KEY) === 'true') return;
     if (localStorage.getItem(ACCESS_TOKEN_KEY)) return;
 
     const devUser = devAuthConfig.user || DEFAULT_DEV_USER;
