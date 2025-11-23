@@ -1,8 +1,11 @@
 import Component from '../../core/Component.js';
 import Header from '../../components/Header/index.js';
-import { getPostById, getPosts } from '../../api/posts.js';
+import { getPostById, getRecommendedPosts } from '../../api/posts.js';
+import { getComments, createComment } from '../../api/comments.js';
 import { navigate } from '../../core/Router.js';
 import { parseMarkdown } from '../../utils/markdown.js';
+import CommentWrite from '../../components/comment/CommentWrite/index.js';
+import CommentList from '../../components/comment/CommentList/index.js';
 
 class PostDetailPage extends Component {
   constructor(props = {}) {
@@ -14,17 +17,18 @@ class PostDetailPage extends Component {
       likeCount: 0,
       isLiked: false,
       recommendedPosts: [],
-      comments: [],
-      commentText: ''
+      comments: []
     };
 
     this.postId = props.id || props.postId;
     this.loadStyle('/src/pages/PostDetailPage/style.css');
     this._eventsBound = false;
+    this.commentWriteComponent = null;
+    this.commentListComponent = null;
   }
 
   render() {
-    const { post, isLoading, likeCount, isLiked, recommendedPosts, comments, commentText } = this.state;
+    const { post, isLoading, likeCount, isLiked, recommendedPosts } = this.state;
 
     if (isLoading) {
       return `
@@ -90,40 +94,8 @@ class PostDetailPage extends Component {
             </div>
           </section>
 
-          <section class="comments-section">
-            <div class="comments-header">
-              <h3 class="section-title">댓글 <span id="commentCount">${comments.length}</span>개</h3>
-              <div class="comments-sort">
-                <label for="sortSelect">정렬 기준</label>
-                <select id="sortSelect" class="sort-select">
-                  <option value="latest">날짜 오름차순</option>
-                  <option value="oldest">날짜 내림차순</option>
-                  <option value="likes">좋아요순</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="comment-write">
-              <div class="comment-avatar">
-                <img src="https://via.placeholder.com/48/CCCCCC/666?text=U" alt="프로필">
-              </div>
-              <div class="comment-input-wrapper">
-                <textarea
-                  id="commentInput"
-                  class="comment-textarea"
-                  placeholder="댓글 달기..."
-                  rows="3"
-                >${commentText}</textarea>
-                <div class="comment-actions-bottom">
-                  <button class="comment-submit-btn" id="submitCommentBtn">댓글 작성</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="comments-list" id="commentsList">
-              ${this.renderComments()}
-            </div>
-          </section>
+          <div id="commentWriteContainer"></div>
+          <div id="commentListContainer"></div>
         </main>
 
         <button class="scroll-top-btn" id="scrollTopBtn">
@@ -151,50 +123,58 @@ class PostDetailPage extends Component {
     `).join('');
   }
 
-  renderComments() {
-    const { comments } = this.state;
-
-    if (comments.length === 0) {
-      return '<div style="text-align: center; color: #999; padding: 40px 0;">댓글이 없습니다.</div>';
-    }
-
-    return comments.map(comment => `
-      <div class="comment-item">
-        <div class="comment-avatar">
-          <img src="${comment.avatar || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}" alt="${comment.author}">
-        </div>
-        <div class="comment-content-wrapper">
-          <div class="comment-header">
-            <span class="comment-author">${comment.author}</span>
-            <span class="comment-date">${comment.date}</span>
-          </div>
-          <div class="comment-text">${comment.text}</div>
-          <div class="comment-actions-row">
-            <button class="comment-action-btn ${comment.likes > 0 ? 'liked' : ''}" data-comment-id="${comment.id}" data-action="like">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 14L7 13.1C3.2 9.68 1 7.72 1 5.5C1 3.72 2.36 2.5 4 2.5C5 2.5 6 3 6.5 3.7C7 3 8 2.5 9 2.5C10.64 2.5 12 3.72 12 5.5C12 7.72 9.8 9.68 6 13.1L5 14Z" stroke="currentColor" stroke-width="1.5" ${comment.likes > 0 ? 'fill="currentColor"' : ''}/>
-              </svg>
-              좋아요
-              ${comment.likes > 0 ? `<span>· ${comment.likes}</span>` : ''}
-            </button>
-            <button class="comment-action-btn" data-comment-id="${comment.id}" data-action="reply">
-              답글 달기
-            </button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
   async mounted() {
     await this.$nextTick();
 
     await this.loadPost();
     await this.loadRecommendedPosts();
-    this.loadMockComments();
+    await this.loadComments();
 
+    this.renderCommentComponents();
     this.setupEventListeners();
     this.initScrollTopButton();
+  }
+
+  renderCommentComponents() {
+    const writeContainer = this.$$('#commentWriteContainer');
+    const listContainer = this.$$('#commentListContainer');
+
+    if (!writeContainer || !listContainer) return;
+
+    if (!this.commentWriteComponent) {
+      this.commentWriteComponent = new CommentWrite({
+        onSubmit: async (text) => {
+          await this.handleCommentSubmit(text);
+        }
+      });
+      this.commentWriteComponent.mount(writeContainer);
+    }
+
+    if (!this.commentListComponent) {
+      this.commentListComponent = new CommentList({
+        comments: this.state.comments,
+        onLike: (commentId, isLiked) => this.handleCommentLike(commentId, isLiked),
+        onReply: (commentId) => this.handleCommentReply(commentId),
+        onSortChange: (sortBy) => this.handleCommentSort(sortBy)
+      });
+      this.commentListComponent.mount(listContainer);
+    } else {
+      this.commentListComponent.setState({ comments: this.state.comments });
+    }
+  }
+
+  async loadComments() {
+    try {
+      const response = await getComments(this.postId, {
+        page: 0,
+        size: 100,
+        sort: 'createdAt,asc'
+      });
+
+      this.setState({ comments: response.items });
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+    }
   }
 
   $nextTick() {
@@ -232,12 +212,9 @@ class PostDetailPage extends Component {
 
   async loadRecommendedPosts() {
     try {
-      const response = await getPosts({
-        page: 0,
-        size: 3
-      });
+      const recommendations = await getRecommendedPosts(this.postId);
 
-      const recommendedPosts = response.items.map(post => ({
+      const recommendedPosts = recommendations.map(post => ({
         id: post.postId,
         title: post.title,
         category: 'TECH INSIGHT',
@@ -295,47 +272,6 @@ function greet(name) {
     });
   }
 
-  loadMockComments() {
-    const mockComments = [
-      {
-        id: 1,
-        author: '배태준',
-        avatar: 'https://via.placeholder.com/48/FF6B6B/FFF?text=배',
-        text: '언제 읽어도 좋은 글이네요. 감사합니다~!',
-        date: '4년',
-        likes: 0
-      },
-      {
-        id: 2,
-        author: '조백규',
-        avatar: 'https://via.placeholder.com/48/4ECDC4/FFF?text=조',
-        text: `옥시 모듈의 버전관리는 어떻게 하셨었나요?
-spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형태인데요.
-동일하게 버전을 관리하는 경우에는 멀티모듈 프로젝트에 있는 a, b 시스템 중 a 시스템의 버그로 인해 패치되는 경우 a, b 모두 버전이 올라가버리는 현상이 발생하는데요..
-또한 b 시스템은 수정이 안되어도 항상 최신버전을 유지하기 위해 같이 배포를 해줘야하는 상황이 발생할 것 같아서요.`,
-        date: '4년',
-        likes: 1
-      },
-      {
-        id: 3,
-        author: 'WooSeok Park',
-        avatar: 'https://via.placeholder.com/48/95E1D3/FFF?text=W',
-        text: '좋은 내용 감사합니다.',
-        date: '4년',
-        likes: 1
-      },
-      {
-        id: 4,
-        author: '최준현',
-        avatar: 'https://via.placeholder.com/48/F38181/FFF?text=최',
-        text: '잘봤습니다~',
-        date: '6년',
-        likes: 0
-      }
-    ];
-
-    this.setState({ comments: mockComments });
-  }
 
   formatDate(dateString) {
     const date = new Date(dateString);
@@ -351,39 +287,11 @@ spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형
 
     this.delegate('click', '#likeBtn', () => this.handleLikeClick());
 
-    this.delegate('click', '#submitCommentBtn', () => this.handleCommentSubmit());
-
-    this.delegate('change', '#sortSelect', (e) => this.handleCommentSort(e.target.value));
-
-    this.delegate('keydown', '#commentInput', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        this.handleCommentSubmit();
-      }
-    });
-
-    this.delegate('input', '#commentInput', (e) => {
-      this.state.commentText = e.target.value;
-    });
-
     this.delegate('click', '#recommendedList .recommended-item', (e) => {
       const item = e.target.closest('.recommended-item');
       if (item) {
         const postId = item.dataset.postId;
         this.handleRecommendedClick(postId);
-      }
-    });
-
-    this.delegate('click', '#commentsList .comment-action-btn', (e) => {
-      const btn = e.target.closest('.comment-action-btn');
-      if (btn) {
-        const commentId = parseInt(btn.dataset.commentId, 10);
-        const action = btn.dataset.action;
-
-        if (action === 'like') {
-          this.handleCommentLike(commentId);
-        } else if (action === 'reply') {
-          this.handleCommentReply(commentId);
-        }
       }
     });
   }
@@ -397,60 +305,45 @@ spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형
     });
   }
 
-  handleCommentSubmit() {
-    const commentInput = this.$$('#commentInput');
-    const text = commentInput.value.trim();
+  async handleCommentSubmit(text) {
+    try {
+      const CommentCreateRequest = (await import('../dto/request/comment/CommentCreateRequest.js')).default;
+      const commentData = new CommentCreateRequest({
+        memberId: 1,
+        content: text
+      });
 
-    if (!text) {
-      alert('댓글 내용을 입력해주세요.');
-      return;
+      await createComment(this.postId, commentData);
+      await this.loadComments();
+
+      if (this.commentListComponent) {
+        this.commentListComponent.setState({ comments: this.state.comments });
+      }
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      throw error;
     }
-
-    const newComment = {
-      id: this.state.comments.length + 1,
-      author: '익명 사용자',
-      avatar: 'https://via.placeholder.com/48/CCCCCC/666?text=U',
-      text: text,
-      date: '방금',
-      likes: 0
-    };
-
-    this.setState({
-      comments: [newComment, ...this.state.comments],
-      commentText: ''
-    });
-
-    alert('댓글이 작성되었습니다!');
   }
 
-  handleCommentSort(sortValue) {
+  handleCommentSort(sortBy) {
     const { comments } = this.state;
     let sortedComments = [...comments];
 
-    if (sortValue === 'latest') {
-      sortedComments.sort((a, b) => b.id - a.id);
-    } else if (sortValue === 'oldest') {
-      sortedComments.sort((a, b) => a.id - b.id);
-    } else if (sortValue === 'likes') {
-      sortedComments.sort((a, b) => b.likes - a.likes);
+    if (sortBy === 'latest') {
+      sortedComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === 'oldest') {
+      sortedComments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     }
 
     this.setState({ comments: sortedComments });
+
+    if (this.commentListComponent) {
+      this.commentListComponent.setState({ comments: sortedComments });
+    }
   }
 
-  handleCommentLike(commentId) {
-    const { comments } = this.state;
-    const updatedComments = comments.map(comment => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          likes: comment.likes > 0 ? 0 : 1
-        };
-      }
-      return comment;
-    });
-
-    this.setState({ comments: updatedComments });
+  handleCommentLike(commentId, isLiked) {
+    console.log(`Comment ${commentId} ${isLiked ? 'liked' : 'unliked'}`);
   }
 
   handleCommentReply(commentId) {
@@ -482,6 +375,12 @@ spring같은 경우는 전체 모듈이 동일하게 version이 올라가는 형
   }
 
   beforeUnmount() {
+    if (this.commentWriteComponent && this.commentWriteComponent._isMounted) {
+      this.commentWriteComponent.unmount();
+    }
+    if (this.commentListComponent && this.commentListComponent._isMounted) {
+      this.commentListComponent.unmount();
+    }
   }
 }
 

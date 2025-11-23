@@ -290,12 +290,12 @@ class BlogListPage extends Component {
       const transformedPosts = response.items.map(post => ({
         id: post.postId,
         title: post.title,
-        excerpt: this.generateExcerpt(post.title),
+        excerpt: post.summary || this.generateExcerpt(post.title),
         category: 'TECH INSIGHT',
         author: post.member?.nickname || 'Anonymous',
         date: post.createdAt,
         views: post.viewCount || 0,
-        thumbnail: post.imageUrl || ''
+        thumbnail: post.thumbnail || post.imageUrl || ''
       }));
 
       let filteredPosts = transformedPosts;

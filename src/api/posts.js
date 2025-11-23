@@ -90,3 +90,13 @@ export const likePost = async (postId, memberId) => {
 export const unlikePost = async (postId, memberId) => {
   await api.delete(`/api/v1/posts/${postId}/like?memberId=${memberId}`);
 };
+
+/**
+ * 추천 게시글 조회 (고정 3개)
+ * @param {number} postId - 현재 게시글 ID
+ * @returns {Promise<PostSummaryResponse[]>} 추천 게시글 목록 (3개)
+ */
+export const getRecommendedPosts = async (postId) => {
+  const res = await api.get(`/api/v1/posts/${postId}/recommendations`);
+  return res.data;
+};

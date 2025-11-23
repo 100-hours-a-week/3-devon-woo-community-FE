@@ -78,6 +78,24 @@ export default class MockServer {
       return { success: true, data: null };
     }
 
+    if (url.match(/\/api\/v1\/posts\/\d+\/recommendations$/) && method === 'GET') {
+      const PostSummaryResponse = (await import('../../dto/response/post/PostSummaryResponse.js')).default;
+      const currentPostId = parseInt(url.match(/\/posts\/(\d+)/)[1]);
+
+      const recommendedIds = [];
+      let offset = (currentPostId * 7) % 10;
+      for (let i = 0; i < 3; i++) {
+        let recommendId = ((offset + i) % 10) + 1;
+        if (recommendId === currentPostId) {
+          recommendId = ((recommendId + 1) % 10) + 1;
+        }
+        recommendedIds.push(recommendId);
+      }
+
+      const recommendations = recommendedIds.map(id => PostSummaryResponse.createDummy(id));
+      return { success: true, data: recommendations };
+    }
+
     // ---------------- COMMENTS ----------------
     // 댓글 목록 조회: GET /posts/{postId}/comments
     if (url.match(/\/api\/v1\/posts\/\d+\/comments(\?.*)?$/) && method === 'GET') {
