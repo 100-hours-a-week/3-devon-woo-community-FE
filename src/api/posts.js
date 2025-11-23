@@ -26,14 +26,20 @@ export const createPost = async (postData) => {
  * @param {number} [params.page=0] - 페이지 번호 (0-based)
  * @param {number} [params.size=20] - 페이지 크기
  * @param {string} [params.sort='createdAt,desc'] - 정렬 기준
+ * @param {number} [params.memberId] - 회원 ID (특정 회원의 게시글만 조회)
  * @returns {Promise<PageResponse<PostSummaryResponse>>} 게시글 목록
  */
-export const getPosts = async ({ page = 0, size = 20, sort = "createdAt,desc" } = {}) => {
+export const getPosts = async ({ page = 0, size = 20, sort = "createdAt,desc", memberId } = {}) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
     size: size.toString(),
     sort: sort,
   });
+
+  if (memberId !== undefined && memberId !== null) {
+    queryParams.append('memberId', memberId.toString());
+  }
+
   const res = await api.get(`/api/v1/posts?${queryParams.toString()}`);
   return res.data;
 };

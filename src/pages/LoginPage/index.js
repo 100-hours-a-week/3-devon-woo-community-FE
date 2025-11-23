@@ -214,7 +214,7 @@ class LoginPage extends Component {
               id: 1,
               email: email,
               username: 'Dev User',
-              profileImage: 'https://i.pravatar.cc/150?img=33',
+              profileImage: 'https://ui-avatars.com/api/?name=Dev+User&background=667eea&color=fff&size=128',
               createdAt: new Date().toISOString()
             }
           }

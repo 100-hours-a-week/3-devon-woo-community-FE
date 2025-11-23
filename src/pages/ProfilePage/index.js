@@ -304,11 +304,11 @@ class ProfilePage extends Component {
       const memberId = AuthService.getCurrentUserId();
       const [profileResponse, postsResponse] = await Promise.all([
         getMemberProfile(memberId),
-        getPosts({ page: 0, size: 50 })
+        getPosts({ page: 0, size: 6, memberId })
       ]);
 
       const extras = getProfileExtras(memberId);
-      const normalizedPosts = this.normalizePosts(postsResponse?.items || [], memberId);
+      const normalizedPosts = this.normalizePosts(postsResponse?.items || []);
 
       const primaryStack = Array.isArray(extras.primaryStack)
         ? extras.primaryStack
@@ -344,11 +344,8 @@ class ProfilePage extends Component {
     }
   }
 
-  normalizePosts(items, memberId) {
-    const filtered = items.filter((post) => `${post.member?.memberId}` === `${memberId}`);
-    const source = filtered.length ? filtered : items;
-
-    if (!source.length) {
+  normalizePosts(items) {
+    if (!items.length) {
       return Array.from({ length: 5 }, (_, idx) => ({
         id: idx + 1,
         title: `새로운 기술 노트 ${idx + 1}`,
@@ -360,7 +357,7 @@ class ProfilePage extends Component {
       }));
     }
 
-    return source.map((post) => ({
+    return items.map((post) => ({
       id: post.postId,
       title: post.title,
       excerpt: this.generateExcerpt(post.title),

@@ -29,7 +29,16 @@ class Header extends Component {
   }
 
   getUser() {
-    return AuthService.getUser();
+    const user = AuthService.getUser();
+    if (user && !user.profileImage) {
+      user.profileImage = this.getDefaultAvatar(user);
+    }
+    return user;
+  }
+
+  getDefaultAvatar(user) {
+    const name = user?.username || user?.email || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=667eea&color=fff&size=128`;
   }
 
   render() {
@@ -95,13 +104,17 @@ class Header extends Component {
       `;
     }
 
+    const avatarUrl = user?.profileImage || this.getDefaultAvatar(user);
+    const username = user?.username || 'User';
+    const email = user?.email || '';
+
     return `
       <div class="header-profile ${isProfileMenuOpen ? 'open' : ''}" id="profileDropdown">
         <button type="button" class="header-profile__button" id="profileBtn" aria-haspopup="true" aria-expanded="${isProfileMenuOpen}">
           <div class="header-profile__avatar">
-            <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+            <img src="${avatarUrl}" alt="${username}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=667eea&color=fff&size=128'">
           </div>
-          <span class="header-profile__name">${user?.username || 'User'}</span>
+          <span class="header-profile__name">${username}</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
@@ -109,11 +122,11 @@ class Header extends Component {
         <div class="header-profile__dropdown" id="profileMenu">
           <div class="header-profile__dropdown-header">
             <div class="header-profile__dropdown-avatar">
-              <img src="${user?.profileImage || '/assets/default-profile.png'}" alt="${user?.username || 'User'}">
+              <img src="${avatarUrl}" alt="${username}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=667eea&color=fff&size=128'">
             </div>
             <div>
-              <p class="header-profile__dropdown-name">${user?.username || 'User'}</p>
-              <p class="header-profile__dropdown-email">${user?.email || ''}</p>
+              <p class="header-profile__dropdown-name">${username}</p>
+              <p class="header-profile__dropdown-email">${email}</p>
             </div>
           </div>
           <div class="header-profile__dropdown-actions">
