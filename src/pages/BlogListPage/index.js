@@ -1,6 +1,6 @@
 import Component from '../../core/Component.js';
 import TopPostsList from '../../components/post/TopPostsList/index.js';
-import BlogCard from '../../components/post/BlogCard/index.js';
+import LegacyPostItem from '../../components/post/LegacyPostItem/index.js';
 import LoadingSpinner from '../../components/LoadingSpinner/index.js';
 import TagCloud from '../../components/ui/TagCloud/index.js';
 import NewsletterSubscribe from '../../components/ui/NewsletterSubscribe/index.js';
@@ -174,8 +174,15 @@ class BlogListPage extends Component {
       return;
     }
 
-    this.state.posts.forEach((post) => {
-      const card = new BlogCard({ post });
+    this.state.posts.forEach((post, index) => {
+      const postNumber = (this.state.currentPage - 1) * this.pageSize + index + 1;
+      const card = new LegacyPostItem({
+        post: {
+          ...post,
+          dateFormatted: post.date
+        },
+        postNumber
+      });
       card.mount(grid);
       this.postComponents.push(card);
     });
