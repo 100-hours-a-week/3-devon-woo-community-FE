@@ -1193,7 +1193,7 @@ class PostCreatePage extends Component {
     }
 
     const payload = new PostCreateRequest({
-      memberId: AuthService.getUser()?.id,
+      memberId: AuthService.getCurrentUserId(),
       title,
       content,
       image: this.state.thumbnailUrl || this.state.uploadedImages[0] || null,
@@ -1216,10 +1216,13 @@ class PostCreatePage extends Component {
       this.closePublishModal(true);
       if (this.afterPublish) {
         this.afterPublish(response);
-      } else if (response?.data?.id) {
-        navigateReplace(`/posts/${response.data.id}`);
       } else {
-        navigateReplace('/posts');
+        const targetPostId = response?.postId ?? response?.data?.postId ?? response?.data?.id;
+        if (targetPostId) {
+          navigateReplace(`/posts/${targetPostId}`);
+        } else {
+          navigateReplace('/posts');
+        }
       }
     } catch (error) {
       console.error('Failed to publish post:', error);

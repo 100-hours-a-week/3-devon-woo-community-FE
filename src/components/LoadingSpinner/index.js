@@ -6,6 +6,7 @@ class LoadingSpinner extends Component {
     this.state = {
       show: props.show !== undefined ? props.show : false
     };
+    this.variant = props.variant || 'overlay';
     this.loadStyle('/src/components/LoadingSpinner/style.css');
   }
 
@@ -15,7 +16,7 @@ class LoadingSpinner extends Component {
     }
 
     return `
-      <div class="loading-spinner">
+      <div class="loading-spinner loading-spinner--${this.variant}">
         <div class="spinner"></div>
       </div>
     `;

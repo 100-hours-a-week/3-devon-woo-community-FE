@@ -10,7 +10,7 @@ export const isDev = appEnv === 'development';
 
 // 개발 환경에서 자동 로그인/우회 설정
 export const devAuthConfig = {
-  bypassAuth: true,
+  bypassAuth: false,
   accessToken: 'dev-access-token',
   refreshToken: 'dev-refresh-token',
   user: {

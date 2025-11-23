@@ -15,6 +15,10 @@ class PostResponse {
     likeCount,
     commentCount,
     isLiked = false,
+    tags = [],
+    seriesId = null,
+    seriesName = '',
+    visibility = 'public'
   }) {
     this.postId = postId;
     this.member = member;
@@ -28,6 +32,10 @@ class PostResponse {
     this.likeCount = likeCount;
     this.commentCount = commentCount;
     this.isLiked = isLiked;
+    this.tags = tags;
+    this.seriesId = seriesId;
+    this.seriesName = seriesName;
+    this.visibility = visibility;
   }
 
   /**
@@ -64,6 +72,10 @@ class PostResponse {
       likeCount: Math.floor(Math.random() * 100) + 1,
       commentCount: Math.floor(Math.random() * 50),
       isLiked: false,
+      tags: ['Java', 'Architecture', 'Best Practice'].slice(0, (seed % 3) + 1),
+      seriesId: seed % 2 === 0 ? 1 : null,
+      seriesName: seed % 2 === 0 ? '백엔드 아키텍처 노트' : '',
+      visibility: 'public'
     });
   }
 
@@ -85,6 +97,10 @@ class PostResponse {
       likeCount: 5,
       commentCount: 3,
       isLiked: false,
+      tags: ['JavaScript', 'ECMAScript'],
+      seriesId: null,
+      seriesName: '',
+      visibility: 'public'
     });
   }
 }

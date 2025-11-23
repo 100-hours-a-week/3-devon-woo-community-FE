@@ -4,7 +4,6 @@ import { getPosts } from '../../api/posts.js';
 import AuthService from '../../utils/AuthService.js';
 import { navigate } from '../../core/Router.js';
 import { withHeader } from '../../services/HeaderService.js';
-import { getProfileExtras } from '../../utils/profileExtrasStorage.js';
 
 const POSTS_PER_PAGE = 5;
 const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile';
@@ -307,35 +306,11 @@ class ProfilePage extends Component {
         getPosts({ page: 0, size: 6, memberId })
       ]);
 
-      const extras = getProfileExtras(memberId);
       const normalizedPosts = this.normalizePosts(postsResponse?.items || []);
-
-      const primaryStack = Array.isArray(extras.primaryStack)
-        ? extras.primaryStack
-        : Array.isArray(extras.skills)
-          ? extras.skills
-          : [];
-      const interests = Array.isArray(extras.interests) ? extras.interests : [];
 
       this.setState({
         isLoading: false,
-        profile: {
-          nickname: profileResponse?.nickname || DEFAULT_DEVELOPER_PROFILE.nickname,
-          handle: extras.handle || DEFAULT_DEVELOPER_PROFILE.handle,
-          bio: extras.bio || DEFAULT_DEVELOPER_PROFILE.bio,
-          profileImageUrl: profileResponse?.profileImage || DEFAULT_PROFILE_IMAGE,
-          role: extras.role || DEFAULT_DEVELOPER_PROFILE.role,
-          company: extras.company || DEFAULT_DEVELOPER_PROFILE.company,
-          location: extras.location || DEFAULT_DEVELOPER_PROFILE.location,
-          primaryStack: primaryStack.length ? primaryStack : DEFAULT_PRIMARY_STACK,
-          interests: interests.length ? interests : DEFAULT_INTERESTS,
-          socialLinks: {
-            github: extras.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
-            website: extras.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
-            linkedin: extras.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
-            notion: extras.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion
-          }
-        },
+        profile: this.normalizeProfile(profileResponse),
         posts: normalizedPosts
       });
     } catch (error) {
@@ -370,6 +345,34 @@ class ProfilePage extends Component {
 
   generateExcerpt(title = '') {
     return `${title}에 대한 생각을 정리했습니다.`;
+  }
+
+  normalizeProfile(profileResponse = {}) {
+    const primaryStack = Array.isArray(profileResponse.primaryStack) && profileResponse.primaryStack.length
+      ? profileResponse.primaryStack
+      : DEFAULT_PRIMARY_STACK;
+    const interests = Array.isArray(profileResponse.interests) && profileResponse.interests.length
+      ? profileResponse.interests
+      : DEFAULT_INTERESTS;
+    const socialLinks = {
+      github: profileResponse.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
+      website: profileResponse.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
+      linkedin: profileResponse.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
+      notion: profileResponse.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion
+    };
+
+    return {
+      nickname: profileResponse.nickname || DEFAULT_DEVELOPER_PROFILE.nickname,
+      handle: profileResponse.handle || DEFAULT_DEVELOPER_PROFILE.handle,
+      bio: profileResponse.bio || DEFAULT_DEVELOPER_PROFILE.bio,
+      profileImageUrl: profileResponse.profileImage || DEFAULT_PROFILE_IMAGE,
+      role: profileResponse.role || DEFAULT_DEVELOPER_PROFILE.role,
+      company: profileResponse.company || DEFAULT_DEVELOPER_PROFILE.company,
+      location: profileResponse.location || DEFAULT_DEVELOPER_PROFILE.location,
+      primaryStack,
+      interests,
+      socialLinks
+    };
   }
 
   setupEventListeners() {

@@ -3,29 +3,14 @@ import { navigateTo, navigateReplace } from '../../core/Router.js';
 import AuthService from '../../utils/AuthService.js';
 import { getCloudinarySignature } from '../../api/cloudinary.js';
 import { createPost } from '../../api/posts.js';
+import { getPopularTags } from '../../api/tags.js';
+import { getSeriesList, createSeries as createSeriesRequest } from '../../api/series.js';
 import PostCreateRequest from '../../dto/request/post/PostCreateRequest.js';
 import { hideHeader, showHeader } from '../../services/HeaderService.js';
 
 const STORAGE_KEY = 'postDraft';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-
-// Mock data as in the original new_design
-const MOCK_TAGS = [
-    'JavaScript', 'React', 'Vue', 'Angular', 'Node.js',
-    'TypeScript', 'Python', 'Java', 'Spring', 'Django',
-    'Backend', 'Frontend', 'DevOps', 'AWS', 'Docker',
-    'Kubernetes', 'Database', 'SQL', 'MongoDB', 'Redis',
-    'Architecture', 'Design Pattern', 'Algorithm', 'Data Structure',
-    'Web', 'Mobile', 'iOS', 'Android', 'Flutter'
-];
-
-const MOCK_SERIES = [
-    { id: 1, name: 'Backend 개발 시리즈' },
-    { id: 2, name: 'Frontend 기초부터 심화까지' },
-    { id: 3, name: '클라우드 아키텍처' },
-    { id: 4, name: '알고리즘 정복하기' }
-];
 
 class PostPublishPage extends Component {
   constructor(props) {
@@ -52,7 +37,7 @@ class PostPublishPage extends Component {
         tags: [],
         tagInput: '',
         tagSuggestions: [],
-        series: MOCK_SERIES,
+        series: [],
         selectedSeriesId: null,
         visibility: 'public',
         isSeriesModalActive: false,
@@ -61,6 +46,7 @@ class PostPublishPage extends Component {
 
     this.loadStyle('/src/pages/PostPublishPage/style.css');
     this._eventsBound = false;
+    this.availableTags = [];
   }
 
   loadDraft() {
@@ -179,7 +165,10 @@ class PostPublishPage extends Component {
                     <div class="series-selector">
                         <select id="seriesSelect" class="series-select">
                             <option value="">시리즈를 선택하세요</option>
-                            ${this.state.series.map(s => `<option value="${s.id}" ${this.state.selectedSeriesId == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                            ${this.state.series.map(s => {
+                              const seriesId = s.seriesId ?? s.id;
+                              return `<option value="${seriesId}" ${this.state.selectedSeriesId == seriesId ? 'selected' : ''}>${s.name}</option>`;
+                            }).join('')}
                         </select>
                         <button class="btn-secondary btn-small" id="createSeriesBtn">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -290,8 +279,9 @@ class PostPublishPage extends Component {
     `;
   }
   
-  mounted() {
+  async mounted() {
     hideHeader();
+    await Promise.all([this.loadTags(), this.loadSeries()]);
     this.setupEventListeners();
   }
 
@@ -314,9 +304,9 @@ class PostPublishPage extends Component {
 
     this.delegate('input', '#tagsInput', (e) => {
       const query = e.target.value;
-      const suggestions = MOCK_TAGS.filter(tag =>
-        tag.toLowerCase().includes(query.toLowerCase()) && !this.state.tags.includes(tag)
-      ).slice(0, 5);
+      const suggestions = this.availableTags
+        .filter(tag => tag.toLowerCase().includes(query.toLowerCase()) && !this.state.tags.includes(tag))
+        .slice(0, 5);
       this.setState({ tagInput: query, tagSuggestions: suggestions });
     });
 
@@ -383,6 +373,26 @@ class PostPublishPage extends Component {
     });
   }
 
+  async loadTags() {
+    try {
+      const tags = await getPopularTags({ limit: 30 });
+      this.availableTags = tags.map(tag => tag.name);
+    } catch (error) {
+      console.error('Failed to load tags:', error);
+      this.availableTags = [];
+    }
+  }
+
+  async loadSeries() {
+    try {
+      const memberId = AuthService.getCurrentUserId();
+      const seriesList = await getSeriesList({ memberId });
+      this.setState({ series: seriesList });
+    } catch (error) {
+      console.error('Failed to load series:', error);
+    }
+  }
+
   addTag(tag) {
     if (this.state.tags.includes(tag) || this.state.tags.length >= 5) return;
     this.setState({
@@ -424,7 +434,7 @@ class PostPublishPage extends Component {
     }
   }
 
-  createSeries() {
+  async createSeries() {
     const nameInput = this.$el.querySelector('#seriesNameInput');
     const name = nameInput.value.trim();
     if (!name) {
@@ -432,18 +442,22 @@ class PostPublishPage extends Component {
       return;
     }
 
-    // This is mock logic, in real app this would be an API call
-    const newSeries = { id: this.state.series.length + 1, name };
-    const updatedSeries = [...this.state.series, newSeries];
-    
-    this.setState({
-      series: updatedSeries,
-      selectedSeriesId: newSeries.id,
-      isSeriesModalActive: false,
-    });
-    
-    nameInput.value = '';
-    this.$el.querySelector('#seriesDescInput').value = '';
+    const descInput = this.$el.querySelector('#seriesDescInput');
+    const description = descInput.value.trim();
+
+    try {
+      const newSeries = await createSeriesRequest({ name, description });
+      this.setState({
+        series: [...this.state.series, newSeries],
+        selectedSeriesId: newSeries.seriesId || newSeries.id,
+        isSeriesModalActive: false
+      });
+      nameInput.value = '';
+      descInput.value = '';
+    } catch (error) {
+      console.error('Failed to create series:', error);
+      alert('시리즈 생성에 실패했습니다. 다시 시도해주세요.');
+    }
   }
 
   async publishPost() {
@@ -456,13 +470,13 @@ class PostPublishPage extends Component {
     this.setState({ isLoading: true });
 
     const postPayload = new PostCreateRequest({
-        memberId: AuthService.getUser()?.id, // Assuming user info is stored in AuthService
+        memberId: AuthService.getCurrentUserId(),
         title: this.postData.title,
         content: this.postData.content,
         image: this.state.thumbnailUrl,
         summary: this.state.summary || null,
         tags: this.state.tags,
-        seriesId: this.state.selectedSeriesId,
+        seriesId: this.state.selectedSeriesId ? Number(this.state.selectedSeriesId) : null,
         visibility: this.state.visibility,
         isDraft: false
     });
@@ -471,7 +485,7 @@ class PostPublishPage extends Component {
       const response = await createPost(postPayload);
       localStorage.removeItem(STORAGE_KEY);
       alert('게시글이 성공적으로 출간되었습니다!');
-      navigateReplace(`/posts/${response.data.id}`);
+      navigateReplace(`/posts/${response.postId}`);
     } catch (error) {
       console.error('Failed to publish post:', error);
       alert('게시글 출간에 실패했습니다. 다시 시도해주세요.');

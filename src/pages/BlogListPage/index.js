@@ -1,10 +1,12 @@
 import Component from '../../core/Component.js';
-import Header from '../../components/Header/index.js';
 import TopPostsList from '../../components/post/TopPostsList/index.js';
+import BlogCard from '../../components/post/BlogCard/index.js';
+import LoadingSpinner from '../../components/LoadingSpinner/index.js';
 import TagCloud from '../../components/ui/TagCloud/index.js';
 import NewsletterSubscribe from '../../components/ui/NewsletterSubscribe/index.js';
 import Sidebar from '../../components/layout/Sidebar/index.js';
 import { getPosts } from '../../api/posts.js';
+import { getPopularTags } from '../../api/tags.js';
 import { navigate } from '../../core/Router.js';
 
 class BlogListPage extends Component {
@@ -24,10 +26,12 @@ class BlogListPage extends Component {
     this.pageSize = 20;
     this.loadStyle('/src/pages/BlogListPage/style.css');
     this._eventsBound = false;
+    this.postComponents = [];
+    this.loadingSpinner = null;
   }
 
   render() {
-    const { posts, isLoading, currentPage, totalPages, searchQuery } = this.state;
+    const { currentPage, totalPages, searchQuery } = this.state;
 
     return `
       <div class="blog-list-page">
@@ -48,17 +52,7 @@ class BlogListPage extends Component {
                 </div>
               ` : ''}
 
-              <div class="blog-list-grid" id="blogListGrid">
-                ${isLoading && posts.length === 0 ? `
-                  <div class="loading-state">
-                    <p>게시글을 불러오는 중...</p>
-                  </div>
-                ` : posts.length === 0 ? `
-                  <div class="empty-state">
-                    <p>게시글이 없습니다.</p>
-                  </div>
-                ` : ''}
-              </div>
+              <div class="blog-list-grid" id="blogListGrid"></div>
 
               ${totalPages > 1 ? `
                 <div class="pagination" id="pagination">
@@ -160,34 +154,31 @@ class BlogListPage extends Component {
 
   renderPosts() {
     const grid = this.$$('#blogListGrid');
-    if (!grid || this.state.posts.length === 0) return;
+    if (!grid) return;
 
-    const postsHTML = this.state.posts.map((post, index) => {
-      const gradientClass = `gradient-${(index % 4) + 1}`;
-      const postNumber = (this.state.currentPage - 1) * this.pageSize + index + 1;
+    this._destroyPostComponents();
+    this._destroyLoadingSpinner();
+    grid.innerHTML = '';
 
-      return `
-        <article class="post-item" data-post-id="${post.id}">
-          <div class="post-content">
-            <div class="post-category">${post.category}</div>
-            <h2 class="post-title">${post.title}</h2>
-            <p class="post-excerpt">${post.excerpt}</p>
-            <div class="post-meta">
-              <span class="post-date">${this.formatDate(post.date)}</span>
-              <span class="post-divider">·</span>
-              <span class="post-author">${post.author}</span>
-              <span class="post-divider">·</span>
-              <span class="post-views">${post.views}</span>
-            </div>
-          </div>
-          <div class="post-thumbnail ${gradientClass}">
-            Tech Post\n#${postNumber}
-          </div>
-        </article>
+    if (this.state.isLoading && this.state.posts.length === 0) {
+      this._mountLoadingSpinner(grid);
+      return;
+    }
+
+    if (!this.state.isLoading && this.state.posts.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <p>게시글이 없습니다.</p>
+        </div>
       `;
-    }).join('');
+      return;
+    }
 
-    grid.innerHTML = postsHTML;
+    this.state.posts.forEach((post) => {
+      const card = new BlogCard({ post });
+      card.mount(grid);
+      this.postComponents.push(card);
+    });
   }
 
   renderPaginationPages() {
@@ -255,16 +246,6 @@ class BlogListPage extends Component {
       navigate('/posts');
     });
 
-    this.delegate('click', '#blogListGrid .post-item', (e) => {
-      const postItem = e.target.closest('.post-item');
-      if (!postItem) return;
-      const postId = postItem.dataset.postId;
-      this.handlePostClick(postId);
-    });
-  }
-
-  handlePostClick(postId) {
-    navigate(`/posts/${postId}`);
   }
 
   async goToPage(page) {
@@ -343,23 +324,49 @@ class BlogListPage extends Component {
   }
 
   async loadTags() {
-    const mockTags = [
-      { name: '빅데이터', count: 42 },
-      { name: '분산처리', count: 38 },
-      { name: 'Golang', count: 31 },
-      { name: 'Scala', count: 28 },
-      { name: 'kafka', count: 25 },
-      { name: 'TensorFlow', count: 22 }
-    ];
+    try {
+      const response = await getPopularTags({ limit: 20 });
+      const tags = (response || []).map((tag) => ({
+        name: tag.name,
+        count: tag.postCount ?? tag.count ?? 0
+      }));
 
-    this.state.tags = mockTags;
-    if (this.tagCloudComponent) {
-      this.tagCloudComponent.setState({ tags: mockTags });
+      this.state.tags = tags;
+      if (this.tagCloudComponent) {
+        this.tagCloudComponent.setState({ tags });
+      }
+    } catch (error) {
+      console.error('Failed to load tags:', error);
     }
   }
 
   generateExcerpt(title) {
     return `네이버 사내 기술 교류 행사인 NAVER ENGINEERING DAY 2025(10월)에서 발표되었던 세션을 공개합니다. 발표 내용과 기술적 인사이트를 공유하며, 실무에 적용할 수 있는 다양한 팁과 노하우를 소개합니다.`;
+  }
+
+  _mountLoadingSpinner(container) {
+    this.loadingSpinner = new LoadingSpinner({ show: true, variant: 'inline' });
+    const wrapper = document.createElement('div');
+    wrapper.className = 'blog-list-loading';
+    container.appendChild(wrapper);
+    this.loadingSpinner.mount(wrapper);
+  }
+
+  _destroyLoadingSpinner() {
+    if (this.loadingSpinner) {
+      this.loadingSpinner.unmount();
+      this.loadingSpinner = null;
+    }
+  }
+
+  _destroyPostComponents() {
+    if (!this.postComponents) return;
+    this.postComponents.forEach((component) => {
+      if (component && typeof component.unmount === 'function') {
+        component.unmount();
+      }
+    });
+    this.postComponents = [];
   }
 
   formatDate(dateString) {
@@ -374,6 +381,8 @@ class BlogListPage extends Component {
     if (this.sidebarComponent) {
       this.sidebarComponent.unmount();
     }
+    this._destroyPostComponents();
+    this._destroyLoadingSpinner();
   }
 }
 

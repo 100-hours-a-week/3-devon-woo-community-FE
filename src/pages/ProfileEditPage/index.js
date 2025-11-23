@@ -5,7 +5,6 @@ import AuthService from '../../utils/AuthService.js';
 import { getMemberProfile, updateMemberProfile } from '../../api/members.js';
 import MemberUpdateRequest from '../../dto/request/member/MemberUpdateRequest.js';
 import { uploadProfileImage } from '../../utils/imageUpload.js';
-import { getProfileExtras, saveProfileExtras } from '../../utils/profileExtrasStorage.js';
 
 const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile';
 const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS'];
@@ -418,55 +417,28 @@ class ProfileEditPage extends Component {
   async loadProfileData() {
     try {
       const memberId = AuthService.getCurrentUserId();
-      const [profile, extras] = await Promise.all([
-        getMemberProfile(memberId),
-        Promise.resolve(getProfileExtras(memberId))
-      ]);
-
-      const initialData = {
-        name: profile?.nickname || '',
-        handle: extras.handle || '',
-        bio: extras.bio || '',
-        role: extras.role || '',
-        company: extras.company || '',
-        location: extras.location || '',
-        primaryStack: Array.isArray(extras.primaryStack)
-          ? extras.primaryStack
-          : Array.isArray(extras.skills)
-            ? extras.skills
-            : [],
-        interests: Array.isArray(extras.interests) ? extras.interests : [],
-        socialLinks: extras.socialLinks || { github: '', website: '', linkedin: '', notion: '' },
-        profileImageUrl: profile?.profileImage || ''
-      };
-
-      const resolvedPrimaryStack = initialData.primaryStack.length
-        ? initialData.primaryStack
-        : DEFAULT_PRIMARY_STACK;
-      const resolvedInterests = initialData.interests.length
-        ? initialData.interests
-        : DEFAULT_INTERESTS;
-      const resolvedSocialLinks = {
-        github: initialData.socialLinks.github || DEFAULT_SOCIAL_LINKS.github,
-        website: initialData.socialLinks.website || DEFAULT_SOCIAL_LINKS.website,
-        linkedin: initialData.socialLinks.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
-        notion: initialData.socialLinks.notion || DEFAULT_SOCIAL_LINKS.notion
-      };
+      const profile = await getMemberProfile(memberId);
+      const resolvedProfile = this.mapProfileToState(profile);
 
       this.initialSnapshot = JSON.stringify({
-        ...initialData,
-        primaryStack: resolvedPrimaryStack,
-        interests: resolvedInterests,
-        socialLinks: resolvedSocialLinks
+        name: resolvedProfile.name,
+        handle: resolvedProfile.handle,
+        bio: resolvedProfile.bio,
+        role: resolvedProfile.role,
+        company: resolvedProfile.company,
+        location: resolvedProfile.location,
+        primaryStack: resolvedProfile.primaryStack,
+        interests: resolvedProfile.interests,
+        socialLinks: resolvedProfile.socialLinks,
+        profileImageUrl: resolvedProfile.profileImageUrl
       });
-      this.initialProfileImage = initialData.profileImageUrl || '';
+      this.initialProfileImage = resolvedProfile.profileImageUrl;
 
       this.setState({
-        ...initialData,
-        primaryStackText: resolvedPrimaryStack.join(', '),
-        interestsText: resolvedInterests.join(', '),
-        socialLinks: resolvedSocialLinks,
-        bioCharCount: (initialData.bio || '').length,
+        ...resolvedProfile,
+        primaryStackText: resolvedProfile.primaryStack.join(', '),
+        interestsText: resolvedProfile.interests.join(', '),
+        bioCharCount: resolvedProfile.bio.length,
         isLoading: false
       });
     } catch (error) {
@@ -474,6 +446,34 @@ class ProfileEditPage extends Component {
       this.setState({ isLoading: false });
       this.showToast('프로필을 불러오지 못했습니다.', 'error');
     }
+  }
+
+  mapProfileToState(profile = {}) {
+    const primaryStack = Array.isArray(profile.primaryStack) && profile.primaryStack.length
+      ? profile.primaryStack
+      : DEFAULT_PRIMARY_STACK;
+    const interests = Array.isArray(profile.interests) && profile.interests.length
+      ? profile.interests
+      : DEFAULT_INTERESTS;
+    const socialLinks = {
+      github: profile.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
+      website: profile.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
+      linkedin: profile.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
+      notion: profile.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion
+    };
+
+    return {
+      name: profile.nickname || '',
+      handle: profile.handle || '',
+      bio: profile.bio || '',
+      role: profile.role || '',
+      company: profile.company || '',
+      location: profile.location || '',
+      primaryStack,
+      interests,
+      socialLinks,
+      profileImageUrl: profile.profileImage || DEFAULT_PROFILE_IMAGE
+    };
   }
 
   setupEventListeners() {
@@ -563,6 +563,13 @@ class ProfileEditPage extends Component {
 
   }
 
+  parseCommaSeparated(value) {
+    return (value || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
   handleSocialInput(key, value) {
     const socialLinks = {
       ...this.state.socialLinks,
@@ -595,24 +602,18 @@ class ProfileEditPage extends Component {
         profileImage = this.state.profileImageUrl;
       }
 
+      const parsedPrimaryStack = this.parseCommaSeparated(this.state.primaryStackText);
+      const parsedInterests = this.parseCommaSeparated(this.state.interestsText);
+      const trimmedSocialLinks = {
+        github: this.state.socialLinks.github.trim(),
+        website: this.state.socialLinks.website.trim(),
+        linkedin: this.state.socialLinks.linkedin.trim(),
+        notion: this.state.socialLinks.notion.trim()
+      };
+
       const updatePayload = new MemberUpdateRequest({
         nickname: this.state.name.trim(),
-        profileImage: profileImage || null
-      });
-
-      await updateMemberProfile(memberId, updatePayload);
-
-      const parsedPrimaryStack = this.state.primaryStackText
-        .split(',')
-        .map((skill) => skill.trim())
-        .filter(Boolean);
-
-      const parsedInterests = this.state.interestsText
-        .split(',')
-        .map((interest) => interest.trim())
-        .filter(Boolean);
-
-      saveProfileExtras(memberId, {
+        profileImage: profileImage || null,
         handle: this.state.handle.trim(),
         bio: this.state.bio.trim(),
         role: this.state.role.trim(),
@@ -620,13 +621,10 @@ class ProfileEditPage extends Component {
         location: this.state.location.trim(),
         primaryStack: parsedPrimaryStack,
         interests: parsedInterests,
-        socialLinks: {
-          github: this.state.socialLinks.github.trim(),
-          website: this.state.socialLinks.website.trim(),
-          linkedin: this.state.socialLinks.linkedin.trim(),
-          notion: this.state.socialLinks.notion.trim()
-        }
+        socialLinks: trimmedSocialLinks
       });
+
+      await updateMemberProfile(memberId, updatePayload);
 
       this.showToast('프로필이 저장되었습니다!');
       this.initialSnapshot = JSON.stringify({
@@ -638,12 +636,7 @@ class ProfileEditPage extends Component {
         location: this.state.location.trim(),
         primaryStack: parsedPrimaryStack,
         interests: parsedInterests,
-        socialLinks: {
-          github: this.state.socialLinks.github.trim(),
-          website: this.state.socialLinks.website.trim(),
-          linkedin: this.state.socialLinks.linkedin.trim(),
-          notion: this.state.socialLinks.notion.trim()
-        },
+        socialLinks: trimmedSocialLinks,
         profileImageUrl: profileImage || ''
       });
       this.initialProfileImage = profileImage || '';
@@ -711,14 +704,8 @@ class ProfileEditPage extends Component {
       role: this.state.role.trim(),
       company: this.state.company.trim(),
       location: this.state.location.trim(),
-      primaryStack: this.state.primaryStackText
-        .split(',')
-        .map((skill) => skill.trim())
-        .filter(Boolean),
-      interests: this.state.interestsText
-        .split(',')
-        .map((interest) => interest.trim())
-        .filter(Boolean),
+      primaryStack: this.parseCommaSeparated(this.state.primaryStackText),
+      interests: this.parseCommaSeparated(this.state.interestsText),
       socialLinks: {
         github: this.state.socialLinks.github.trim(),
         website: this.state.socialLinks.website.trim(),

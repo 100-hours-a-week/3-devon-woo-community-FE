@@ -1,3 +1,5 @@
+import MemberResponse from "../member/MemberResponse.js";
+
 /**
  * 로그인 응답 DTO
  * @class LoginResponse
@@ -5,19 +7,27 @@
 class LoginResponse {
   /**
    * @param {Object} params
-   * @param {number} params.userId - 사용자 ID
+   * @param {string} params.accessToken - 액세스 토큰
+   * @param {string} params.refreshToken - 리프레시 토큰
+   * @param {MemberResponse} params.member - 로그인한 회원 정보
    */
-  constructor({ userId }) {
-    this.userId = userId;
+  constructor({ accessToken, refreshToken, member }) {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.member = member;
   }
 
   /**
    * 더미 데이터를 생성하는 정적 팩토리 메서드
-   * @param {number} userId - 사용자 ID (기본값: 1)
+   * @param {number} memberId - 회원 ID (기본값: 1)
    * @returns {LoginResponse}
    */
-  static createDummy(userId = 1) {
-    return new LoginResponse({ userId });
+  static createDummy(memberId = 1) {
+    return new LoginResponse({
+      accessToken: `mock-access-token-${memberId}`,
+      refreshToken: `mock-refresh-token-${memberId}`,
+      member: MemberResponse.createDummy(memberId),
+    });
   }
 
   /**
@@ -25,7 +35,7 @@ class LoginResponse {
    * @returns {LoginResponse}
    */
   static createDefault() {
-    return new LoginResponse({ userId: 1 });
+    return LoginResponse.createDummy(1);
   }
 }
 

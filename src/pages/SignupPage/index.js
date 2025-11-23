@@ -11,8 +11,7 @@ import {
   validatePasswordConfirm,
   validateNickname
 } from '../../validation/index.js';
-import { withHeader } from '../../services/HeaderService.js';
-import { saveProfileExtras } from '../../utils/profileExtrasStorage.js';
+import { withHeader, refreshAuthState } from '../../services/HeaderService.js';
 
 const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS'];
 const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화'];
@@ -567,37 +566,36 @@ class SignupPage extends Component {
         }
       }
 
+      const profilePayload = skipProfile ? {} : {
+        handle: this.state.handle.trim(),
+        bio: this.state.bio.trim(),
+        role: this.state.role.trim(),
+        company: this.state.company.trim(),
+        location: this.state.location.trim(),
+        primaryStack: this.parseList(this.state.primaryStackText, DEFAULT_PRIMARY_STACK),
+        interests: this.parseList(this.state.interestsText, DEFAULT_INTERESTS),
+        socialLinks: {
+          github: this.state.socialLinks.github.trim(),
+          website: this.state.socialLinks.website.trim(),
+          linkedin: this.state.socialLinks.linkedin.trim(),
+          notion: this.state.socialLinks.notion.trim()
+        }
+      };
+
       const signupData = new SignupRequest({
         email: this.state.email.trim(),
         password: this.state.password.trim(),
         nickname: this.state.nickname.trim(),
-        profileImage: profileImageUrl
+        profileImage: profileImageUrl,
+        ...profilePayload
       });
 
       const response = await signup(signupData);
 
-      if (!skipProfile) {
-        saveProfileExtras(response.userId, {
-          handle: this.state.handle.trim(),
-          bio: this.state.bio.trim(),
-          role: this.state.role.trim(),
-          company: this.state.company.trim(),
-          location: this.state.location.trim(),
-          primaryStack: this.parseList(this.state.primaryStackText, DEFAULT_PRIMARY_STACK),
-          interests: this.parseList(this.state.interestsText, DEFAULT_INTERESTS),
-          socialLinks: {
-            github: this.state.socialLinks.github.trim(),
-            website: this.state.socialLinks.website.trim(),
-            linkedin: this.state.socialLinks.linkedin.trim(),
-            notion: this.state.socialLinks.notion.trim()
-          }
-        });
-      }
-
-      // 기존 로직 유지 (토큰 없이도 진행)
-      AuthService.login(response.userId);
+      AuthService.login(response.accessToken, response.refreshToken, response.member);
+      refreshAuthState();
       alert('회원가입이 완료되었습니다!');
-      navigateReplace('/posts');
+      navigateReplace('/');
     } catch (error) {
       console.error('회원가입 실패:', error);
       const message = error.response?.data?.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.';

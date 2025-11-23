@@ -6,7 +6,6 @@ import { navigateTo, navigateReplace } from '../../core/Router.js';
 import { withHeader, refreshAuthState } from '../../services/HeaderService.js';
 
 const OAUTH_API_BASE_URL = 'http://localhost:8080';
-const DEV_MODE = true;
 
 class LoginPage extends Component {
   constructor(props) {
@@ -20,7 +19,7 @@ class LoginPage extends Component {
 
     // If already logged in, redirect to the main page
     if (AuthService.isLoggedIn()) {
-      navigateReplace('/tech-blog');
+      navigateReplace('/');
       return;
     }
 
@@ -205,34 +204,12 @@ class LoginPage extends Component {
     }
 
     try {
-      if (DEV_MODE) {
-        const dummyResponse = {
-          data: {
-            accessToken: 'dev-access-token',
-            refreshToken: 'dev-refresh-token',
-            member: {
-              id: 1,
-              email: email,
-              username: 'Dev User',
-              profileImage: 'https://ui-avatars.com/api/?name=Dev+User&background=667eea&color=fff&size=128',
-              createdAt: new Date().toISOString()
-            }
-          }
-        };
-
-        AuthService.login(dummyResponse.data.accessToken, dummyResponse.data.refreshToken, dummyResponse.data.member);
-        refreshAuthState();
-        navigateReplace('/tech-blog');
-        return;
-      }
-
       const loginData = new LoginRequest({ email, password });
       const response = await login(loginData);
 
-      AuthService.login(response.data.accessToken, response.data.refreshToken, response.data.member);
+      AuthService.login(response.accessToken, response.refreshToken, response.member);
       refreshAuthState();
-      navigateReplace('/tech-blog');
-
+      navigateReplace('/');
     } catch (error) {
       console.error('Login failed:', error);
       const message = error.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.';

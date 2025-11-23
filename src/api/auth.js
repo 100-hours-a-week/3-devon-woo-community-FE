@@ -16,7 +16,6 @@ const api = new Axios({
  */
 export const signup = async (signupData) => {
   const res = await api.post("/auth/signup", signupData);
-  console.log(res.data);
   return res.data;
 };
 
@@ -27,7 +26,6 @@ export const signup = async (signupData) => {
  */
 export const login = async (loginData) => {
   const res = await api.post("/auth/login", loginData);
-  console.log(res.data);
   return res.data;
 };
 
