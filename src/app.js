@@ -6,9 +6,7 @@ import SignupPage from './pages/SignupPage/index.js';
 import BlogListPage from './pages/BlogListPage/index.js';
 import PostCreatePage from './pages/PostCreatePage/index.js';
 import PostDetailPage from './pages/PostDetailPage/index.js';
-import PostEditPage from './pages/PostEditPage/index.js';
 import ProfilePage from './pages/ProfilePage/index.js';
-import PasswordChangePage from './pages/PasswordChangePage/index.js';
 import PostPublishPage from './pages/PostPublishPage/index.js';
 
 // App 초기화
@@ -53,9 +51,7 @@ function initApp() {
   router.addRoute('/posts/create', PostCreatePage);
   router.addRoute('/posts/publish', PostPublishPage);
   router.addRoute('/posts/:id', PostDetailPage);
-  router.addRoute('/posts/:id/edit', PostEditPage);
   router.addRoute('/profile', ProfilePage);
-  router.addRoute('/password-change', PasswordChangePage);
 
   console.log('Routes registered');
 
