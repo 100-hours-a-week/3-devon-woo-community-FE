@@ -130,6 +130,9 @@ class Component {
     try {
       this.beforeUnmount();
       this._removeDelegatedEvents();
+      if (Object.prototype.hasOwnProperty.call(this, '_eventsBound')) {
+        this._eventsBound = false;
+      }
 
       if (this.$el.parentNode) {
         this.$el.parentNode.removeChild(this.$el);
