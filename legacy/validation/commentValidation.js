@@ -2,7 +2,7 @@ import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * CommentCreateRequest 유효성 검증
- * @param {import('../dto/request/comment/CommentCreateRequest')} dto
+ * @param {import('../dto/request/comment/CommentCreateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validateCommentCreateRequest(dto) {
@@ -27,7 +27,7 @@ export function validateCommentCreateRequest(dto) {
 
 /**
  * CommentUpdateRequest 유효성 검증
- * @param {import('../dto/request/comment/CommentUpdateRequest')} dto
+ * @param {import('../dto/request/comment/CommentUpdateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validateCommentUpdateRequest(dto) {

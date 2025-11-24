@@ -54,7 +54,7 @@ export function validateNickname(nickname) {
 
 /**
  * LoginRequest 유효성 검증
- * @param {import('../dto/request/auth/LoginRequest')} dto
+ * @param {import('../dto/request/auth/LoginRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validateLoginRequest(dto) {
@@ -84,7 +84,7 @@ export function validateLoginRequest(dto) {
 
 /**
  * SignupRequest 유효성 검증
- * @param {import('../dto/request/auth/SignupRequest')} dto
+ * @param {import('../dto/request/auth/SignupRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validateSignupRequest(dto) {

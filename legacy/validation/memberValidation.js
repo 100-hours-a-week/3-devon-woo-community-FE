@@ -7,7 +7,7 @@ import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * MemberUpdateRequest 유효성 검증
- * @param {import('../dto/request/member/MemberUpdateRequest')} dto
+ * @param {import('../dto/request/member/MemberUpdateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validateMemberUpdateRequest(dto) {
@@ -32,7 +32,7 @@ export function validateMemberUpdateRequest(dto) {
 
 /**
  * PasswordUpdateRequest 유효성 검증
- * @param {import('../dto/request/member/PasswordUpdateRequest')} dto
+ * @param {import('../dto/request/member/PasswordUpdateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validatePasswordUpdateRequest(dto) {

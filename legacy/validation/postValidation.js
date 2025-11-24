@@ -3,7 +3,7 @@ import { VALIDATION_MESSAGES } from './messages.js';
 
 /**
  * PostCreateRequest 유효성 검증
- * @param {import('../dto/request/post/PostCreateRequest')} dto
+ * @param {import('../dto/request/post/PostCreateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validatePostCreateRequest(dto) {
@@ -42,7 +42,7 @@ export function validatePostCreateRequest(dto) {
 
 /**
  * PostUpdateRequest 유효성 검증
- * @param {import('../dto/request/post/PostUpdateRequest')} dto
+ * @param {import('../dto/request/post/PostUpdateRequest.js')} dto
  * @returns {Array<{field: string, message: string}>} 에러 배열 (빈 배열이면 유효함)
  */
 export function validatePostUpdateRequest(dto) {
