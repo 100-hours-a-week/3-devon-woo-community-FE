@@ -1,9 +1,13 @@
 node_modules/
 dist/
-.DS_Store
-*.log
+build/
+.vite/
 .env
-.env.local
+.env.*
+.DS_Store
 .vscode/
 .idea/
-/.claude
+*.log
+npm-debug.log*
+yarn-error.log
+.claude
