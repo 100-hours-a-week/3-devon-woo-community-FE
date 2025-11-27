@@ -1,10 +1,16 @@
 import httpClient from './httpClient'
 import type { ApiResponse, PageResponse } from '@/types/common'
+import { createSuccessResponse } from '@/types/common'
 import type {
   CommentResponse,
   CommentCreateRequest,
   CommentUpdateRequest,
 } from '@/types/comment'
+import { USE_MOCK } from '@/config/env'
+import {
+  generateMockCommentsPage,
+  generateMockComment,
+} from '@/mocks/commentDummy'
 
 export const commentApi = {
   getComments: async (
@@ -12,6 +18,11 @@ export const commentApi = {
     page: number = 0,
     size: number = 20
   ): Promise<ApiResponse<PageResponse<CommentResponse>>> => {
+    if (USE_MOCK) {
+      const pageResponse = generateMockCommentsPage(postId, page, size)
+      return createSuccessResponse(pageResponse)
+    }
+
     return httpClient.get(
       `/api/v1/posts/${postId}/comments?page=${page}&size=${size}`
     )
@@ -21,6 +32,11 @@ export const commentApi = {
     postId: number,
     data: CommentCreateRequest
   ): Promise<ApiResponse<CommentResponse>> => {
+    if (USE_MOCK) {
+      const mockComment = generateMockComment(postId, data.content)
+      return createSuccessResponse(mockComment)
+    }
+
     return httpClient.post(`/api/v1/posts/${postId}/comments`, data)
   },
 

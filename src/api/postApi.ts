@@ -1,6 +1,9 @@
 import httpClient from './httpClient'
 import type { ApiResponse, PageResponse } from '@/types/common'
+import { createSuccessResponse } from '@/types/common'
 import type { PostSummaryResponse, PostResponse } from '@/types/post'
+import { USE_MOCK } from '@/config/env'
+import { generateMockPost, generateMockPosts } from '@/mocks/postDummy'
 
 interface GetPostsParams {
   page?: number
@@ -15,6 +18,35 @@ export const postApi = {
     params: GetPostsParams = {}
   ): Promise<ApiResponse<PageResponse<PostSummaryResponse>>> => {
     const { page = 0, size = 20, sort = 'createdAt,desc', memberId, search } = params
+
+    if (USE_MOCK) {
+      const allItems = generateMockPosts(100)
+
+      const filteredItems = search
+        ? allItems.filter(post => {
+            const query = search.toLowerCase()
+            return (
+              post.title.toLowerCase().includes(query) ||
+              post.member.nickname.toLowerCase().includes(query)
+            )
+          })
+        : allItems
+
+      const startIndex = page * size
+      const endIndex = startIndex + size
+
+      const pageItems = filteredItems.slice(startIndex, endIndex)
+
+      const pageResponse: PageResponse<PostSummaryResponse> = {
+        items: pageItems,
+        page,
+        size,
+        totalElements: filteredItems.length,
+        totalPages: Math.max(1, Math.ceil(filteredItems.length / size)),
+      }
+
+      return createSuccessResponse(pageResponse)
+    }
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -37,6 +69,11 @@ export const postApi = {
     postId: number,
     memberId?: number
   ): Promise<ApiResponse<PostResponse>> => {
+    if (USE_MOCK) {
+      const mockPost = generateMockPost(postId)
+      return createSuccessResponse(mockPost)
+    }
+
     const queryParams = memberId ? `?memberId=${memberId}` : ''
     return httpClient.get(`/api/v1/posts/${postId}${queryParams}`)
   },

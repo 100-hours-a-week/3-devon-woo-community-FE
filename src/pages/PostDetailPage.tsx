@@ -9,7 +9,6 @@ import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { postApi, commentApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { PostResponse, CommentResponse } from '@/types'
-import { USE_MOCK } from '@/config/env'
 import { formatDateLong } from '@/utils/formatters'
 import styles from './PostDetailPage.module.css'
 
@@ -43,93 +42,33 @@ export default function PostDetailPage() {
   const loadPost = async () => {
     setIsLoading(true)
     try {
-      if (!USE_MOCK && postId) {
+      if (postId) {
         const response = await postApi.getPostById(Number(postId))
         if (response.success && response.data) {
           setPost(response.data)
           setLikeCount(response.data.likeCount || 0)
           setIsLiked(response.data.isLiked || false)
+        } else {
+          setPost(null)
         }
-      } else {
-        loadMockPost()
       }
     } catch (error) {
       console.error('Failed to load post:', error)
-      loadMockPost()
+      setPost(null)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const loadMockPost = () => {
-    const mockMarkdown = `# 마크다운으로 작성된 샘플 포스트
-
-복잡한 에디터 없이 **간단한 마크다운**으로도 충분히 구성할 수 있습니다.
-
-## 1. 왜 마크다운인가?
-- 텍스트 기반
-- 버전 관리에 용이
-- 협업 툴과 높은 호환성
-
-> "텍스트는 코드다." 라는 말이 있듯이, 마크다운은 문서를 코드처럼 다루게 해 줍니다.
-
-### 코드 블록
-\`\`\`js
-function greet(name) {
-  return \`안녕하세요, \${name}님!\`;
-}
-\`\`\`
-
-### 이미지
-![Mock](https://via.placeholder.com/960x480/F5F7FB/111?text=Markdown+Preview)
-
----
-
-표준 HTML 태그와 섞여도 안전하게 렌더링되도록 파싱하고 있습니다.`
-
-    const mockPost: PostResponse = {
-      postId: Number(postId) || 1,
-      title: '마크다운 샘플 게시글',
-      content: mockMarkdown,
-      member: {
-        memberId: 1,
-        id: 1,
-        email: 'mock@example.com',
-        nickname: 'Mock Writer',
-        profileImage: 'https://via.placeholder.com/48',
-        handle: 'Tech Writer',
-        bio: '',
-        role: '',
-        company: '',
-        location: '',
-        primaryStack: [],
-        interests: [],
-        socialLinks: { github: '', website: '', linkedin: '', notion: '' },
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      imageUrl: 'https://via.placeholder.com/800x450/EEF2FF/4B5BDC?text=Markdown+Mock',
-      likeCount: 12,
-      viewCount: 123,
-      commentCount: 0,
-      isLiked: false,
-      tags: ['JavaScript', 'Markdown', 'Writing'],
-    }
-
-    setPost(mockPost)
-    setLikeCount(12)
-    setIsLiked(false)
-  }
-
   const loadRecommendedPosts = async () => {
     try {
-      if (!USE_MOCK && postId) {
+      if (postId) {
         const response = await postApi.getPosts({ page: 0, size: 3 })
         if (response.success && response.data) {
           const recommendations: RecommendedPost[] = response.data.items
-            .filter((p) => p.postId !== Number(postId))
+            .filter(p => p.postId !== Number(postId))
             .slice(0, 3)
-            .map((p) => ({
+            .map(p => ({
               id: p.postId,
               title: p.title,
               category: 'TECH INSIGHT',
@@ -137,28 +76,6 @@ function greet(name) {
             }))
           setRecommendedPosts(recommendations)
         }
-      } else {
-        const mockRecommended: RecommendedPost[] = [
-          {
-            id: 2,
-            title: 'React 성능 최적화 가이드',
-            category: 'TECH INSIGHT',
-            date: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            id: 3,
-            title: 'TypeScript 고급 타입 활용하기',
-            category: 'TECH INSIGHT',
-            date: new Date(Date.now() - 2 * 86400000).toISOString(),
-          },
-          {
-            id: 4,
-            title: 'Vite로 빠른 개발 환경 구축하기',
-            category: 'TECH INSIGHT',
-            date: new Date(Date.now() - 3 * 86400000).toISOString(),
-          },
-        ]
-        setRecommendedPosts(mockRecommended)
       }
     } catch (error) {
       console.error('Failed to load recommended posts:', error)
@@ -167,61 +84,11 @@ function greet(name) {
 
   const loadComments = async () => {
     try {
-      if (!USE_MOCK && postId) {
+      if (postId) {
         const response = await commentApi.getComments(Number(postId))
         if (response.success && response.data) {
           setComments(response.data.items)
         }
-      } else {
-        const mockComments: CommentResponse[] = [
-          {
-            commentId: 1,
-            postId: Number(postId),
-            content: '정말 유익한 글이네요! 마크다운으로 작성하니 훨씬 깔끔하고 관리하기 편한 것 같아요.',
-            member: {
-              memberId: 2,
-              id: 2,
-              email: 'user1@example.com',
-              nickname: 'CodeMaster',
-              profileImage:
-                'https://ui-avatars.com/api/?name=CodeMaster&background=667eea&color=fff&size=128',
-              handle: 'Frontend Developer',
-              bio: '',
-              role: 'Frontend Developer',
-              company: 'Tech Inc',
-              location: 'Seoul',
-              primaryStack: ['React', 'TypeScript'],
-              interests: ['Frontend'],
-              socialLinks: { github: '', website: '', linkedin: '', notion: '' },
-            },
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            commentId: 2,
-            postId: Number(postId),
-            content: '코드 블록 부분이 특히 마음에 드네요. 다음 프로젝트에 적용해봐야겠습니다!',
-            member: {
-              memberId: 3,
-              id: 3,
-              email: 'user2@example.com',
-              nickname: 'DevNinja',
-              profileImage:
-                'https://ui-avatars.com/api/?name=DevNinja&background=764ba2&color=fff&size=128',
-              handle: 'Backend Engineer',
-              bio: '',
-              role: 'Backend Engineer',
-              company: 'Startup Co',
-              location: 'Busan',
-              primaryStack: ['Node.js', 'Express'],
-              interests: ['Backend'],
-              socialLinks: { github: '', website: '', linkedin: '', notion: '' },
-            },
-            createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          },
-        ]
-        setComments(mockComments)
       }
     } catch (error) {
       console.error('Failed to load comments:', error)
@@ -237,14 +104,12 @@ function greet(name) {
     setIsLiked(newIsLiked)
     setLikeCount(newLikeCount)
 
-    if (!USE_MOCK) {
-      try {
-        await postApi.likePost(post.postId)
-      } catch (error) {
-        console.error('Failed to like post:', error)
-        setIsLiked(!newIsLiked)
-        setLikeCount(likeCount)
-      }
+    try {
+      await postApi.likePost(post.postId)
+    } catch (error) {
+      console.error('Failed to like post:', error)
+      setIsLiked(!newIsLiked)
+      setLikeCount(likeCount)
     }
   }
 
@@ -252,37 +117,9 @@ function greet(name) {
     if (!postId) return
 
     try {
-      if (!USE_MOCK) {
-        const response = await commentApi.createComment(Number(postId), { content: text })
-        if (response.success && response.data) {
-          setComments([...comments, response.data])
-        }
-      } else {
-        const mockComment: CommentResponse = {
-          commentId: comments.length + 1,
-          postId: Number(postId),
-          content: text,
-          member: user || {
-            memberId: 1,
-            id: 1,
-            email: 'current@example.com',
-            nickname: user?.nickname || 'Current User',
-            profileImage:
-              user?.profileImage ||
-              'https://ui-avatars.com/api/?name=User&background=667eea&color=fff&size=128',
-            handle: '',
-            bio: '',
-            role: '',
-            company: '',
-            location: '',
-            primaryStack: [],
-            interests: [],
-            socialLinks: { github: '', website: '', linkedin: '', notion: '' },
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-        setComments([...comments, mockComment])
+      const response = await commentApi.createComment(Number(postId), { content: text })
+      if (response.success && response.data) {
+        setComments([...comments, response.data])
       }
     } catch (error) {
       console.error('Failed to create comment:', error)
