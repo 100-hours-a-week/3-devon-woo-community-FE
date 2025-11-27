@@ -8,8 +8,12 @@
   background-color: #050515;
 }
 
+html {
+  overscroll-behavior-y: none;
+}
+
 body {
   min-height: 100vh;
   background: #050515;
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
