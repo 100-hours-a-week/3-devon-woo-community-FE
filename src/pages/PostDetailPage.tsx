@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import Header from '@/components/Header'
 import CommentList from '@/components/CommentList'
 import Footer from '@/components/Footer'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { postApi, commentApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { PostResponse, CommentResponse } from '@/types'
@@ -29,7 +30,6 @@ export default function PostDetailPage() {
   const [likeCount, setLikeCount] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
   const [recommendedPosts, setRecommendedPosts] = useState<RecommendedPost[]>([])
-  const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     if (postId) {
@@ -39,14 +39,6 @@ export default function PostDetailPage() {
     }
   }, [postId])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const loadPost = async () => {
     setIsLoading(true)
@@ -315,12 +307,6 @@ function greet(name) {
   }
 
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    })
-  }
 
   if (isLoading) {
     return (
@@ -418,21 +404,7 @@ function greet(name) {
         />
       </main>
 
-      <button
-        className={`${styles.scrollTopBtn} ${showScrollTop ? styles.visible : ''}`}
-        onClick={scrollToTop}
-        aria-label="맨 위로 이동"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M18 15l-6-6-6 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+      <ScrollToTopButton />
 
       <Footer />
     </div>

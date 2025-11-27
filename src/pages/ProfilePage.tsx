@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import ProfileCard from '@/components/ProfileCard'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { memberApi, postApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
@@ -47,7 +48,6 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [sort, setSort] = useState<'latest' | 'popular' | 'views'>('latest')
-  const [showScrollTop, setShowScrollTop] = useState(false)
 
   const isOwner = !memberId || (user && user.memberId === Number(memberId))
 
@@ -55,13 +55,6 @@ export default function ProfilePage() {
     loadProfileData()
   }, [memberId])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 200)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const loadProfileData = async () => {
     try {
@@ -198,9 +191,6 @@ export default function ProfilePage() {
   }
 
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
 
   if (isLoading) {
     return (
@@ -316,15 +306,7 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      <button
-        className={`${styles.scrollTopBtn} ${showScrollTop ? styles.visible : ''}`}
-        onClick={scrollToTop}
-        aria-label="맨 위로 이동"
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M18 15l-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      <ScrollToTopButton threshold={200} />
     </div>
   )
 }

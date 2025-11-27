@@ -1,0 +1,32 @@
+.emptyState {
+  padding: 60px 20px;
+  text-align: center;
+  color: #888;
+}
+
+.emptyStateIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyStateMessage {
+  font-size: 14px;
+  margin: 0 0 20px;
+  color: #888;
+}
+
+.emptyStateAction {
+  padding: 10px 24px;
+  background-color: #111;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.emptyStateAction:hover {
+  background-color: #000;
+}
