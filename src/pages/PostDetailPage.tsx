@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import Header from '@/components/Header'
 import CommentList from '@/components/CommentList'
+import Footer from '@/components/Footer'
 import { postApi, commentApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { PostResponse, CommentResponse } from '@/types'
@@ -438,6 +439,8 @@ function greet(name) {
           />
         </svg>
       </button>
+
+      <Footer />
     </div>
   )
 }

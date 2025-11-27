@@ -5,6 +5,10 @@
   background-color: #ffffff;
 }
 
+.postDetailPage main {
+  flex: 1;
+}
+
 .postDetailMain {
   max-width: 800px;
   margin: 0 auto;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import PostItem from '@/components/PostItem/PostItem'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import TopPostsList from '@/components/TopPostsList/TopPostsList'
@@ -309,6 +310,8 @@ export default function BlogListPage() {
           </Sidebar>
         </div>
       </main>
+
+      <Footer />
     </div>
   )
 }
