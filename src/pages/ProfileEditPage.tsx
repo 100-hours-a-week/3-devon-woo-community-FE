@@ -6,6 +6,8 @@ import { memberApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
 import { USE_MOCK } from '@/config/env'
+import { validateUrl } from '@/utils/validators'
+import { parseCommaSeparatedList } from '@/utils/formatters'
 import styles from './ProfileEditPage.module.css'
 
 const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile'
@@ -162,31 +164,27 @@ export default function ProfileEditPage() {
       newErrors.nickname = '닉네임을 입력해주세요.'
     }
 
-    if (githubUrl && !isValidUrl(githubUrl)) {
-      newErrors.github = '올바른 URL 형식이 아닙니다.'
+    const githubValidation = validateUrl(githubUrl)
+    if (!githubValidation.isValid) {
+      newErrors.github = githubValidation.error
     }
-    if (websiteUrl && !isValidUrl(websiteUrl)) {
-      newErrors.website = '올바른 URL 형식이 아닙니다.'
+    const websiteValidation = validateUrl(websiteUrl)
+    if (!websiteValidation.isValid) {
+      newErrors.website = websiteValidation.error
     }
-    if (linkedinUrl && !isValidUrl(linkedinUrl)) {
-      newErrors.linkedin = '올바른 URL 형식이 아닙니다.'
+    const linkedinValidation = validateUrl(linkedinUrl)
+    if (!linkedinValidation.isValid) {
+      newErrors.linkedin = linkedinValidation.error
     }
-    if (notionUrl && !isValidUrl(notionUrl)) {
-      newErrors.notion = '올바른 URL 형식이 아닙니다.'
+    const notionValidation = validateUrl(notionUrl)
+    if (!notionValidation.isValid) {
+      newErrors.notion = notionValidation.error
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
-  }
 
   const handleSave = async () => {
     if (!validateForm()) {
@@ -196,15 +194,9 @@ export default function ProfileEditPage() {
 
     setIsSaving(true)
     try {
-      const primaryStack = primaryStackText
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s)
+      const primaryStack = parseCommaSeparatedList(primaryStackText)
 
-      const interests = interestsText
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s)
+      const interests = parseCommaSeparatedList(interestsText)
 
       const updateData = {
         nickname: nickname.trim(),
@@ -282,14 +274,8 @@ export default function ProfileEditPage() {
     )
   }
 
-  const primaryStack = primaryStackText
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s)
-  const interests = interestsText
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s)
+  const primaryStack = parseCommaSeparatedList(primaryStackText)
+  const interests = parseCommaSeparatedList(interestsText)
 
   const previewProfile: MemberResponse = {
     memberId: user?.memberId || 1,

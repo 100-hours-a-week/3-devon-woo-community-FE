@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth'
 import Header from '@/components/Header'
 import ProfileImageUploader from '@/components/ProfileImageUploader'
+import { validateEmail, validatePassword, validatePasswordConfirm, validateNickname } from '@/utils/validators'
+import { parseCommaSeparatedList } from '@/utils/formatters'
 import styles from './SignupPage.module.css'
 
 const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS']
@@ -40,35 +42,6 @@ export default function SignupPage() {
   const { signup } = useAuth()
   const navigate = useNavigate()
 
-  const validateEmail = (email: string) => {
-    if (!email.trim()) return '이메일을 입력해주세요.'
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) return '올바른 이메일 형식이 아닙니다.'
-    return ''
-  }
-
-  const validatePassword = (password: string) => {
-    if (!password) return '비밀번호를 입력해주세요.'
-    if (password.length < 8 || password.length > 20) {
-      return '비밀번호는 8자 이상, 20자 이하이어야 합니다.'
-    }
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return '비밀번호는 영문과 숫자를 포함해야 합니다.'
-    }
-    return ''
-  }
-
-  const validatePasswordConfirm = (password: string, passwordConfirm: string) => {
-    if (!passwordConfirm) return '비밀번호를 한번 더 입력해주세요.'
-    if (password !== passwordConfirm) return '비밀번호가 일치하지 않습니다.'
-    return ''
-  }
-
-  const validateNickname = (nickname: string) => {
-    if (!nickname.trim()) return '닉네임을 입력해주세요.'
-    if (nickname.length > 30) return '닉네임은 30자 이하이어야 합니다.'
-    return ''
-  }
 
   const isAccountFormValid = () => {
     return (
@@ -86,10 +59,10 @@ export default function SignupPage() {
   const handleAccountSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const emailErr = validateEmail(email)
-    const passwordErr = validatePassword(password)
-    const passwordConfirmErr = validatePasswordConfirm(password, passwordConfirm)
-    const nicknameErr = validateNickname(nickname)
+    const emailErr = validateEmail(email).error
+    const passwordErr = validatePassword(password).error
+    const passwordConfirmErr = validatePasswordConfirm(password, passwordConfirm).error
+    const nicknameErr = validateNickname(nickname).error
 
     setEmailError(emailErr)
     setPasswordError(passwordErr)
@@ -101,13 +74,6 @@ export default function SignupPage() {
     }
   }
 
-  const parseList = (text: string, fallback: string[] = []) => {
-    const parsed = text
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-    return parsed.length ? parsed : fallback
-  }
 
   const completeSignup = async (skipProfile: boolean) => {
     if (isSubmitting) return
@@ -120,8 +86,8 @@ export default function SignupPage() {
         role: role.trim(),
         company: company.trim(),
         location: location.trim(),
-        primaryStack: parseList(primaryStackText, DEFAULT_PRIMARY_STACK),
-        interests: parseList(interestsText, DEFAULT_INTERESTS),
+        primaryStack: parseCommaSeparatedList(primaryStackText, DEFAULT_PRIMARY_STACK),
+        interests: parseCommaSeparatedList(interestsText, DEFAULT_INTERESTS),
         socialLinks: {
           github: socialLinks.github.trim(),
           website: socialLinks.website.trim(),
@@ -194,7 +160,7 @@ export default function SignupPage() {
                         setEmail(e.target.value)
                         setEmailError('')
                       }}
-                      onBlur={() => setEmailError(validateEmail(email))}
+                      onBlur={() => setEmailError(validateEmail(email).error)}
                     />
                     <p className={`${styles.helperText} ${emailError ? styles.show : ''}`}>
                       {emailError || '*올바른 이메일 주소를 입력해주세요.'}
@@ -214,7 +180,7 @@ export default function SignupPage() {
                         setNickname(e.target.value)
                         setNicknameError('')
                       }}
-                      onBlur={() => setNicknameError(validateNickname(nickname))}
+                      onBlur={() => setNicknameError(validateNickname(nickname).error)}
                     />
                     <p className={`${styles.helperText} ${nicknameError ? styles.show : ''}`}>
                       {nicknameError || '*닉네임을 입력해주세요.'}
@@ -233,7 +199,7 @@ export default function SignupPage() {
                         setPassword(e.target.value)
                         setPasswordError('')
                       }}
-                      onBlur={() => setPasswordError(validatePassword(password))}
+                      onBlur={() => setPasswordError(validatePassword(password).error)}
                     />
                     <p className={`${styles.helperText} ${passwordError ? styles.show : ''}`}>
                       {passwordError || '*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다.'}
@@ -252,7 +218,7 @@ export default function SignupPage() {
                         setPasswordConfirm(e.target.value)
                         setPasswordConfirmError('')
                       }}
-                      onBlur={() => setPasswordConfirmError(validatePasswordConfirm(password, passwordConfirm))}
+                      onBlur={() => setPasswordConfirmError(validatePasswordConfirm(password, passwordConfirm).error)}
                     />
                     <p className={`${styles.helperText} ${passwordConfirmError ? styles.show : ''}`}>
                       {passwordConfirmError || '*비밀번호를 한번 더 입력해주세요.'}

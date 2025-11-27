@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import type { PostSummaryResponse } from '@/types/post'
+import { formatDateDot } from '@/utils/formatters'
 import styles from './PostItem.module.css'
 
 interface PostItemProps {
@@ -16,17 +17,6 @@ export default function PostItem({ post, postNumber }: PostItemProps) {
     navigate(`/posts/${post.postId}`)
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}.${month}.${day}`
-    } catch {
-      return dateString
-    }
-  }
 
   const generateExcerpt = (title: string) => {
     return '네이버 사내 기술 교류 행사인 NAVER ENGINEERING DAY 2025(10월)에서 발표되었던 세션을 공개합니다. 발표 내용과 기술적 인사이트를 공유하며, 실무에 적용할 수 있는 다양한 팁과 노하우를 소개합니다.'
@@ -41,7 +31,7 @@ export default function PostItem({ post, postNumber }: PostItemProps) {
           {post.summary || generateExcerpt(post.title)}
         </p>
         <div className={styles.postMeta}>
-          <span className={styles.postDate}>{formatDate(post.createdAt)}</span>
+          <span className={styles.postDate}>{formatDateDot(post.createdAt)}</span>
           <span className={styles.postDivider}>·</span>
           <span className={styles.postAuthor}>{post.member.nickname}</span>
           <span className={styles.postDivider}>·</span>

@@ -6,6 +6,7 @@ import { memberApi, postApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
 import { USE_MOCK } from '@/config/env'
+import { formatDateDot } from '@/utils/formatters'
 import styles from './ProfilePage.module.css'
 
 const POSTS_PER_PAGE = 5
@@ -196,14 +197,6 @@ export default function ProfilePage() {
     return pages
   }
 
-  const formatDate = (isoString: string) => {
-    try {
-      const date = new Date(isoString)
-      return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
-    } catch {
-      return isoString
-    }
-  }
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -282,7 +275,7 @@ export default function ProfilePage() {
                   onClick={() => navigate(`/posts/${post.id}`)}
                 >
                   <h3 className={styles.postCardTitle}>{post.title}</h3>
-                  <div className={styles.postCardDate}>{formatDate(post.date)}</div>
+                  <div className={styles.postCardDate}>{formatDateDot(post.date)}</div>
                   <p className={styles.postCardExcerpt}>{post.excerpt}</p>
                 </article>
               ))}

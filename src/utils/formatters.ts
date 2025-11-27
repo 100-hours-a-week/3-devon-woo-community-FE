@@ -33,3 +33,33 @@ export function truncateText(text: string, maxLength: number = 26): string {
   }
   return text
 }
+
+export function formatDateDot(dateValue: string | Date): string {
+  try {
+    const date = new Date(dateValue)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
+  } catch {
+    return typeof dateValue === 'string' ? dateValue : ''
+  }
+}
+
+export function formatDateLong(dateValue: string | Date): string {
+  const date = new Date(dateValue)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}년 ${month}월 ${day}일`
+}
+
+export function parseCommaSeparatedList(text: string, fallback: string[] = []): string[] {
+  if (!text || !text.trim()) {
+    return fallback
+  }
+  return text
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item.length > 0)
+}
