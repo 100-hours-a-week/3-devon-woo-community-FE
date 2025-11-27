@@ -1,21 +1,12 @@
-import './App.css';
+import { AuthProvider } from '@/features/auth'
+import Router from '@/app/Router'
 
 function App() {
-  const handleClick = () => {
-    window.alert('React + TypeScript boilerplate is running!');
-  };
-
   return (
-    <main className="app">
-      <div className="card">
-        <h1>React + TypeScript</h1>
-        <p>Vite + React + TypeScript ready to go.</p>
-        <button type="button" onClick={handleClick}>
-          Click me
-        </button>
-      </div>
-    </main>
-  );
+    <AuthProvider>
+      <Router />
+    </AuthProvider>
+  )
 }
 
-export default App;
+export default App
