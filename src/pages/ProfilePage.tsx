@@ -7,27 +7,27 @@ import Pagination from '@/components/Pagination'
 import { memberApi, postApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
-import { USE_MOCK } from '@/config/env'
 import { formatDateDot } from '@/utils/formatters'
 import styles from './ProfilePage.module.css'
 
 const POSTS_PER_PAGE = 5
-const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile'
+const DEFAULT_PROFILE_IMAGE =
+  'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=160'
 const DEFAULT_DEVELOPER_PROFILE = {
-  nickname: '홍길동',
-  handle: 'Backend Developer / Java Enthusiast',
-  bio: 'MSA 기반 백엔드 아키텍처와 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다.',
-  role: 'Backend Engineer',
-  company: 'Codestate Labs',
+  nickname: 'SH Woo',
+  handle: 'Fullstack Developer / TypeScript Enthusiast',
+  bio: '프론트엔드와 백엔드를 넘나들며 커뮤니티 서비스를 만드는 개발자 SH Woo 입니다.',
+  role: 'Fullstack Engineer',
+  company: 'Dev Community',
   location: 'Seoul, Korea'
 }
-const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS']
-const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화']
+const DEFAULT_PRIMARY_STACK = ['TypeScript', 'React', 'Node.js', 'Vite']
+const DEFAULT_INTERESTS = ['Developer Experience', 'Frontend Architecture', 'Open Source']
 const DEFAULT_SOCIAL_LINKS = {
-  github: 'https://github.com/codestate-dev',
-  website: 'https://blog.codestate.dev',
-  linkedin: 'https://www.linkedin.com/in/codestate',
-  notion: 'https://codestate.notion.site/portfolio'
+  github: 'https://github.com/sh-woo',
+  website: 'https://shwoo.dev',
+  linkedin: 'https://www.linkedin.com/in/sh-woo',
+  notion: 'https://shwoo.notion.site'
 }
 
 interface Post {
@@ -61,10 +61,10 @@ export default function ProfilePage() {
     try {
       const targetMemberId = memberId ? Number(memberId) : user?.memberId
 
-      if (!USE_MOCK && targetMemberId) {
+      if (targetMemberId) {
         const [profileResponse, postsResponse] = await Promise.all([
           memberApi.getProfile(targetMemberId),
-          postApi.getPosts({ page: 0, size: 6, memberId: targetMemberId })
+          postApi.getPosts({ page: 0, size: 6, memberId: targetMemberId }),
         ])
 
         if (profileResponse.success && profileResponse.data) {
@@ -74,33 +74,8 @@ export default function ProfilePage() {
           setPosts(normalizePosts(postsResponse.data.items))
         }
       } else {
-        const mockProfile: MemberResponse = {
-          memberId: targetMemberId || 1,
-          id: targetMemberId || 1,
-          email: 'dev@example.com',
-          nickname: DEFAULT_DEVELOPER_PROFILE.nickname,
-          profileImage: DEFAULT_PROFILE_IMAGE,
-          handle: DEFAULT_DEVELOPER_PROFILE.handle,
-          bio: DEFAULT_DEVELOPER_PROFILE.bio,
-          role: DEFAULT_DEVELOPER_PROFILE.role,
-          company: DEFAULT_DEVELOPER_PROFILE.company,
-          location: DEFAULT_DEVELOPER_PROFILE.location,
-          primaryStack: DEFAULT_PRIMARY_STACK,
-          interests: DEFAULT_INTERESTS,
-          socialLinks: DEFAULT_SOCIAL_LINKS,
-        }
-        setProfile(mockProfile)
-
-        const mockPosts: Post[] = Array.from({ length: 5 }, (_, idx) => ({
-          id: idx + 1,
-          title: `새로운 기술 노트 ${idx + 1}`,
-          excerpt: '아직 게시글이 없어요. 첫 번째 글을 작성해보세요.',
-          date: new Date(Date.now() - idx * 86400000).toISOString(),
-          likes: 0,
-          views: 0,
-          comments: 0
-        }))
-        setPosts(mockPosts)
+        setProfile(null)
+        setPosts([])
       }
     } catch (error) {
       console.error('Failed to load profile data:', error)

@@ -11,4 +11,5 @@
 body {
   min-height: 100vh;
   background: #050515;
+  overscroll-behavior: none;
 }

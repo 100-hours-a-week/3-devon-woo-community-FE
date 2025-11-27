@@ -699,21 +699,22 @@ Transactional Outbox 패턴을 통해 메시지 발행의 신뢰성을 크게 �
 const baseMember = {
   memberId: 1,
   id: 1,
-  email: 'developer@example.com',
-  nickname: '테크 블로거',
-  profileImage: 'https://ui-avatars.com/api/?name=TechBlogger&background=667eea&color=fff&size=128',
-  handle: 'Backend Engineer',
-  bio: '기술 블로그를 운영하는 백엔드 엔지니어입니다.',
-  role: 'Backend Engineer',
-  company: 'Tech Corp',
-  location: 'Seoul',
-  primaryStack: ['JavaScript', 'TypeScript', 'Node.js'],
-  interests: ['Web Development', 'Backend'],
+  email: 'shwoo@example.com',
+  nickname: 'SH Woo',
+  profileImage:
+    'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=128',
+  handle: 'Fullstack Developer / TypeScript Enthusiast',
+  bio: '프론트엔드와 백엔드를 넘나들며 커뮤니티 서비스를 만드는 개발자 SH Woo 입니다.',
+  role: 'Fullstack Engineer',
+  company: 'Dev Community',
+  location: 'Seoul, Korea',
+  primaryStack: ['TypeScript', 'React', 'Node.js', 'Vite'],
+  interests: ['Developer Experience', 'Frontend Architecture', 'Open Source'],
   socialLinks: {
-    github: 'https://github.com/techblogger',
-    website: 'https://techblog.com',
-    linkedin: '',
-    notion: '',
+    github: 'https://github.com/sh-woo',
+    website: 'https://shwoo.dev',
+    linkedin: 'https://www.linkedin.com/in/sh-woo',
+    notion: 'https://shwoo.notion.site',
   },
 }
 
@@ -726,8 +727,9 @@ export const generateMockPosts = (count: number = 20): PostSummaryResponse[] => 
     member: {
       ...baseMember,
       memberId: (i % 3) + 1,
-      nickname: ['테크 블로거', 'DevUser', 'Code Master'][i % 3],
-      profileImage: `https://ui-avatars.com/api/?name=${['TechBlogger', 'DevUser', 'CodeMaster'][i % 3]}&background=${['667eea', 'f093fb', '4facfe'][i % 3]}&color=fff&size=128`,
+      nickname: 'SH Woo',
+      profileImage:
+        'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=128',
     },
     createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
     viewCount: Math.floor(Math.random() * 5000) + 100,
@@ -748,7 +750,7 @@ export const generateMockPost = (id: number): PostResponse => {
     member: {
       ...baseMember,
       memberId: (id % 3) + 1,
-      nickname: ['테크 블로거', 'DevUser', 'Code Master'][id % 3],
+      nickname: 'SH Woo',
     },
     createdAt: new Date(Date.now() - id * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - id * 24 * 60 * 60 * 1000).toISOString(),

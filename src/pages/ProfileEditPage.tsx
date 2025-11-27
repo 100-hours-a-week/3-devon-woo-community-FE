@@ -6,14 +6,14 @@ import FormField from '@/components/FormField'
 import { memberApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
-import { USE_MOCK } from '@/config/env'
 import { validateUrl } from '@/utils/validators'
 import { parseCommaSeparatedList } from '@/utils/formatters'
 import styles from './ProfileEditPage.module.css'
 
-const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile'
-const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS']
-const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화']
+const DEFAULT_PROFILE_IMAGE =
+  'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=160'
+const DEFAULT_PRIMARY_STACK = ['TypeScript', 'React', 'Node.js', 'Vite']
+const DEFAULT_INTERESTS = ['Developer Experience', 'Frontend Architecture', 'Open Source']
 
 export default function ProfileEditPage() {
   const navigate = useNavigate()
@@ -100,7 +100,7 @@ export default function ProfileEditPage() {
 
   const loadProfile = async () => {
     try {
-      if (!USE_MOCK && user?.memberId) {
+      if (user?.memberId) {
         const response = await memberApi.getProfile(user.memberId)
         if (response.success && response.data) {
           const profile = response.data
@@ -135,18 +135,19 @@ export default function ProfileEditPage() {
           })
         }
       } else {
-        setNickname('홍길동')
-        setHandle('Backend Developer / Java Enthusiast')
-        setBio('MSA 기반 백엔드 아키텍처와 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다.')
-        setRole('Backend Engineer')
-        setCompany('Codestate Labs')
+        setProfileImage(DEFAULT_PROFILE_IMAGE)
+        setNickname('SH Woo')
+        setHandle('Fullstack Developer / TypeScript Enthusiast')
+        setBio('프론트엔드와 백엔드를 넘나들며 커뮤니티 서비스를 만드는 개발자 SH Woo 입니다.')
+        setRole('Fullstack Engineer')
+        setCompany('Dev Community')
         setLocation('Seoul, Korea')
         setPrimaryStackText(DEFAULT_PRIMARY_STACK.join(', '))
         setInterestsText(DEFAULT_INTERESTS.join(', '))
-        setGithubUrl('https://github.com/codestate-dev')
-        setWebsiteUrl('https://blog.codestate.dev')
-        setLinkedinUrl('https://www.linkedin.com/in/codestate')
-        setNotionUrl('https://codestate.notion.site/portfolio')
+        setGithubUrl('https://github.com/sh-woo')
+        setWebsiteUrl('https://shwoo.dev')
+        setLinkedinUrl('https://www.linkedin.com/in/sh-woo')
+        setNotionUrl('https://shwoo.notion.site')
 
         originalDataRef.current = getCurrentFormData()
       }
