@@ -1,107 +1,221 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
-import BlogCard from '@/components/BlogCard'
+import ProfileCard from '@/components/ProfileCard'
 import { memberApi, postApi } from '@/api'
 import { useAuth } from '@/features/auth'
-import type { MemberResponse, PostSummaryResponse } from '@/types'
+import type { MemberResponse } from '@/types'
 import { USE_MOCK } from '@/config/env'
 import styles from './ProfilePage.module.css'
+
+const POSTS_PER_PAGE = 5
+const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/160?text=Profile'
+const DEFAULT_DEVELOPER_PROFILE = {
+  nickname: '홍길동',
+  handle: 'Backend Developer / Java Enthusiast',
+  bio: 'MSA 기반 백엔드 아키텍처와 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다.',
+  role: 'Backend Engineer',
+  company: 'Codestate Labs',
+  location: 'Seoul, Korea'
+}
+const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS']
+const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화']
+const DEFAULT_SOCIAL_LINKS = {
+  github: 'https://github.com/codestate-dev',
+  website: 'https://blog.codestate.dev',
+  linkedin: 'https://www.linkedin.com/in/codestate',
+  notion: 'https://codestate.notion.site/portfolio'
+}
+
+interface Post {
+  id: number
+  title: string
+  excerpt: string
+  date: string
+  likes: number
+  views: number
+  comments: number
+}
 
 export default function ProfilePage() {
   const { memberId } = useParams<{ memberId?: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [profile, setProfile] = useState<MemberResponse | null>(null)
-  const [posts, setPosts] = useState<PostSummaryResponse[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [sort, setSort] = useState<'latest' | 'popular' | 'views'>('latest')
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   const isOwner = !memberId || (user && user.memberId === Number(memberId))
 
   useEffect(() => {
-    loadProfile()
-    loadPosts()
+    loadProfileData()
   }, [memberId])
 
-  const loadProfile = async () => {
-    if (!USE_MOCK) {
-      try {
-        const response = await memberApi.getProfile(
-          memberId ? Number(memberId) : undefined
-        )
-        if (response.success && response.data) {
-          setProfile(response.data)
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const loadProfileData = async () => {
+    try {
+      const targetMemberId = memberId ? Number(memberId) : user?.memberId
+
+      if (!USE_MOCK && targetMemberId) {
+        const [profileResponse, postsResponse] = await Promise.all([
+          memberApi.getProfile(targetMemberId),
+          postApi.getPosts({ page: 0, size: 6, memberId: targetMemberId })
+        ])
+
+        if (profileResponse.success && profileResponse.data) {
+          setProfile(normalizeProfile(profileResponse.data))
         }
-      } catch (error) {
-        console.error('Failed to load profile:', error)
-      } finally {
-        setIsLoading(false)
+        if (postsResponse.success && postsResponse.data) {
+          setPosts(normalizePosts(postsResponse.data.items))
+        }
+      } else {
+        const mockProfile: MemberResponse = {
+          memberId: targetMemberId || 1,
+          id: targetMemberId || 1,
+          email: 'dev@example.com',
+          nickname: DEFAULT_DEVELOPER_PROFILE.nickname,
+          profileImage: DEFAULT_PROFILE_IMAGE,
+          handle: DEFAULT_DEVELOPER_PROFILE.handle,
+          bio: DEFAULT_DEVELOPER_PROFILE.bio,
+          role: DEFAULT_DEVELOPER_PROFILE.role,
+          company: DEFAULT_DEVELOPER_PROFILE.company,
+          location: DEFAULT_DEVELOPER_PROFILE.location,
+          primaryStack: DEFAULT_PRIMARY_STACK,
+          interests: DEFAULT_INTERESTS,
+          socialLinks: DEFAULT_SOCIAL_LINKS,
+        }
+        setProfile(mockProfile)
+
+        const mockPosts: Post[] = Array.from({ length: 5 }, (_, idx) => ({
+          id: idx + 1,
+          title: `새로운 기술 노트 ${idx + 1}`,
+          excerpt: '아직 게시글이 없어요. 첫 번째 글을 작성해보세요.',
+          date: new Date(Date.now() - idx * 86400000).toISOString(),
+          likes: 0,
+          views: 0,
+          comments: 0
+        }))
+        setPosts(mockPosts)
       }
-    } else {
-      const mockProfile: MemberResponse = {
-        memberId: Number(memberId) || user?.memberId || 1,
-        id: Number(memberId) || user?.id || 1,
-        email: 'dev@example.com',
-        nickname: user?.nickname || 'DevUser',
-        profileImage:
-          user?.profileImage ||
-          'https://ui-avatars.com/api/?name=DevUser&background=667eea&color=fff&size=160',
-        handle: 'Backend Engineer / Tech Enthusiast',
-        bio: 'MSA 기반 백엔드 아키텍처와 대규모 트래픽 대응 경험이 있는 개발자입니다.',
-        role: 'Backend Engineer',
-        company: 'Tech Corp',
-        location: 'Seoul, Korea',
-        primaryStack: ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS'],
-        interests: ['서버 아키텍처', '대규모 트래픽 처리', 'DevOps'],
-        socialLinks: {
-          github: 'https://github.com/devuser',
-          website: 'https://blog.devuser.com',
-          linkedin: 'https://linkedin.com/in/devuser',
-          notion: 'https://notion.so/devuser',
-        },
-      }
-      setProfile(mockProfile)
+    } catch (error) {
+      console.error('Failed to load profile data:', error)
+    } finally {
       setIsLoading(false)
     }
   }
 
-  const loadPosts = async () => {
-    const targetMemberId = memberId ? Number(memberId) : user?.memberId
-
-    if (!USE_MOCK && targetMemberId) {
-      try {
-        const response = await postApi.getPosts({
-          memberId: targetMemberId,
-          page: 0,
-          size: 20,
-        })
-        if (response.success && response.data) {
-          setPosts(response.data.items)
-        }
-      } catch (error) {
-        console.error('Failed to load posts:', error)
+  const normalizeProfile = (data: any): MemberResponse => {
+    return {
+      ...data,
+      primaryStack: data.primaryStack?.length ? data.primaryStack : DEFAULT_PRIMARY_STACK,
+      interests: data.interests?.length ? data.interests : DEFAULT_INTERESTS,
+      socialLinks: {
+        github: data.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
+        website: data.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
+        linkedin: data.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
+        notion: data.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion
       }
-    } else {
-      const mockPosts: PostSummaryResponse[] = Array.from({ length: 5 }, (_, i) => ({
-        postId: i + 1,
-        title: `Sample Post ${i + 1}`,
-        summary: 'This is a sample post summary.',
-        thumbnail: `https://picsum.photos/seed/profile${i}/800/400`,
-        member: profile || ({} as any),
-        createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-        viewCount: Math.floor(Math.random() * 1000),
-        likeCount: Math.floor(Math.random() * 100),
-        commentCount: Math.floor(Math.random() * 50),
-      }))
-      setPosts(mockPosts)
     }
+  }
+
+  const normalizePosts = (items: any[]): Post[] => {
+    if (!items.length) {
+      return Array.from({ length: 5 }, (_, idx) => ({
+        id: idx + 1,
+        title: `새로운 기술 노트 ${idx + 1}`,
+        excerpt: '아직 게시글이 없어요. 첫 번째 글을 작성해보세요.',
+        date: new Date(Date.now() - idx * 86400000).toISOString(),
+        likes: 0,
+        views: 0,
+        comments: 0
+      }))
+    }
+
+    return items.map((post) => ({
+      id: post.postId,
+      title: post.title,
+      excerpt: `${post.title}에 대한 생각을 정리했습니다.`,
+      date: post.createdAt,
+      likes: post.likeCount || 0,
+      views: post.viewCount || 0,
+      comments: post.commentCount || 0
+    }))
+  }
+
+  const getProcessedPosts = () => {
+    const sorted = [...posts]
+    if (sort === 'latest') {
+      return sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    }
+    if (sort === 'popular') {
+      return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    }
+    if (sort === 'views') {
+      return sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
+    }
+    return sorted
+  }
+
+  const getPaginatedPosts = () => {
+    const processed = getProcessedPosts()
+    const start = (currentPage - 1) * POSTS_PER_PAGE
+    return processed.slice(start, start + POSTS_PER_PAGE)
+  }
+
+  const getTotalPages = () => {
+    const total = getProcessedPosts().length || 1
+    return Math.max(1, Math.ceil(total / POSTS_PER_PAGE))
+  }
+
+  const getPaginationButtons = () => {
+    const totalPages = getTotalPages()
+    const maxVisible = 5
+    const pages: number[] = []
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+    let end = Math.min(totalPages, start + maxVisible - 1)
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+
+    for (let page = start; page <= end; page++) {
+      pages.push(page)
+    }
+
+    return pages
+  }
+
+  const formatDate = (isoString: string) => {
+    try {
+      const date = new Date(isoString)
+      return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+    } catch {
+      return isoString
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (isLoading) {
     return (
       <div className={styles.profilePage}>
         <Header />
-        <div className={styles.loading}>프로필을 불러오는 중...</div>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner} />
+        </div>
       </div>
     )
   }
@@ -110,150 +224,114 @@ export default function ProfilePage() {
     return (
       <div className={styles.profilePage}>
         <Header />
-        <div className={styles.loading}>프로필을 찾을 수 없습니다.</div>
+        <div className={styles.emptyState}>프로필을 찾을 수 없습니다.</div>
       </div>
     )
   }
+
+  const paginatedPosts = getPaginatedPosts()
+  const totalPages = getTotalPages()
 
   return (
     <div className={styles.profilePage}>
       <Header />
 
-      <main className={styles.main}>
-        <div className={styles.container}>
-          <div className={styles.profileCard}>
-            <div className={styles.profileHeader}>
-              <img
-                src={profile.profileImage}
-                alt={profile.nickname}
-                className={styles.profileImage}
-              />
-              <div className={styles.profileInfo}>
-                <h1 className={styles.nickname}>{profile.nickname}</h1>
-                {profile.handle && <p className={styles.handle}>{profile.handle}</p>}
-                {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
-              </div>
-              {isOwner && (
-                <Link to="/profile/edit" className={styles.editBtn}>
-                  프로필 수정
-                </Link>
-              )}
+      <div className={styles.mainContainer}>
+        <ProfileCard profile={profile} isOwner={isOwner} />
+
+        <section className={styles.postsSection}>
+          <div className={styles.postsHeader}>
+            <h2>기술 블로그</h2>
+            <div className={styles.sortOptions}>
+              <button
+                className={`${styles.sortBtn} ${sort === 'latest' ? styles.active : ''}`}
+                onClick={() => {
+                  setSort('latest')
+                  setCurrentPage(1)
+                }}
+              >
+                최신순
+              </button>
+              <button
+                className={`${styles.sortBtn} ${sort === 'popular' ? styles.active : ''}`}
+                onClick={() => {
+                  setSort('popular')
+                  setCurrentPage(1)
+                }}
+              >
+                인기순
+              </button>
+              <button
+                className={`${styles.sortBtn} ${sort === 'views' ? styles.active : ''}`}
+                onClick={() => {
+                  setSort('views')
+                  setCurrentPage(1)
+                }}
+              >
+                조회순
+              </button>
             </div>
-
-            <div className={styles.profileDetails}>
-              {profile.company && (
-                <div className={styles.detailItem}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M2 14h12M3 14V4h4V2h2v2h4v10M6 7h1M6 10h1M9 7h1M9 10h1"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span>{profile.company}</span>
-                </div>
-              )}
-              {profile.location && (
-                <div className={styles.detailItem}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M8 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    />
-                    <path
-                      d="M8 14s-5-4-5-8a5 5 0 0 1 10 0c0 4-5 8-5 8z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>{profile.location}</span>
-                </div>
-              )}
-            </div>
-
-            {profile.primaryStack && profile.primaryStack.length > 0 && (
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>주요 기술 스택</h3>
-                <div className={styles.tags}>
-                  {profile.primaryStack.map(tech => (
-                    <span key={tech} className={styles.tag}>
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.interests && profile.interests.length > 0 && (
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>관심 분야</h3>
-                <div className={styles.tags}>
-                  {profile.interests.map(interest => (
-                    <span key={interest} className={styles.tag}>
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {profile.socialLinks && (
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>소셜 링크</h3>
-                <div className={styles.socialLinks}>
-                  {profile.socialLinks.github && (
-                    <a
-                      href={profile.socialLinks.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialLink}
-                    >
-                      GitHub
-                    </a>
-                  )}
-                  {profile.socialLinks.website && (
-                    <a
-                      href={profile.socialLinks.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialLink}
-                    >
-                      Website
-                    </a>
-                  )}
-                  {profile.socialLinks.linkedin && (
-                    <a
-                      href={profile.socialLinks.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialLink}
-                    >
-                      LinkedIn
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className={styles.postsSection}>
-            <h2 className={styles.postsTitle}>작성한 글</h2>
-            {posts.length > 0 ? (
-              <div className={styles.postsGrid}>
-                {posts.map(post => (
-                  <BlogCard key={post.postId} post={post} />
+          {paginatedPosts.length > 0 ? (
+            <div className={styles.postsList}>
+              {paginatedPosts.map((post) => (
+                <article
+                  key={post.id}
+                  className={styles.postCard}
+                  onClick={() => navigate(`/posts/${post.id}`)}
+                >
+                  <h3 className={styles.postCardTitle}>{post.title}</h3>
+                  <div className={styles.postCardDate}>{formatDate(post.date)}</div>
+                  <p className={styles.postCardExcerpt}>{post.excerpt}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>게시글이 없습니다.</div>
+          )}
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.paginationBtn}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                &lt;
+              </button>
+              <div className={styles.paginationNumbers}>
+                {getPaginationButtons().map(page => (
+                  <button
+                    key={page}
+                    className={`${styles.paginationNumber} ${page === currentPage ? styles.active : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
                 ))}
               </div>
-            ) : (
-              <div className={styles.emptyState}>작성한 글이 없습니다.</div>
-            )}
-          </div>
-        </div>
-      </main>
+              <button
+                className={styles.paginationBtn}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                &gt;
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <button
+        className={`${styles.scrollTopBtn} ${showScrollTop ? styles.visible : ''}`}
+        onClick={scrollToTop}
+        aria-label="맨 위로 이동"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M18 15l-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
     </div>
   )
 }
