@@ -15,8 +15,8 @@ export const authApi = {
     return httpClient.post('/auth/logout')
   },
 
-  refresh: async (refreshToken: string): Promise<ApiResponse<{ accessToken: string }>> => {
-    return httpClient.post('/auth/refresh', { refreshToken })
+  refresh: async (): Promise<ApiResponse<{ accessToken: string }>> => {
+    return httpClient.post('/auth/refresh', {}, { withCredentials: true })
   },
 
   checkEmail: async (email: string): Promise<ApiResponse<{ available: boolean }>> => {

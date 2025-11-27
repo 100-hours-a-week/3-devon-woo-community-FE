@@ -67,33 +67,21 @@ class HttpClient {
     return localStorage.getItem('accessToken')
   }
 
-  private getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken')
-  }
-
   setAccessToken(token: string) {
     localStorage.setItem('accessToken', token)
   }
 
-  setRefreshToken(token: string) {
-    localStorage.setItem('refreshToken', token)
-  }
-
   clearTokens() {
     localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
   }
 
   private async refreshAccessToken(): Promise<string | null> {
-    const refreshToken = this.getRefreshToken()
-    if (!refreshToken) {
-      return null
-    }
-
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-        refreshToken,
-      })
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      )
 
       const { accessToken } = response.data.data
       this.setAccessToken(accessToken)

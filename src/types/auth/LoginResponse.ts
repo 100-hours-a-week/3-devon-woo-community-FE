@@ -1,7 +1,4 @@
-import { MemberResponse } from '@/types/member'
-
 export interface LoginResponse {
+  userId: number
   accessToken: string
-  refreshToken: string
-  member: MemberResponse
 }

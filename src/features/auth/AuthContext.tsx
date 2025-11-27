@@ -44,8 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const response = await authApi.login(data)
     if (response.success && response.data) {
       httpClient.setAccessToken(response.data.accessToken)
-      httpClient.setRefreshToken(response.data.refreshToken)
-      setUser(response.data.member)
+      setUser({ id: response.data.userId } as MemberResponse)
     } else {
       throw new Error(response.message || 'Login failed')
     }
@@ -55,8 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const response = await authApi.signup(data)
     if (response.success && response.data) {
       httpClient.setAccessToken(response.data.accessToken)
-      httpClient.setRefreshToken(response.data.refreshToken)
-      setUser(response.data.member)
+      setUser({ id: response.data.userId } as MemberResponse)
     } else {
       throw new Error(response.message || 'Signup failed')
     }
