@@ -300,6 +300,18 @@ export default function PostCreatePage() {
   }, [content, adjustTextareaHeight])
 
   useEffect(() => {
+    if (showPublishModal) {
+      document.body.classList.add('publish-modal-active')
+    } else {
+      document.body.classList.remove('publish-modal-active')
+    }
+
+    return () => {
+      document.body.classList.remove('publish-modal-active')
+    }
+  }, [showPublishModal])
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !isPreviewMode) {
         switch (e.key.toLowerCase()) {
