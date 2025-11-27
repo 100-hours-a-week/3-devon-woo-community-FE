@@ -1,15 +1,28 @@
 import { useState } from 'react'
 import type { CommentResponse } from '@/types'
 import CommentItem from './CommentItem'
+import CommentWrite from './CommentWrite'
 import styles from './CommentList.module.css'
 
 interface CommentListProps {
   comments: CommentResponse[]
   onLike?: (commentId: number, isLiked: boolean) => void
   onReply?: (commentId: number) => void
+  onCommentSubmit?: (text: string) => Promise<void>
+  userProfileImage?: string
+  currentUserId?: number
+  onEdit?: (commentId: number) => void
 }
 
-export default function CommentList({ comments, onLike, onReply }: CommentListProps) {
+export default function CommentList({
+  comments,
+  onLike,
+  onReply,
+  onCommentSubmit,
+  userProfileImage,
+  currentUserId,
+  onEdit,
+}: CommentListProps) {
   const [sortBy, setSortBy] = useState<'latest' | 'oldest'>('latest')
 
   const getSortedComments = () => {
@@ -47,6 +60,10 @@ export default function CommentList({ comments, onLike, onReply }: CommentListPr
         </div>
       </div>
 
+      {onCommentSubmit && (
+        <CommentWrite onSubmit={onCommentSubmit} userProfileImage={userProfileImage} />
+      )}
+
       <div className={styles.commentsList}>
         {sortedComments.length === 0 ? (
           <div className={styles.commentsEmpty}>
@@ -59,6 +76,8 @@ export default function CommentList({ comments, onLike, onReply }: CommentListPr
               comment={comment}
               onLike={onLike}
               onReply={onReply}
+              currentUserId={currentUserId}
+              onEdit={onEdit}
             />
           ))
         )}

@@ -1,58 +1,58 @@
 .tagCloud {
-  background-color: var(--bg-card);
-  border-radius: var(--radius-card);
-  padding: var(--space-6);
-  border: 1px solid var(--border-secondary);
+  background-color: #fafafa;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e5e5;
 }
 
 .tagCloudTitle {
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-4) 0;
-  padding-bottom: var(--space-3);
-  border-bottom: 2px solid var(--border-primary);
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .tagCloudList {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
 .tagCloudTag {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
   cursor: pointer;
-  transition: var(--transition-default);
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .tagCloudTag:hover {
-  background-color: var(--bg-secondary);
-  border-color: var(--border-primary);
-  color: var(--text-primary);
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  color: #333;
 }
 
 .tagCloudTag.isActive {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
-  color: var(--color-white);
+  background-color: #111;
+  border-color: #111;
+  color: #fff;
 }
 
 .tagCloudTagName {
-  font-weight: var(--font-weight-medium);
+  font-weight: 500;
 }
 
 .tagCloudTagCount {
-  font-size: var(--font-size-xsmall);
+  font-size: 12px;
   opacity: 0.7;
 }
 
@@ -61,32 +61,9 @@
 }
 
 .tagCloudEmpty {
-  font-size: var(--font-size-medium);
-  color: var(--text-tertiary);
+  font-size: 14px;
+  color: #999;
   text-align: center;
-  padding: var(--space-8) 0;
+  padding: 40px 0;
   margin: 0;
-}
-
-@media (max-width: 768px) {
-  .tagCloud {
-    padding: var(--space-5);
-  }
-
-  .tagCloudTitle {
-    font-size: var(--font-size-base);
-  }
-
-  .tagCloudList {
-    gap: var(--space-1);
-  }
-
-  .tagCloudTag {
-    padding: 6px var(--space-3);
-    font-size: var(--font-size-xsmall);
-  }
-
-  .tagCloudTagCount {
-    font-size: var(--font-size-mini);
-  }
 }

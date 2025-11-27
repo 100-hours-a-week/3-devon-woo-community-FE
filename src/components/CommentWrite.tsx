@@ -6,6 +6,8 @@ interface CommentWriteProps {
   userProfileImage?: string
 }
 
+const MAX_LENGTH = 500
+
 export default function CommentWrite({
   onSubmit,
   userProfileImage = 'https://via.placeholder.com/48/CCCCCC/666?text=U',
@@ -15,7 +17,7 @@ export default function CommentWrite({
 
   const handleSubmit = async () => {
     const text = commentText.trim()
-    if (!text || isSubmitting) return
+    if (!text || isSubmitting || text.length > MAX_LENGTH) return
 
     setIsSubmitting(true)
     try {
@@ -36,6 +38,15 @@ export default function CommentWrite({
     }
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value
+    if (text.length <= MAX_LENGTH) {
+      setCommentText(text)
+    }
+  }
+
+  const isOverLimit = commentText.length > MAX_LENGTH
+
   return (
     <div className={styles.commentWrite}>
       <div className={styles.commentAvatar}>
@@ -47,15 +58,19 @@ export default function CommentWrite({
           placeholder="댓글 달기..."
           rows={3}
           value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           disabled={isSubmitting}
+          maxLength={MAX_LENGTH}
         />
         <div className={styles.commentActionsBottom}>
+          <span className={`${styles.charCount} ${isOverLimit ? styles.overLimit : ''}`}>
+            {commentText.length}/{MAX_LENGTH}
+          </span>
           <button
             className={styles.commentSubmitBtn}
             onClick={handleSubmit}
-            disabled={isSubmitting || !commentText.trim()}
+            disabled={isSubmitting || !commentText.trim() || isOverLimit}
           >
             {isSubmitting ? '작성 중...' : '댓글 작성'}
           </button>

@@ -17,11 +17,11 @@
   border-radius: 4px;
   font-size: 15px;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
   outline: none;
   transition: border-color 0.2s ease;
   background-color: #ffffff;
-  min-height: 100px;
+  height: 100px;
   line-height: 1.6;
 }
 
@@ -41,7 +41,18 @@
 .commentActionsBottom {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
   margin-top: 12px;
+}
+
+.charCount {
+  font-size: 13px;
+  color: #999;
+}
+
+.charCount.overLimit {
+  color: #d32f2f;
 }
 
 .commentSubmitBtn {
@@ -67,7 +78,7 @@
 
 @media (max-width: 768px) {
   .commentTextarea {
-    min-height: 80px;
+    height: 80px;
     font-size: 14px;
   }
 }

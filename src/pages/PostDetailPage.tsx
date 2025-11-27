@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import Header from '@/components/Header'
-import CommentWrite from '@/components/CommentWrite'
 import CommentList from '@/components/CommentList'
 import { postApi, commentApi } from '@/api'
 import { useAuth } from '@/features/auth'
@@ -305,6 +304,10 @@ function greet(name) {
     alert(`댓글 ${commentId}번에 답글을 작성합니다.`)
   }
 
+  const handleCommentEdit = (commentId: number) => {
+    alert(`댓글 ${commentId}번을 수정합니다.`)
+  }
+
   const handleRecommendedClick = (postId: number) => {
     navigate(`/posts/${postId}`)
   }
@@ -409,15 +412,14 @@ function greet(name) {
           </section>
         )}
 
-        <CommentWrite
-          onSubmit={handleCommentSubmit}
-          userProfileImage={user?.profileImage || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}
-        />
-
         <CommentList
           comments={comments}
           onLike={handleCommentLike}
           onReply={handleCommentReply}
+          onCommentSubmit={handleCommentSubmit}
+          userProfileImage={user?.profileImage || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}
+          currentUserId={user?.memberId}
+          onEdit={handleCommentEdit}
         />
       </main>
 

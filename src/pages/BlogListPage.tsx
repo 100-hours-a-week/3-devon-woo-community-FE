@@ -5,7 +5,6 @@ import PostItem from '@/components/PostItem/PostItem'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import TopPostsList from '@/components/TopPostsList/TopPostsList'
 import TagCloud from '@/components/TagCloud/TagCloud'
-import NewsletterSubscribe from '@/components/NewsletterSubscribe/NewsletterSubscribe'
 import { postApi } from '@/api'
 import type { PostSummaryResponse } from '@/types/post'
 import { USE_MOCK } from '@/config/env'
@@ -159,10 +158,6 @@ export default function BlogListPage() {
     navigate(`/posts?search=${encodeURIComponent(tagName)}`)
   }
 
-  const handleNewsletterSubscribe = async (email: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Newsletter subscription:', email)
-  }
 
   const renderPaginationPages = () => {
     const pageButtons = []
@@ -311,7 +306,6 @@ export default function BlogListPage() {
           <Sidebar>
             <TopPostsList posts={topPosts} />
             <TagCloud tags={tags} onTagClick={handleTagClick} />
-            <NewsletterSubscribe onSubscribe={handleNewsletterSubscribe} />
           </Sidebar>
         </div>
       </main>
