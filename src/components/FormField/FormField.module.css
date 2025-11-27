@@ -1,0 +1,112 @@
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 14px;
+  background-color: #fafafa;
+  color: #333;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #0a66c2;
+  background-color: #fff;
+}
+
+.formInput.error,
+.formTextarea.error {
+  border-color: #e63946;
+  background-color: #fff;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.helperText {
+  font-size: 12px;
+  color: #667;
+  opacity: 0;
+  height: 18px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.helperText.show {
+  opacity: 1;
+  color: #e63946;
+}
+
+.charCount {
+  color: #888;
+  margin-left: auto;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: #333;
+}
+
+.passwordToggle.active {
+  color: #0a66c2;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.eyeOpen {
+  display: block;
+}
+
+.eyeClosed {
+  display: none;
+}
+
+.passwordToggle.active .eyeOpen {
+  display: none;
+}
+
+.passwordToggle.active .eyeClosed {
+  display: block;
+}

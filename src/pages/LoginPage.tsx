@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth'
 import Header from '@/components/Header'
+import FormField from '@/components/FormField'
 import styles from './LoginPage.module.css'
 
 const OAUTH_API_BASE_URL = 'http://localhost:8080'
@@ -11,7 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -47,49 +47,30 @@ export default function LoginPage() {
           <h2 className={styles.pageTitle}>로그인</h2>
 
           <form className={styles.loginForm} onSubmit={handleSubmit}>
-            <div className={styles.formGroup}>
-              <input
-                type="email"
-                className={styles.formInput}
-                placeholder="이메일"
-                value={email}
-                onChange={e => {
-                  setEmail(e.target.value)
-                  handleInputChange()
-                }}
-                required
-                autoComplete="email"
-              />
-            </div>
+            <FormField
+              type="email"
+              placeholder="이메일"
+              value={email}
+              onChange={value => {
+                setEmail(value)
+                handleInputChange()
+              }}
+              required
+              autoComplete="email"
+            />
 
-            <div className={styles.formGroup}>
-              <div className={styles.passwordWrapper}>
-                <input
-                  type={isPasswordVisible ? 'text' : 'password'}
-                  className={styles.formInput}
-                  placeholder="비밀번호"
-                  value={password}
-                  onChange={e => {
-                    setPassword(e.target.value)
-                    handleInputChange()
-                  }}
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className={`${styles.passwordToggle} ${isPasswordVisible ? styles.active : ''}`}
-                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                  aria-label="비밀번호 표시"
-                >
-                  <svg className={styles.eyeIcon} width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path className={styles.eyeOpen} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle className={styles.eyeOpen} cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path className={styles.eyeClosed} d="M2 2L22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'none' }}/>
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <FormField
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={value => {
+                setPassword(value)
+                handleInputChange()
+              }}
+              required
+              autoComplete="current-password"
+              showPasswordToggle
+            />
 
             <div className={`${styles.errorMessage} ${error ? styles.visible : ''}`}>
               {error || ' '}

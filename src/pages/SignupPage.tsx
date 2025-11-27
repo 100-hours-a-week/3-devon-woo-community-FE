@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth'
 import Header from '@/components/Header'
 import ProfileImageUploader from '@/components/ProfileImageUploader'
+import FormField from '@/components/FormField'
 import { validateEmail, validatePassword, validatePasswordConfirm, validateNickname } from '@/utils/validators'
 import { parseCommaSeparatedList } from '@/utils/formatters'
 import styles from './SignupPage.module.css'
@@ -148,82 +149,72 @@ export default function SignupPage() {
                 <p className={styles.stepSubtitle}>Tech Blog 사용을 위한 필수 정보를 입력해주세요.</p>
 
                 <div className={`${styles.formGrid} ${styles.twoColumns}`}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="emailInput" className={styles.formLabel}>이메일*</label>
-                    <input
-                      type="email"
-                      id="emailInput"
-                      className={`${styles.formInput} ${emailError ? styles.error : ''}`}
-                      placeholder="이메일을 입력해주세요"
-                      value={email}
-                      onChange={e => {
-                        setEmail(e.target.value)
-                        setEmailError('')
-                      }}
-                      onBlur={() => setEmailError(validateEmail(email).error)}
-                    />
-                    <p className={`${styles.helperText} ${emailError ? styles.show : ''}`}>
-                      {emailError || '*올바른 이메일 주소를 입력해주세요.'}
-                    </p>
-                  </div>
+                  <FormField
+                    type="email"
+                    id="emailInput"
+                    label="이메일"
+                    placeholder="이메일을 입력해주세요"
+                    value={email}
+                    error={emailError}
+                    helperText="*올바른 이메일 주소를 입력해주세요."
+                    required
+                    onChange={value => {
+                      setEmail(value)
+                      setEmailError('')
+                    }}
+                    onBlur={() => setEmailError(validateEmail(email).error)}
+                  />
 
-                  <div className={styles.formGroup}>
-                    <label htmlFor="nicknameInput" className={styles.formLabel}>닉네임*</label>
-                    <input
-                      type="text"
-                      id="nicknameInput"
-                      className={`${styles.formInput} ${nicknameError ? styles.error : ''}`}
-                      placeholder="닉네임을 입력해주세요"
-                      maxLength={30}
-                      value={nickname}
-                      onChange={e => {
-                        setNickname(e.target.value)
-                        setNicknameError('')
-                      }}
-                      onBlur={() => setNicknameError(validateNickname(nickname).error)}
-                    />
-                    <p className={`${styles.helperText} ${nicknameError ? styles.show : ''}`}>
-                      {nicknameError || '*닉네임을 입력해주세요.'}
-                    </p>
-                  </div>
+                  <FormField
+                    type="text"
+                    id="nicknameInput"
+                    label="닉네임"
+                    placeholder="닉네임을 입력해주세요"
+                    value={nickname}
+                    error={nicknameError}
+                    helperText="*닉네임을 입력해주세요."
+                    maxLength={30}
+                    required
+                    onChange={value => {
+                      setNickname(value)
+                      setNicknameError('')
+                    }}
+                    onBlur={() => setNicknameError(validateNickname(nickname).error)}
+                  />
 
-                  <div className={styles.formGroup}>
-                    <label htmlFor="passwordInput" className={styles.formLabel}>비밀번호*</label>
-                    <input
-                      type="password"
-                      id="passwordInput"
-                      className={`${styles.formInput} ${passwordError ? styles.error : ''}`}
-                      placeholder="비밀번호를 입력해주세요"
-                      value={password}
-                      onChange={e => {
-                        setPassword(e.target.value)
-                        setPasswordError('')
-                      }}
-                      onBlur={() => setPasswordError(validatePassword(password).error)}
-                    />
-                    <p className={`${styles.helperText} ${passwordError ? styles.show : ''}`}>
-                      {passwordError || '*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다.'}
-                    </p>
-                  </div>
+                  <FormField
+                    type="password"
+                    id="passwordInput"
+                    label="비밀번호"
+                    placeholder="비밀번호를 입력해주세요"
+                    value={password}
+                    error={passwordError}
+                    helperText="*비밀번호는 8자 이상, 20자 이하이며, 영문과 숫자를 포함해야 합니다."
+                    required
+                    showPasswordToggle
+                    onChange={value => {
+                      setPassword(value)
+                      setPasswordError('')
+                    }}
+                    onBlur={() => setPasswordError(validatePassword(password).error)}
+                  />
 
-                  <div className={styles.formGroup}>
-                    <label htmlFor="passwordConfirmInput" className={styles.formLabel}>비밀번호 확인*</label>
-                    <input
-                      type="password"
-                      id="passwordConfirmInput"
-                      className={`${styles.formInput} ${passwordConfirmError ? styles.error : ''}`}
-                      placeholder="비밀번호를 한번 더 입력해주세요"
-                      value={passwordConfirm}
-                      onChange={e => {
-                        setPasswordConfirm(e.target.value)
-                        setPasswordConfirmError('')
-                      }}
-                      onBlur={() => setPasswordConfirmError(validatePasswordConfirm(password, passwordConfirm).error)}
-                    />
-                    <p className={`${styles.helperText} ${passwordConfirmError ? styles.show : ''}`}>
-                      {passwordConfirmError || '*비밀번호를 한번 더 입력해주세요.'}
-                    </p>
-                  </div>
+                  <FormField
+                    type="password"
+                    id="passwordConfirmInput"
+                    label="비밀번호 확인"
+                    placeholder="비밀번호를 한번 더 입력해주세요"
+                    value={passwordConfirm}
+                    error={passwordConfirmError}
+                    helperText="*비밀번호를 한번 더 입력해주세요."
+                    required
+                    showPasswordToggle
+                    onChange={value => {
+                      setPasswordConfirm(value)
+                      setPasswordConfirmError('')
+                    }}
+                    onBlur={() => setPasswordConfirmError(validatePasswordConfirm(password, passwordConfirm).error)}
+                  />
                 </div>
 
                 <div className={styles.stepActions}>
@@ -250,94 +241,72 @@ export default function SignupPage() {
                 <ProfileImageUploader imageUrl="" onFileSelected={setSelectedImageFile} />
 
                 <div className={`${styles.formGrid} ${styles.twoColumns}`}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="handleInput" className={styles.formLabel}>한 줄 소개</label>
-                    <input
-                      type="text"
-                      id="handleInput"
-                      className={styles.formInput}
-                      maxLength={80}
-                      placeholder="예: Backend Developer / Java Enthusiast"
-                      value={handle}
-                      onChange={e => setHandle(e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="roleInput" className={styles.formLabel}>직무/포지션</label>
-                    <input
-                      type="text"
-                      id="roleInput"
-                      className={styles.formInput}
-                      placeholder="예: Backend Engineer"
-                      value={role}
-                      onChange={e => setRole(e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="companyInput" className={styles.formLabel}>회사/소속</label>
-                    <input
-                      type="text"
-                      id="companyInput"
-                      className={styles.formInput}
-                      placeholder="예: Codestate Labs"
-                      value={company}
-                      onChange={e => setCompany(e.target.value)}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="locationInput" className={styles.formLabel}>위치</label>
-                    <input
-                      type="text"
-                      id="locationInput"
-                      className={styles.formInput}
-                      placeholder="예: Seoul, Korea"
-                      value={location}
-                      onChange={e => setLocation(e.target.value)}
-                    />
-                  </div>
+                  <FormField
+                    type="text"
+                    id="handleInput"
+                    label="한 줄 소개"
+                    placeholder="예: Backend Developer / Java Enthusiast"
+                    value={handle}
+                    maxLength={80}
+                    onChange={value => setHandle(value)}
+                  />
+                  <FormField
+                    type="text"
+                    id="roleInput"
+                    label="직무/포지션"
+                    placeholder="예: Backend Engineer"
+                    value={role}
+                    onChange={value => setRole(value)}
+                  />
+                  <FormField
+                    type="text"
+                    id="companyInput"
+                    label="회사/소속"
+                    placeholder="예: Codestate Labs"
+                    value={company}
+                    onChange={value => setCompany(value)}
+                  />
+                  <FormField
+                    type="text"
+                    id="locationInput"
+                    label="위치"
+                    placeholder="예: Seoul, Korea"
+                    value={location}
+                    onChange={value => setLocation(value)}
+                  />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="bioInput" className={styles.formLabel}>간단 소개</label>
-                  <textarea
-                    id="bioInput"
-                    className={styles.formTextarea}
-                    rows={4}
-                    maxLength={300}
-                    placeholder="MSA 기반 백엔드 아키텍처 구축과 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다."
-                    value={bio}
-                    onChange={e => setBio(e.target.value)}
-                  />
-                  <div className={styles.charCount}>
-                    <span>{bio.length}</span> / 300
-                  </div>
-                </div>
+                <FormField
+                  type="textarea"
+                  id="bioInput"
+                  label="간단 소개"
+                  placeholder="MSA 기반 백엔드 아키텍처 구축과 대규모 트래픽 대응 경험이 있는 Java/Spring 개발자입니다."
+                  value={bio}
+                  maxLength={300}
+                  rows={4}
+                  showCharCount
+                  onChange={value => setBio(value)}
+                />
 
                 <div className={`${styles.formGrid} ${styles.twoColumns}`}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="primaryStackInput" className={styles.formLabel}>주요 기술 스택</label>
-                    <input
-                      type="text"
-                      id="primaryStackInput"
-                      className={styles.formInput}
-                      placeholder="Java, Spring Boot, JPA, MySQL, AWS"
-                      value={primaryStackText}
-                      onChange={e => setPrimaryStackText(e.target.value)}
-                    />
-                    <p className={`${styles.helperText} ${styles.small}`}>쉼표로 구분해 입력해주세요.</p>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="interestsInput" className={styles.formLabel}>관심 분야</label>
-                    <input
-                      type="text"
-                      id="interestsInput"
-                      className={styles.formInput}
-                      placeholder="서버 아키텍처, CQRS, Observability"
-                      value={interestsText}
-                      onChange={e => setInterestsText(e.target.value)}
-                    />
-                    <p className={`${styles.helperText} ${styles.small}`}>쉼표로 구분해 입력해주세요.</p>
-                  </div>
+                  <FormField
+                    type="text"
+                    id="primaryStackInput"
+                    label="주요 기술 스택"
+                    placeholder="Java, Spring Boot, JPA, MySQL, AWS"
+                    value={primaryStackText}
+                    helperText="쉼표로 구분해 입력해주세요."
+                    onChange={value => setPrimaryStackText(value)}
+                  />
+                  <FormField
+                    type="text"
+                    id="interestsInput"
+                    label="관심 분야"
+                    placeholder="서버 아키텍처, CQRS, Observability"
+                    value={interestsText}
+                    helperText="쉼표로 구분해 입력해주세요."
+                    onChange={value => setInterestsText(value)}
+                  />
                 </div>
 
                 <div className={`${styles.formGrid} ${styles.twoColumns}`}>
