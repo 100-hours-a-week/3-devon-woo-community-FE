@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import ProfileImageUploader from '@/components/ProfileImageUploader'
+import FormField from '@/components/FormField'
 import { memberApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
@@ -431,195 +432,125 @@ export default function ProfileEditPage() {
             <div className={styles.formSection}>
               <h3 className={styles.sectionTitle}>기본 정보</h3>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  닉네임
-                  <span className={styles.labelRequired}>*</span>
-                </label>
-                <input
-                  type="text"
-                  className={`${styles.formInput} ${errors.nickname ? styles.error : ''}`}
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="닉네임을 입력하세요"
-                />
-                {errors.nickname && <p className={styles.formError}>{errors.nickname}</p>}
-              </div>
+              <FormField
+                type="text"
+                label="닉네임"
+                value={nickname}
+                onChange={setNickname}
+                placeholder="닉네임을 입력하세요"
+                error={errors.nickname}
+                required
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  한 줄 소개
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={handle}
-                  onChange={(e) => setHandle(e.target.value)}
-                  placeholder="예: Frontend Developer / React Specialist"
-                  maxLength={60}
-                />
-                <p className={styles.charCount}>{handle.length}/60</p>
-              </div>
+              <FormField
+                type="text"
+                label="한 줄 소개"
+                value={handle}
+                onChange={setHandle}
+                placeholder="예: Frontend Developer / React Specialist"
+                maxLength={60}
+                showCharCount
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  소개
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <textarea
-                  className={styles.formTextarea}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="자신을 소개해보세요"
-                  maxLength={300}
-                />
-                <p className={styles.charCount}>{bio.length}/300</p>
-              </div>
+              <FormField
+                type="textarea"
+                label="소개"
+                value={bio}
+                onChange={setBio}
+                placeholder="자신을 소개해보세요"
+                maxLength={300}
+                showCharCount
+              />
             </div>
 
             <div className={styles.formSection}>
               <h3 className={styles.sectionTitle}>직무 정보</h3>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  직무
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  placeholder="예: Backend Engineer"
-                />
-              </div>
+              <FormField
+                type="text"
+                label="직무"
+                value={role}
+                onChange={setRole}
+                placeholder="예: Backend Engineer"
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  회사
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="예: Codestate Labs"
-                />
-              </div>
+              <FormField
+                type="text"
+                label="회사"
+                value={company}
+                onChange={setCompany}
+                placeholder="예: Codestate Labs"
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  위치
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="예: Seoul, Korea"
-                />
-              </div>
+              <FormField
+                type="text"
+                label="위치"
+                value={location}
+                onChange={setLocation}
+                placeholder="예: Seoul, Korea"
+              />
             </div>
 
             <div className={styles.formSection}>
               <h3 className={styles.sectionTitle}>기술 스택 및 관심사</h3>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  주요 기술 스택
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={primaryStackText}
-                  onChange={(e) => setPrimaryStackText(e.target.value)}
-                  placeholder="예: Java, Spring Boot, JPA, MySQL, AWS"
-                />
-                <p className={styles.formHint}>쉼표(,)로 구분하여 입력하세요</p>
-              </div>
+              <FormField
+                type="text"
+                label="주요 기술 스택"
+                value={primaryStackText}
+                onChange={setPrimaryStackText}
+                placeholder="예: Java, Spring Boot, JPA, MySQL, AWS"
+                helperText="쉼표(,)로 구분하여 입력하세요"
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  관심 분야
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={interestsText}
-                  onChange={(e) => setInterestsText(e.target.value)}
-                  placeholder="예: 서버 아키텍처, 대규모 트래픽 처리"
-                />
-                <p className={styles.formHint}>쉼표(,)로 구분하여 입력하세요</p>
-              </div>
+              <FormField
+                type="text"
+                label="관심 분야"
+                value={interestsText}
+                onChange={setInterestsText}
+                placeholder="예: 서버 아키텍처, 대규모 트래픽 처리"
+                helperText="쉼표(,)로 구분하여 입력하세요"
+              />
             </div>
 
             <div className={styles.formSection}>
               <h3 className={styles.sectionTitle}>소셜 링크</h3>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  GitHub
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="url"
-                  className={`${styles.formInput} ${errors.github ? styles.error : ''}`}
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                  placeholder="https://github.com/username"
-                />
-                {errors.github && <p className={styles.formError}>{errors.github}</p>}
-              </div>
+              <FormField
+                type="url"
+                label="GitHub"
+                value={githubUrl}
+                onChange={setGithubUrl}
+                placeholder="https://github.com/username"
+                error={errors.github}
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Website
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="url"
-                  className={`${styles.formInput} ${errors.website ? styles.error : ''}`}
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  placeholder="https://your-website.com"
-                />
-                {errors.website && <p className={styles.formError}>{errors.website}</p>}
-              </div>
+              <FormField
+                type="url"
+                label="Website"
+                value={websiteUrl}
+                onChange={setWebsiteUrl}
+                placeholder="https://your-website.com"
+                error={errors.website}
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  LinkedIn
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="url"
-                  className={`${styles.formInput} ${errors.linkedin ? styles.error : ''}`}
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="https://www.linkedin.com/in/username"
-                />
-                {errors.linkedin && <p className={styles.formError}>{errors.linkedin}</p>}
-              </div>
+              <FormField
+                type="url"
+                label="LinkedIn"
+                value={linkedinUrl}
+                onChange={setLinkedinUrl}
+                placeholder="https://www.linkedin.com/in/username"
+                error={errors.linkedin}
+              />
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Notion
-                  <span className={styles.labelOptional}>(선택)</span>
-                </label>
-                <input
-                  type="url"
-                  className={`${styles.formInput} ${errors.notion ? styles.error : ''}`}
-                  value={notionUrl}
-                  onChange={(e) => setNotionUrl(e.target.value)}
-                  placeholder="https://username.notion.site/page"
-                />
-                {errors.notion && <p className={styles.formError}>{errors.notion}</p>}
-              </div>
+              <FormField
+                type="url"
+                label="Notion"
+                value={notionUrl}
+                onChange={setNotionUrl}
+                placeholder="https://username.notion.site/page"
+                error={errors.notion}
+              />
             </div>
 
             <div className={styles.formActions}>

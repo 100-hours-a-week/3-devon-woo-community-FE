@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import ProfileCard from '@/components/ProfileCard'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
+import Pagination from '@/components/Pagination'
 import { memberApi, postApi } from '@/api'
 import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
@@ -171,24 +172,6 @@ export default function ProfilePage() {
     return Math.max(1, Math.ceil(total / POSTS_PER_PAGE))
   }
 
-  const getPaginationButtons = () => {
-    const totalPages = getTotalPages()
-    const maxVisible = 5
-    const pages: number[] = []
-
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
-    let end = Math.min(totalPages, start + maxVisible - 1)
-
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1)
-    }
-
-    for (let page = start; page <= end; page++) {
-      pages.push(page)
-    }
-
-    return pages
-  }
 
 
 
@@ -274,35 +257,11 @@ export default function ProfilePage() {
             <div className={styles.emptyState}>게시글이 없습니다.</div>
           )}
 
-          {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <button
-                className={styles.paginationBtn}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                &lt;
-              </button>
-              <div className={styles.paginationNumbers}>
-                {getPaginationButtons().map(page => (
-                  <button
-                    key={page}
-                    className={`${styles.paginationNumber} ${page === currentPage ? styles.active : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-              <button
-                className={styles.paginationBtn}
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-              >
-                &gt;
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </section>
       </div>
 

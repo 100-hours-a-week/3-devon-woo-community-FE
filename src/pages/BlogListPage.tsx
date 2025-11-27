@@ -6,6 +6,7 @@ import PostItem from '@/components/PostItem/PostItem'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import TopPostsList from '@/components/TopPostsList/TopPostsList'
 import TagCloud from '@/components/TagCloud/TagCloud'
+import Pagination from '@/components/Pagination'
 import { postApi } from '@/api'
 import type { PostSummaryResponse } from '@/types/post'
 import { USE_MOCK } from '@/config/env'
@@ -160,69 +161,6 @@ export default function BlogListPage() {
   }
 
 
-  const renderPaginationPages = () => {
-    const pageButtons = []
-    const maxVisiblePages = 5
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
-
-    if (endPage - startPage < maxVisiblePages - 1) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1)
-    }
-
-    if (startPage > 1) {
-      pageButtons.push(
-        <button
-          key={1}
-          className={styles.paginationPage}
-          onClick={() => handlePageChange(1)}
-        >
-          1
-        </button>
-      )
-      if (startPage > 2) {
-        pageButtons.push(
-          <div key="ellipsis1" className={styles.paginationEllipsis}>
-            ...
-          </div>
-        )
-      }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageButtons.push(
-        <button
-          key={i}
-          className={`${styles.paginationPage} ${i === currentPage ? styles.isActive : ''}`}
-          onClick={() => handlePageChange(i)}
-        >
-          {i}
-        </button>
-      )
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        pageButtons.push(
-          <div key="ellipsis2" className={styles.paginationEllipsis}>
-            ...
-          </div>
-        )
-      }
-      pageButtons.push(
-        <button
-          key={totalPages}
-          className={styles.paginationPage}
-          onClick={() => handlePageChange(totalPages)}
-        >
-          {totalPages}
-        </button>
-      )
-    }
-
-    return pageButtons
-  }
 
   return (
     <div className={styles.blogListPage}>
@@ -265,43 +203,11 @@ export default function BlogListPage() {
               )}
             </div>
 
-            {totalPages > 1 && (
-              <div className={styles.pagination}>
-                <button
-                  className={styles.paginationBtn}
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M12.5 15l-5-5 5-5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-
-                <div className={styles.paginationPages}>{renderPaginationPages()}</div>
-
-                <button
-                  className={styles.paginationBtn}
-                  disabled={currentPage >= totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M7.5 15l5-5-5-5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </section>
 
           <Sidebar>
