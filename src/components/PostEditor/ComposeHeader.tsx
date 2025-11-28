@@ -8,6 +8,8 @@ interface ComposeHeaderProps {
   onBack: () => void
   onTempSave: () => void
   onPublish: () => void
+  canTempSave: boolean
+  canPublish: boolean
 }
 
 export default function ComposeHeader({
@@ -18,6 +20,8 @@ export default function ComposeHeader({
   onBack,
   onTempSave,
   onPublish,
+  canTempSave,
+  canPublish,
 }: ComposeHeaderProps) {
   return (
     <header className="compose-header">
@@ -52,7 +56,7 @@ export default function ComposeHeader({
             <span className="status-text">{autosaveStatusText}</span>
             <span className="status-time">{autosaveStatusTime}</span>
           </div>
-          <button className="btn-secondary" onClick={onTempSave}>
+          <button className="btn-secondary" onClick={onTempSave} disabled={!canTempSave}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 d="M12.67 1H3.33A2.33 2.33 0 0 0 1 3.33v9.34A2.33 2.33 0 0 0 15 12.67V3.33A2.33 2.33 0 0 0 12.67 1zM11 15v-4.67H5V15M11 1v3.67H3.33"
@@ -64,7 +68,7 @@ export default function ComposeHeader({
             </svg>
             임시 저장
           </button>
-          <button className="btn-primary" onClick={onPublish}>
+          <button className="btn-primary" onClick={onPublish} disabled={!canPublish}>
             출간하기
           </button>
         </div>

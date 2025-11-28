@@ -28,6 +28,8 @@ export default function PostCreatePage() {
   const [isPublishing, setIsPublishing] = useState(false)
 
   const isEditMode = !!postId
+  const canPublish = !!title.trim() && !!content.trim()
+  const canTempSave = !!(title.trim() || content.trim())
 
   useEffect(() => {
     if (isEditMode) {
@@ -45,7 +47,9 @@ export default function PostCreatePage() {
         }
       }
     }
+  }, [isEditMode, postId])
 
+  useEffect(() => {
     const autosaveInterval = setInterval(() => {
       if (title || content) {
         const now = new Date()
@@ -62,7 +66,7 @@ export default function PostCreatePage() {
     return () => {
       clearInterval(autosaveInterval)
     }
-  }, [title, content, isEditMode])
+  }, [title, content])
 
   const loadPost = async () => {
     if (!postId) return
@@ -349,6 +353,8 @@ export default function PostCreatePage() {
         onBack={handleBack}
         onTempSave={handleTempSave}
         onPublish={() => setShowPublishModal(true)}
+        canTempSave={canTempSave}
+        canPublish={canPublish}
       />
 
       <div className="main-container">
