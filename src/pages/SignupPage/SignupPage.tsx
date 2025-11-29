@@ -1,123 +1,65 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/features/auth'
+import { useSignupForm } from '@/features/auth'
 import Header from '@/components/Header'
 import ProfileImageUploader from '@/components/ProfileImageUploader'
 import FormField from '@/components/FormField'
 import { validateEmail, validatePassword, validatePasswordConfirm, validateNickname } from '@/utils/validators'
-import { parseCommaSeparatedList } from '@/utils/formatters'
 import styles from './SignupPage.module.css'
 
-const DEFAULT_PRIMARY_STACK = ['Java', 'Spring Boot', 'JPA', 'MySQL', 'AWS']
-const DEFAULT_INTERESTS = ['서버 아키텍처', '대규모 트래픽 처리', 'Event-driven Design', 'DevOps 자동화']
-
 export default function SignupPage() {
-  const [step, setStep] = useState(1)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [nickname, setNickname] = useState('')
-
-  const [emailError, setEmailError] = useState('')
-  const [passwordError, setPasswordError] = useState('')
-  const [passwordConfirmError, setPasswordConfirmError] = useState('')
-  const [nicknameError, setNicknameError] = useState('')
-
-  const [handle, setHandle] = useState('')
-  const [role, setRole] = useState('')
-  const [company, setCompany] = useState('')
-  const [location, setLocation] = useState('')
-  const [bio, setBio] = useState('')
-  const [primaryStackText, setPrimaryStackText] = useState('')
-  const [interestsText, setInterestsText] = useState('')
-  const [socialLinks, setSocialLinks] = useState({
-    github: '',
-    website: '',
-    linkedin: '',
-    notion: ''
-  })
-
-  const { signup } = useAuth()
   const navigate = useNavigate()
 
-
-  const isAccountFormValid = () => {
-    return (
-      email.trim() &&
-      password.trim() &&
-      passwordConfirm.trim() &&
-      nickname.trim() &&
-      !emailError &&
-      !passwordError &&
-      !passwordConfirmError &&
-      !nicknameError
-    )
-  }
-
-  const handleAccountSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const emailErr = validateEmail(email).error
-    const passwordErr = validatePassword(password).error
-    const passwordConfirmErr = validatePasswordConfirm(password, passwordConfirm).error
-    const nicknameErr = validateNickname(nickname).error
-
-    setEmailError(emailErr)
-    setPasswordError(passwordErr)
-    setPasswordConfirmError(passwordConfirmErr)
-    setNicknameError(nicknameErr)
-
-    if (!emailErr && !passwordErr && !passwordConfirmErr && !nicknameErr) {
-      setStep(2)
-    }
-  }
-
-
-  const completeSignup = async (skipProfile: boolean) => {
-    if (isSubmitting) return
-    setIsSubmitting(true)
-
-    try {
-      const profilePayload = skipProfile ? {} : {
-        handle: handle.trim(),
-        bio: bio.trim(),
-        role: role.trim(),
-        company: company.trim(),
-        location: location.trim(),
-        primaryStack: parseCommaSeparatedList(primaryStackText, DEFAULT_PRIMARY_STACK),
-        interests: parseCommaSeparatedList(interestsText, DEFAULT_INTERESTS),
-        socialLinks: {
-          github: socialLinks.github.trim(),
-          website: socialLinks.website.trim(),
-          linkedin: socialLinks.linkedin.trim(),
-          notion: socialLinks.notion.trim()
-        }
-      }
-
-      await signup({
-        email: email.trim(),
-        password: password.trim(),
-        passwordConfirm: passwordConfirm.trim(),
-        nickname: nickname.trim(),
-        ...profilePayload
-      })
-
+  const {
+    step,
+    setStep,
+    isSubmitting,
+    selectedImageFile,
+    setSelectedImageFile,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    passwordConfirm,
+    setPasswordConfirm,
+    nickname,
+    setNickname,
+    emailError,
+    setEmailError,
+    passwordError,
+    setPasswordError,
+    passwordConfirmError,
+    setPasswordConfirmError,
+    nicknameError,
+    setNicknameError,
+    handle,
+    setHandle,
+    role,
+    setRole,
+    company,
+    setCompany,
+    location,
+    setLocation,
+    bio,
+    setBio,
+    primaryStackText,
+    setPrimaryStackText,
+    interestsText,
+    setInterestsText,
+    socialLinks,
+    setSocialLinks,
+    isAccountFormValid,
+    handleAccountSubmit,
+    completeSignup,
+    handleProfileSubmit,
+  } = useSignupForm({
+    onSuccess: () => {
       alert('회원가입이 완료되었습니다!')
       navigate('/')
-    } catch (error) {
+    },
+    onError: () => {
       alert('회원가입에 실패했습니다. 입력 정보를 확인해주세요.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    completeSignup(false)
-  }
+    },
+  })
 
   return (
     <div className={styles.signupPage}>
