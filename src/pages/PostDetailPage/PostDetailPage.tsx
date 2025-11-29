@@ -6,7 +6,7 @@ import CommentList from '@/components/CommentList'
 import Footer from '@/components/Footer'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { useAuth } from '@/features/auth'
-import { usePostDetail } from '@/features/post'
+import { usePostDetail, useCommentInteractions } from '@/features/post'
 import { formatDateLong } from '@/utils/formatters'
 import styles from './PostDetailPage.module.css'
 
@@ -28,6 +28,14 @@ export default function PostDetailPage() {
   } = usePostDetail({
     postId: postId ? Number(postId) : undefined,
   })
+
+  const {
+    sortBy: commentSort,
+    setSortBy: setCommentSort,
+    sortedComments,
+    toggleLike: toggleCommentLike,
+    getLikeState: getCommentLikeState,
+  } = useCommentInteractions(comments)
 
   const handleCommentLike = (commentId: number, isLiked: boolean) => {
     console.log(`Comment ${commentId} ${isLiked ? 'liked' : 'unliked'}`)
@@ -142,13 +150,17 @@ export default function PostDetailPage() {
         )}
 
         <CommentList
-          comments={comments}
+          comments={sortedComments}
+          sortBy={commentSort}
+          onSortChange={setCommentSort}
           onLike={handleCommentLike}
           onReply={handleCommentReply}
           onCommentSubmit={handleCommentSubmit}
           userProfileImage={user?.profileImage || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}
           currentUserId={user?.memberId}
           onEdit={handleCommentEdit}
+          getLikeState={getCommentLikeState}
+          onToggleLike={toggleCommentLike}
         />
       </main>
 

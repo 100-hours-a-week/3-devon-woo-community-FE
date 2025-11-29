@@ -1,18 +1,26 @@
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import type { CommentResponse } from '@/types'
 import styles from './CommentItem.module.css'
 
 interface CommentItemProps {
   comment: CommentResponse
-  onLike?: (commentId: number, isLiked: boolean) => void
   onReply?: (commentId: number) => void
   currentUserId?: number
   onEdit?: (commentId: number) => void
+  onLikeToggle?: (commentId: number) => void
+  isLiked?: boolean
+  likeCount?: number
 }
 
-export default function CommentItem({ comment, onLike, onReply, currentUserId, onEdit }: CommentItemProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [likes, setLikes] = useState(0)
+export default function CommentItem({
+  comment,
+  onReply,
+  currentUserId,
+  onEdit,
+  onLikeToggle,
+  isLiked = false,
+  likeCount = 0,
+}: CommentItemProps) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -34,13 +42,6 @@ export default function CommentItem({ comment, onLike, onReply, currentUserId, o
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showDropdown])
-
-  const handleLike = () => {
-    const newIsLiked = !isLiked
-    setIsLiked(newIsLiked)
-    setLikes(newIsLiked ? likes + 1 : Math.max(0, likes - 1))
-    onLike?.(comment.commentId, newIsLiked)
-  }
 
   const handleReply = () => {
     onReply?.(comment.commentId)
@@ -105,7 +106,7 @@ export default function CommentItem({ comment, onLike, onReply, currentUserId, o
             <div className={styles.commentHeaderRight}>
               <button
                 className={`${styles.commentActionBtn} ${isLiked ? styles.liked : ''}`}
-                onClick={handleLike}
+                onClick={() => onLikeToggle?.(comment.commentId)}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
@@ -115,7 +116,7 @@ export default function CommentItem({ comment, onLike, onReply, currentUserId, o
                     fill={isLiked ? 'currentColor' : 'none'}
                   />
                 </svg>
-                {likes > 0 && <span>{likes}</span>}
+                {likeCount > 0 && <span>{likeCount}</span>}
               </button>
               <div className={styles.dropdownWrapper} ref={dropdownRef}>
                 <button
