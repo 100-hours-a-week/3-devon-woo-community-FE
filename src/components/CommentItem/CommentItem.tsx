@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import type { CommentResponse } from '@/types'
+import CommentReportModal from './CommentReportModal'
 import styles from './CommentItem.module.css'
 
 interface CommentItemProps {
@@ -149,20 +150,11 @@ export default function CommentItem({
       </div>
 
       {showReportModal && (
-        <div className={styles.modalOverlay} onClick={handleReportCancel}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>댓글 신고</h3>
-            <p className={styles.modalMessage}>이 댓글을 신고하시겠습니까?</p>
-            <div className={styles.modalActions}>
-              <button className={styles.modalBtnCancel} onClick={handleReportCancel}>
-                취소
-              </button>
-              <button className={styles.modalBtnConfirm} onClick={handleReportConfirm}>
-                신고
-              </button>
-            </div>
-          </div>
-        </div>
+        <CommentReportModal
+          commentId={comment.commentId}
+          onCancel={handleReportCancel}
+          onConfirm={handleReportConfirm}
+        />
       )}
     </>
   )
