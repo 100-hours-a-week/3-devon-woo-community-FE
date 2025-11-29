@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { CommentResponse } from '@/types'
-import CommentItem from './CommentItem'
-import CommentWrite from './CommentWrite'
+import CommentItem from '@/components/CommentItem'
+import CommentWrite from '@/components/CommentWrite'
 import styles from './CommentList.module.css'
 
 interface CommentListProps {
