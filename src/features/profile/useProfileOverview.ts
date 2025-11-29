@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { memberApi, postApi } from '@/api'
 import type { MemberResponse } from '@/types'
-import { DEFAULT_PROFILE_CONFIG } from '@/config/defaults'
+import { USE_MOCK } from '@/config/env'
 
 export interface ProfilePost {
   id: number
@@ -35,34 +35,36 @@ export function useProfileOverview({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const isOwner = !memberId || (currentUserId && currentUserId === memberId) || false
+  const isOwner = memberId ? currentUserId === memberId : !!currentUserId
 
   useEffect(() => {
     const loadProfileData = async () => {
       try {
         setError(null)
-        const targetMemberId = memberId || currentUserId
+        const targetMemberId =
+          memberId || currentUserId || (USE_MOCK ? 1 : undefined)
 
-        if (targetMemberId) {
-          const [profileResponse, postsResponse] = await Promise.all([
-            memberApi.getProfile(targetMemberId),
-            postApi.getPosts({ page: 0, size: 6, memberId: targetMemberId }),
-          ])
+        if (!targetMemberId) {
+          setProfile(null)
+          setPosts([])
+          return
+        }
 
-          if (profileResponse.success && profileResponse.data) {
-            setProfile(normalizeProfile(profileResponse.data))
-          } else {
-            setProfile(null)
-          }
+        const [profileResponse, postsResponse] = await Promise.all([
+          memberApi.getProfile(targetMemberId),
+          postApi.getPosts({ page: 0, size: 6, memberId: targetMemberId }),
+        ])
 
-          if (postsResponse.success && postsResponse.data) {
-            setPosts(normalizePosts(postsResponse.data.items))
-          } else {
-            setPosts([])
-          }
+        if (profileResponse.success && profileResponse.data) {
+          setProfile(normalizeProfile(profileResponse.data))
         } else {
-          setProfile(createDefaultProfile())
-          setPosts(createDefaultPosts())
+          setProfile(null)
+        }
+
+        if (postsResponse.success && postsResponse.data) {
+          setPosts(normalizePosts(postsResponse.data.items))
+        } else {
+          setPosts([])
         }
       } catch (err) {
         console.error('Failed to load profile data:', err)
@@ -89,29 +91,25 @@ export function useProfileOverview({
 function normalizeProfile(data: any): MemberResponse {
   return {
     ...data,
-    profileImage: data.profileImage || DEFAULT_PROFILE_CONFIG.image,
-    nickname: data.nickname || DEFAULT_PROFILE_CONFIG.profile.nickname,
-    handle: data.handle || DEFAULT_PROFILE_CONFIG.profile.handle,
-    bio: data.bio || DEFAULT_PROFILE_CONFIG.profile.bio,
-    role: data.role || DEFAULT_PROFILE_CONFIG.profile.role,
-    company: data.company || DEFAULT_PROFILE_CONFIG.profile.company,
-    location: data.location || DEFAULT_PROFILE_CONFIG.profile.location,
-    primaryStack: data.primaryStack?.length ? data.primaryStack : DEFAULT_PROFILE_CONFIG.primaryStack,
-    interests: data.interests?.length ? data.interests : DEFAULT_PROFILE_CONFIG.interests,
+    profileImage: data.profileImage ?? '',
+    nickname: data.nickname ?? '',
+    handle: data.handle ?? '',
+    bio: data.bio ?? '',
+    role: data.role ?? '',
+    company: data.company ?? '',
+    location: data.location ?? '',
+    primaryStack: Array.isArray(data.primaryStack) ? data.primaryStack : [],
+    interests: Array.isArray(data.interests) ? data.interests : [],
     socialLinks: {
-      github: data.socialLinks?.github || DEFAULT_PROFILE_CONFIG.socialLinks.github,
-      website: data.socialLinks?.website || DEFAULT_PROFILE_CONFIG.socialLinks.website,
-      linkedin: data.socialLinks?.linkedin || DEFAULT_PROFILE_CONFIG.socialLinks.linkedin,
-      notion: data.socialLinks?.notion || DEFAULT_PROFILE_CONFIG.socialLinks.notion,
+      github: data.socialLinks?.github ?? '',
+      website: data.socialLinks?.website ?? '',
+      linkedin: data.socialLinks?.linkedin ?? '',
+      notion: data.socialLinks?.notion ?? '',
     },
   }
 }
 
 function normalizePosts(items: any[]): ProfilePost[] {
-  if (!items.length) {
-    return createDefaultPosts()
-  }
-
   return items.map(post => ({
     id: post.postId,
     title: post.title,
@@ -122,30 +120,3 @@ function normalizePosts(items: any[]): ProfilePost[] {
     comments: post.commentCount || 0,
   }))
 }
-
-function createDefaultProfile(): MemberResponse {
-  return normalizeProfile({
-    nickname: DEFAULT_PROFILE_CONFIG.profile.nickname,
-    handle: DEFAULT_PROFILE_CONFIG.profile.handle,
-    bio: DEFAULT_PROFILE_CONFIG.profile.bio,
-    role: DEFAULT_PROFILE_CONFIG.profile.role,
-    company: DEFAULT_PROFILE_CONFIG.profile.company,
-    location: DEFAULT_PROFILE_CONFIG.profile.location,
-    primaryStack: DEFAULT_PROFILE_CONFIG.primaryStack,
-    interests: DEFAULT_PROFILE_CONFIG.interests,
-    socialLinks: DEFAULT_PROFILE_CONFIG.socialLinks,
-  })
-}
-
-function createDefaultPosts(): ProfilePost[] {
-  return Array.from({ length: 5 }, (_, idx) => ({
-    id: idx + 1,
-    title: `새로운 기술 노트 ${idx + 1}`,
-    excerpt: '아직 게시글이 없어요. 첫 번째 글을 작성해보세요.',
-    date: new Date(Date.now() - idx * 86400000).toISOString(),
-    likes: 0,
-    views: 0,
-    comments: 0,
-  }))
-}
-

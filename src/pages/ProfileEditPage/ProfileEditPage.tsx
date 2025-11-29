@@ -13,8 +13,6 @@ import styles from './ProfileEditPage.module.css'
 
 const DEFAULT_PROFILE_IMAGE =
   'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=160'
-const DEFAULT_PRIMARY_STACK = ['TypeScript', 'React', 'Node.js', 'Vite']
-const DEFAULT_INTERESTS = ['Developer Experience', 'Frontend Architecture', 'Open Source']
 
 export default function ProfileEditPage() {
   const navigate = useNavigate()
@@ -135,22 +133,6 @@ export default function ProfileEditPage() {
             hasImageFile: false,
           })
         }
-      } else {
-        setProfileImage(DEFAULT_PROFILE_IMAGE)
-        setNickname('SH Woo')
-        setHandle('Fullstack Developer / TypeScript Enthusiast')
-        setBio('프론트엔드와 백엔드를 넘나들며 커뮤니티 서비스를 만드는 개발자 SH Woo 입니다.')
-        setRole('Fullstack Engineer')
-        setCompany('Dev Community')
-        setLocation('Seoul, Korea')
-        setPrimaryStackText(DEFAULT_PRIMARY_STACK.join(', '))
-        setInterestsText(DEFAULT_INTERESTS.join(', '))
-        setGithubUrl('https://github.com/sh-woo')
-        setWebsiteUrl('https://shwoo.dev')
-        setLinkedinUrl('https://www.linkedin.com/in/sh-woo')
-        setNotionUrl('https://shwoo.notion.site')
-
-        originalDataRef.current = getCurrentFormData()
       }
     } catch (error) {
       console.error('Failed to load profile:', error)
