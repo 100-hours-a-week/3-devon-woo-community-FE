@@ -22,6 +22,7 @@ export default function PostDetailPage() {
     isLiked,
     recommendedPosts,
     isLoading,
+    error,
     handleLike,
     handleCommentSubmit,
   } = usePostDetail({
@@ -50,6 +51,17 @@ export default function PostDetailPage() {
         <Header />
         <main className={styles.postDetailMain}>
           <div className={styles.loading}>게시글을 불러오는 중...</div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.postDetailPage}>
+        <Header />
+        <main className={styles.postDetailMain}>
+          <div className={styles.loading}>{error.message || '게시글을 불러오지 못했습니다.'}</div>
         </main>
       </div>
     )

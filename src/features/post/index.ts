@@ -5,4 +5,5 @@ export * from './usePostComments'
 export * from './usePostLike'
 export * from './useRecommendedPosts'
 export * from './usePostEditor'
-
+export * from './useTopPosts'
+export * from './usePopularTags'

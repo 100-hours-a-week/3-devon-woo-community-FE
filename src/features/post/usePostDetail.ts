@@ -20,6 +20,7 @@ interface UsePostDetailResult {
   isLiked: boolean
   recommendedPosts: RecommendedPost[]
   isLoading: boolean
+  error: Error | null
   handleLike: () => Promise<void>
   handleCommentSubmit: (text: string) => Promise<void>
   refreshComments: () => Promise<void>
@@ -32,6 +33,7 @@ export function usePostDetail({ postId }: UsePostDetailOptions): UsePostDetailRe
   const [likeCount, setLikeCount] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
   const [recommendedPosts, setRecommendedPosts] = useState<RecommendedPost[]>([])
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     if (postId) {
@@ -42,20 +44,23 @@ export function usePostDetail({ postId }: UsePostDetailOptions): UsePostDetailRe
   }, [postId])
 
   const loadPost = async () => {
+    if (!postId) return
+
     setIsLoading(true)
+    setError(null)
     try {
-      if (postId) {
-        const response = await postApi.getPostById(postId)
-        if (response.success && response.data) {
-          setPost(response.data)
-          setLikeCount(response.data.likeCount || 0)
-          setIsLiked(response.data.isLiked || false)
-        } else {
-          setPost(null)
-        }
+      const response = await postApi.getPostById(postId)
+      if (response.success && response.data) {
+        setPost(response.data)
+        setLikeCount(response.data.likeCount || 0)
+        setIsLiked(response.data.isLiked || false)
+      } else {
+        setPost(null)
+        setError(new Error(response.message || '게시글을 불러오지 못했습니다.'))
       }
-    } catch (error) {
-      console.error('Failed to load post:', error)
+    } catch (err) {
+      const errorObj = err instanceof Error ? err : new Error('게시글을 불러오지 못했습니다.')
+      setError(errorObj)
       setPost(null)
     } finally {
       setIsLoading(false)
@@ -85,15 +90,15 @@ export function usePostDetail({ postId }: UsePostDetailOptions): UsePostDetailRe
   }
 
   const loadComments = async () => {
+    if (!postId) return
+
     try {
-      if (postId) {
-        const response = await commentApi.getComments(postId)
-        if (response.success && response.data) {
-          setComments(response.data.items)
-        }
+      const response = await commentApi.getComments(postId)
+      if (response.success && response.data) {
+        setComments(response.data.items)
       }
-    } catch (error) {
-      console.error('Failed to load comments:', error)
+    } catch (err) {
+      console.error('Failed to load comments:', err)
     }
   }
 
@@ -144,6 +149,7 @@ export function usePostDetail({ postId }: UsePostDetailOptions): UsePostDetailRe
     isLiked,
     recommendedPosts,
     isLoading,
+    error,
     handleLike,
     handleCommentSubmit,
     refreshComments,

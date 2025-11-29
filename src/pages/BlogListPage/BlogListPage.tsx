@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -7,26 +7,12 @@ import Sidebar from '@/components/Sidebar/Sidebar'
 import TopPostsList from '@/components/TopPostsList/TopPostsList'
 import TagCloud from '@/components/TagCloud/TagCloud'
 import Pagination from '@/components/Pagination'
-import { postApi } from '@/api'
-import { usePosts } from '@/features/post'
+import { usePosts, useTopPosts, usePopularTags } from '@/features/post'
 import styles from './BlogListPage.module.css'
 
-interface TopPost {
-  id: string | number
-  title: string
-  url: string
-}
-
-interface Tag {
-  name: string
-  count: number
-}
-
 export default function BlogListPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [topPosts, setTopPosts] = useState<TopPost[]>([])
-  const [tags, setTags] = useState<Tag[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const searchQuery = searchParams.get('search') || ''
   const pageSize = 20
@@ -37,51 +23,8 @@ export default function BlogListPage() {
     search: searchQuery || undefined,
   })
 
-  useEffect(() => {
-    loadTopPosts()
-    loadTags()
-  }, [])
-
-  const loadTopPosts = async () => {
-    try {
-      const response = await postApi.getPosts({
-        page: 0,
-        size: 5,
-        sort: 'viewCount,desc',
-      })
-
-      if (response.success && response.data) {
-        const topPostsList = response.data.items.map(post => ({
-          id: post.postId,
-          title: post.title,
-          url: `/posts/${post.postId}`,
-        }))
-        setTopPosts(topPostsList)
-      }
-    } catch (error) {
-      console.error('Failed to load top posts:', error)
-    }
-  }
-
-  const loadTags = async () => {
-    try {
-      const mockTags: Tag[] = [
-        { name: 'JavaScript', count: 45 },
-        { name: 'React', count: 38 },
-        { name: 'TypeScript', count: 32 },
-        { name: 'Node.js', count: 28 },
-        { name: 'CSS', count: 25 },
-        { name: 'Python', count: 22 },
-        { name: 'Java', count: 20 },
-        { name: 'Spring', count: 18 },
-        { name: 'Docker', count: 15 },
-        { name: 'AWS', count: 12 },
-      ]
-      setTags(mockTags)
-    } catch (error) {
-      console.error('Failed to load tags:', error)
-    }
-  }
+  const { topPosts, isLoading: isTopPostsLoading } = useTopPosts({ limit: 5 })
+  const { tags, isLoading: isTagsLoading } = usePopularTags({ limit: 10 })
 
   const handleClearSearch = () => {
     navigate('/posts')
@@ -145,8 +88,8 @@ export default function BlogListPage() {
           </section>
 
           <Sidebar>
-            <TopPostsList posts={topPosts} />
-            <TagCloud tags={tags} onTagClick={handleTagClick} />
+            <TopPostsList posts={isTopPostsLoading ? [] : topPosts} />
+            <TagCloud tags={isTagsLoading ? [] : tags} onTagClick={handleTagClick} />
           </Sidebar>
         </div>
       </main>

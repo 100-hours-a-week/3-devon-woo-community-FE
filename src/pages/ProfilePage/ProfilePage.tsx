@@ -15,7 +15,7 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const { profile, posts, isLoading, isOwner } = useProfileOverview({
+  const { profile, posts, isLoading, isOwner, error } = useProfileOverview({
     memberId: memberId ? Number(memberId) : undefined,
     currentUserId: user?.memberId,
   })
@@ -38,6 +38,17 @@ export default function ProfilePage() {
         <Header />
         <div className={styles.loading}>
           <div className={styles.loadingSpinner} />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.profilePage}>
+        <Header />
+        <div className={styles.emptyState}>
+          {error.message || '프로필 정보를 불러오는 중 오류가 발생했습니다.'}
         </div>
       </div>
     )
