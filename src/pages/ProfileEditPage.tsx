@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth'
 import type { MemberResponse } from '@/types'
 import { validateUrl } from '@/utils/validators'
 import { parseCommaSeparatedList } from '@/utils/formatters'
+import { USE_MOCK } from '@/config/env'
 import styles from './ProfileEditPage.module.css'
 
 const DEFAULT_PROFILE_IMAGE =
@@ -217,8 +218,8 @@ export default function ProfileEditPage() {
         },
       }
 
-      if (!USE_MOCK && user?.memberId) {
-        const response = await memberApi.updateProfile(user.memberId, updateData)
+      if (!USE_MOCK) {
+        const response = await memberApi.updateProfile(updateData)
         if (!response.success) {
           throw new Error('Failed to update profile')
         }
@@ -281,22 +282,21 @@ export default function ProfileEditPage() {
 
   const previewProfile: MemberResponse = {
     memberId: user?.memberId || 1,
-    id: user?.memberId || 1,
     email: user?.email || '',
     nickname: nickname || '사용자',
     profileImage,
-    handle: handle || undefined,
-    bio: bio || undefined,
-    role: role || undefined,
-    company: company || undefined,
-    location: location || undefined,
+    handle: handle || '',
+    bio: bio || '',
+    role: role || '',
+    company: company || '',
+    location: location || '',
     primaryStack,
     interests,
     socialLinks: {
-      github: githubUrl || undefined,
-      website: websiteUrl || undefined,
-      linkedin: linkedinUrl || undefined,
-      notion: notionUrl || undefined,
+      github: githubUrl || '',
+      website: websiteUrl || '',
+      linkedin: linkedinUrl || '',
+      notion: notionUrl || '',
     },
   }
 

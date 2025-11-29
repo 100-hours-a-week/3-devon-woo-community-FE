@@ -35,7 +35,7 @@ interface Post {
   title: string
   excerpt: string
   date: string
-  likes: number
+  likes: number | null
   views: number
   comments: number
 }
@@ -50,7 +50,7 @@ export default function ProfilePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [sort, setSort] = useState<'latest' | 'popular' | 'views'>('latest')
 
-  const isOwner = !memberId || (user && user.memberId === Number(memberId))
+  const isOwner = !memberId || (user && user.memberId === Number(memberId)) || false
 
   useEffect(() => {
     loadProfileData()

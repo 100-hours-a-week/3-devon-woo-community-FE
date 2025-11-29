@@ -11,8 +11,8 @@ export interface PostCreateRequest {
 }
 
 export interface PostUpdateRequest {
-  title: string
-  content: string
+  title?: string
+  content?: string
   image?: string
   summary?: string
   tags?: string[]

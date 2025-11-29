@@ -2,7 +2,6 @@ import type { MemberResponse } from '@/types/member'
 
 export const generateMockMember = (memberId: number = 1): MemberResponse => ({
   memberId,
-  id: memberId,
   email: 'shwoo@example.com',
   nickname: 'SH Woo',
   profileImage:

@@ -2,6 +2,7 @@ import httpClient from './httpClient'
 import type { ApiResponse } from '@/types/common'
 import { createSuccessResponse } from '@/types/common'
 import type { MemberResponse } from '@/types/member'
+import type { UpdateProfileRequest } from '@/types/member/UpdateProfileRequest'
 import { USE_MOCK } from '@/config/env'
 import { generateMockMember } from '@/mocks/memberDummy'
 
@@ -16,7 +17,7 @@ export const memberApi = {
     return httpClient.get(url)
   },
 
-  updateProfile: async (data: Partial<MemberResponse>): Promise<ApiResponse<MemberResponse>> => {
+  updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<MemberResponse>> => {
     if (USE_MOCK) {
       const updatedMock = { ...generateMockMember(), ...data } as MemberResponse
       return createSuccessResponse(updatedMock)

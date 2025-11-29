@@ -96,6 +96,10 @@ export const postApi = {
   likePost: async (postId: number): Promise<ApiResponse<{ liked: boolean }>> => {
     return httpClient.post(`/api/v1/posts/${postId}/like`)
   },
+
+  unlikePost: async (postId: number): Promise<ApiResponse<{ liked: boolean }>> => {
+    return httpClient.delete(`/api/v1/posts/${postId}/like`)
+  },
 }
 
 export default postApi

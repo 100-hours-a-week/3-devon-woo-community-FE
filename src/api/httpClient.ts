@@ -8,6 +8,7 @@ import { API_BASE_URL } from '@/config/env'
 
 class HttpClient {
   private client: AxiosInstance
+  private accessToken: string | null = null
 
   constructor(baseURL: string = API_BASE_URL) {
     this.client = axios.create({
@@ -25,9 +26,8 @@ class HttpClient {
   private setupInterceptors() {
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = this.getAccessToken()
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`
+        if (this.accessToken && config.headers) {
+          config.headers.Authorization = `Bearer ${this.accessToken}`
         }
         return config
       },
@@ -64,16 +64,12 @@ class HttpClient {
     )
   }
 
-  private getAccessToken(): string | null {
-    return localStorage.getItem('accessToken')
-  }
-
-  setAccessToken(token: string) {
-    localStorage.setItem('accessToken', token)
+  setAccessToken(token: string | null) {
+    this.accessToken = token
   }
 
   clearTokens() {
-    localStorage.removeItem('accessToken')
+    this.accessToken = null
   }
 
   private async refreshAccessToken(): Promise<string | null> {

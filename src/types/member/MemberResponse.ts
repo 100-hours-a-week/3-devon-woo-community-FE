@@ -7,7 +7,6 @@ export interface SocialLinks {
 
 export interface MemberResponse {
   memberId: number
-  id: number
   email: string
   nickname: string
   profileImage: string
