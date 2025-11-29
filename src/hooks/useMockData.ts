@@ -12,5 +12,3 @@ export function useMockData<T>(mockData: T, realDataFn: () => Promise<T>): () =>
 export function useMockDataSync<T>(mockData: T, realData: T): T {
   return USE_MOCK ? mockData : realData
 }
-
-export default useMockData
