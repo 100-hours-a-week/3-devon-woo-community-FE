@@ -23,6 +23,7 @@ interface UseProfileOverviewResult {
   posts: ProfilePost[]
   isLoading: boolean
   isOwner: boolean
+  error: Error | null
 }
 
 export function useProfileOverview({
@@ -32,12 +33,14 @@ export function useProfileOverview({
   const [profile, setProfile] = useState<MemberResponse | null>(null)
   const [posts, setPosts] = useState<ProfilePost[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   const isOwner = !memberId || (currentUserId && currentUserId === memberId) || false
 
   useEffect(() => {
     const loadProfileData = async () => {
       try {
+        setError(null)
         const targetMemberId = memberId || currentUserId
 
         if (targetMemberId) {
@@ -61,8 +64,9 @@ export function useProfileOverview({
           setProfile(createDefaultProfile())
           setPosts(createDefaultPosts())
         }
-      } catch (error) {
-        console.error('Failed to load profile data:', error)
+      } catch (err) {
+        console.error('Failed to load profile data:', err)
+        setError(err instanceof Error ? err : new Error('Failed to load profile data'))
         setProfile(null)
         setPosts([])
       } finally {
@@ -71,7 +75,6 @@ export function useProfileOverview({
     }
 
     void loadProfileData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId, currentUserId])
 
   return {
@@ -79,6 +82,7 @@ export function useProfileOverview({
     posts,
     isLoading,
     isOwner,
+    error,
   }
 }
 
