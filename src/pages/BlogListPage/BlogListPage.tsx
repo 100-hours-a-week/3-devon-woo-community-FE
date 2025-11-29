@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -8,9 +8,7 @@ import TopPostsList from '@/components/TopPostsList/TopPostsList'
 import TagCloud from '@/components/TagCloud/TagCloud'
 import Pagination from '@/components/Pagination'
 import { postApi } from '@/api'
-import type { PostSummaryResponse } from '@/types/post'
-import { USE_MOCK } from '@/config/env'
-import { generateMockPosts } from '@/mocks/postDummy'
+import { usePosts } from '@/features/post'
 import styles from './BlogListPage.module.css'
 
 interface TopPost {
@@ -27,100 +25,38 @@ interface Tag {
 export default function BlogListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [posts, setPosts] = useState<PostSummaryResponse[]>([])
   const [topPosts, setTopPosts] = useState<TopPost[]>([])
   const [tags, setTags] = useState<Tag[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
   const searchQuery = searchParams.get('search') || ''
   const pageSize = 20
 
-  useEffect(() => {
-    loadPosts()
-  }, [currentPage, searchQuery])
+  const { posts, totalPages, isLoading } = usePosts({
+    page: currentPage,
+    size: pageSize,
+    search: searchQuery || undefined,
+  })
 
   useEffect(() => {
     loadTopPosts()
     loadTags()
   }, [])
 
-  const loadPosts = async () => {
-    setIsLoading(true)
-    try {
-      if (USE_MOCK) {
-        const mockPosts = generateMockPosts(100)
-        const startIndex = (currentPage - 1) * pageSize
-        const endIndex = startIndex + pageSize
-
-        let filteredPosts = mockPosts
-
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase()
-          filteredPosts = mockPosts.filter(
-            post =>
-              post.title.toLowerCase().includes(query) ||
-              post.member.nickname.toLowerCase().includes(query)
-          )
-        }
-
-        setPosts(filteredPosts.slice(startIndex, endIndex))
-        setTotalPages(Math.ceil(filteredPosts.length / pageSize))
-      } else {
-        const response = await postApi.getPosts({
-          page: currentPage - 1,
-          size: pageSize,
-        })
-
-        if (response.success && response.data) {
-          let filteredPosts = response.data.items
-
-          if (searchQuery) {
-            const query = searchQuery.toLowerCase()
-            filteredPosts = filteredPosts.filter(
-              post =>
-                post.title.toLowerCase().includes(query) ||
-                post.member.nickname.toLowerCase().includes(query)
-            )
-          }
-
-          setPosts(filteredPosts)
-          setTotalPages(response.data.totalPages)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load posts:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const loadTopPosts = async () => {
     try {
-      if (USE_MOCK) {
-        const mockPosts = generateMockPosts(20)
-        const sortedPosts = [...mockPosts].sort((a, b) => b.viewCount - a.viewCount)
-        const topPostsList = sortedPosts.slice(0, 5).map(post => ({
+      const response = await postApi.getPosts({
+        page: 0,
+        size: 5,
+        sort: 'viewCount,desc',
+      })
+
+      if (response.success && response.data) {
+        const topPostsList = response.data.items.map(post => ({
           id: post.postId,
           title: post.title,
           url: `/posts/${post.postId}`,
         }))
         setTopPosts(topPostsList)
-      } else {
-        const response = await postApi.getPosts({
-          page: 0,
-          size: 5,
-          sort: 'viewCount,desc',
-        })
-
-        if (response.success && response.data) {
-          const topPostsList = response.data.items.map(post => ({
-            id: post.postId,
-            title: post.title,
-            url: `/posts/${post.postId}`,
-          }))
-          setTopPosts(topPostsList)
-        }
       }
     } catch (error) {
       console.error('Failed to load top posts:', error)
@@ -159,8 +95,6 @@ export default function BlogListPage() {
   const handleTagClick = (tagName: string) => {
     navigate(`/posts?search=${encodeURIComponent(tagName)}`)
   }
-
-
 
   return (
     <div className={styles.blogListPage}>

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -6,126 +5,28 @@ import Header from '@/components/Header'
 import CommentList from '@/components/CommentList'
 import Footer from '@/components/Footer'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
-import { postApi, commentApi } from '@/api'
 import { useAuth } from '@/features/auth'
-import type { PostResponse, CommentResponse } from '@/types'
+import { usePostDetail } from '@/features/post'
 import { formatDateLong } from '@/utils/formatters'
 import styles from './PostDetailPage.module.css'
-
-interface RecommendedPost {
-  id: number
-  title: string
-  category: string
-  date: string
-}
 
 export default function PostDetailPage() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [post, setPost] = useState<PostResponse | null>(null)
-  const [comments, setComments] = useState<CommentResponse[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [likeCount, setLikeCount] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-  const [recommendedPosts, setRecommendedPosts] = useState<RecommendedPost[]>([])
 
-  useEffect(() => {
-    if (postId) {
-      loadPost()
-      loadRecommendedPosts()
-      loadComments()
-    }
-  }, [postId])
-
-
-  const loadPost = async () => {
-    setIsLoading(true)
-    try {
-      if (postId) {
-        const response = await postApi.getPostById(Number(postId))
-        if (response.success && response.data) {
-          setPost(response.data)
-          setLikeCount(response.data.likeCount || 0)
-          setIsLiked(response.data.isLiked || false)
-        } else {
-          setPost(null)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load post:', error)
-      setPost(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const loadRecommendedPosts = async () => {
-    try {
-      if (postId) {
-        const response = await postApi.getPosts({ page: 0, size: 3 })
-        if (response.success && response.data) {
-          const recommendations: RecommendedPost[] = response.data.items
-            .filter(p => p.postId !== Number(postId))
-            .slice(0, 3)
-            .map(p => ({
-              id: p.postId,
-              title: p.title,
-              category: 'TECH INSIGHT',
-              date: p.createdAt,
-            }))
-          setRecommendedPosts(recommendations)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load recommended posts:', error)
-    }
-  }
-
-  const loadComments = async () => {
-    try {
-      if (postId) {
-        const response = await commentApi.getComments(Number(postId))
-        if (response.success && response.data) {
-          setComments(response.data.items)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load comments:', error)
-    }
-  }
-
-  const handleLikeClick = async () => {
-    if (!post) return
-
-    const newIsLiked = !isLiked
-    const newLikeCount = newIsLiked ? likeCount + 1 : likeCount - 1
-
-    setIsLiked(newIsLiked)
-    setLikeCount(newLikeCount)
-
-    try {
-      await postApi.likePost(post.postId)
-    } catch (error) {
-      console.error('Failed to like post:', error)
-      setIsLiked(!newIsLiked)
-      setLikeCount(likeCount)
-    }
-  }
-
-  const handleCommentSubmit = async (text: string) => {
-    if (!postId) return
-
-    try {
-      const response = await commentApi.createComment(Number(postId), { content: text })
-      if (response.success && response.data) {
-        setComments([...comments, response.data])
-      }
-    } catch (error) {
-      console.error('Failed to create comment:', error)
-      throw error
-    }
-  }
+  const {
+    post,
+    comments,
+    likeCount,
+    isLiked,
+    recommendedPosts,
+    isLoading,
+    handleLike,
+    handleCommentSubmit,
+  } = usePostDetail({
+    postId: postId ? Number(postId) : undefined,
+  })
 
   const handleCommentLike = (commentId: number, isLiked: boolean) => {
     console.log(`Comment ${commentId} ${isLiked ? 'liked' : 'unliked'}`)
@@ -142,8 +43,6 @@ export default function PostDetailPage() {
   const handleRecommendedClick = (postId: number) => {
     navigate(`/posts/${postId}`)
   }
-
-
 
   if (isLoading) {
     return (
@@ -184,7 +83,7 @@ export default function PostDetailPage() {
             <div className={styles.postActions}>
               <button
                 className={`${styles.likeBtn} ${isLiked ? styles.liked : ''}`}
-                onClick={handleLikeClick}
+                onClick={handleLike}
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
