@@ -1,25 +1,7 @@
 import { useEffect, useState } from 'react'
 import { memberApi, postApi } from '@/api'
 import type { MemberResponse } from '@/types'
-
-const DEFAULT_PROFILE_IMAGE =
-  'https://ui-avatars.com/api/?name=SH+Woo&background=2563eb&color=fff&size=160'
-const DEFAULT_DEVELOPER_PROFILE = {
-  nickname: 'SH Woo',
-  handle: 'Fullstack Developer / TypeScript Enthusiast',
-  bio: '프론트엔드와 백엔드를 넘나들며 커뮤니티 서비스를 만드는 개발자 SH Woo 입니다.',
-  role: 'Fullstack Engineer',
-  company: 'Dev Community',
-  location: 'Seoul, Korea',
-}
-const DEFAULT_PRIMARY_STACK = ['TypeScript', 'React', 'Node.js', 'Vite']
-const DEFAULT_INTERESTS = ['Developer Experience', 'Frontend Architecture', 'Open Source']
-const DEFAULT_SOCIAL_LINKS = {
-  github: 'https://github.com/sh-woo',
-  website: 'https://shwoo.dev',
-  linkedin: 'https://www.linkedin.com/in/sh-woo',
-  notion: 'https://shwoo.notion.site',
-}
+import { DEFAULT_PROFILE_CONFIG } from '@/config/defaults'
 
 export interface ProfilePost {
   id: number
@@ -103,20 +85,20 @@ export function useProfileOverview({
 function normalizeProfile(data: any): MemberResponse {
   return {
     ...data,
-    profileImage: data.profileImage || DEFAULT_PROFILE_IMAGE,
-    nickname: data.nickname || DEFAULT_DEVELOPER_PROFILE.nickname,
-    handle: data.handle || DEFAULT_DEVELOPER_PROFILE.handle,
-    bio: data.bio || DEFAULT_DEVELOPER_PROFILE.bio,
-    role: data.role || DEFAULT_DEVELOPER_PROFILE.role,
-    company: data.company || DEFAULT_DEVELOPER_PROFILE.company,
-    location: data.location || DEFAULT_DEVELOPER_PROFILE.location,
-    primaryStack: data.primaryStack?.length ? data.primaryStack : DEFAULT_PRIMARY_STACK,
-    interests: data.interests?.length ? data.interests : DEFAULT_INTERESTS,
+    profileImage: data.profileImage || DEFAULT_PROFILE_CONFIG.image,
+    nickname: data.nickname || DEFAULT_PROFILE_CONFIG.profile.nickname,
+    handle: data.handle || DEFAULT_PROFILE_CONFIG.profile.handle,
+    bio: data.bio || DEFAULT_PROFILE_CONFIG.profile.bio,
+    role: data.role || DEFAULT_PROFILE_CONFIG.profile.role,
+    company: data.company || DEFAULT_PROFILE_CONFIG.profile.company,
+    location: data.location || DEFAULT_PROFILE_CONFIG.profile.location,
+    primaryStack: data.primaryStack?.length ? data.primaryStack : DEFAULT_PROFILE_CONFIG.primaryStack,
+    interests: data.interests?.length ? data.interests : DEFAULT_PROFILE_CONFIG.interests,
     socialLinks: {
-      github: data.socialLinks?.github || DEFAULT_SOCIAL_LINKS.github,
-      website: data.socialLinks?.website || DEFAULT_SOCIAL_LINKS.website,
-      linkedin: data.socialLinks?.linkedin || DEFAULT_SOCIAL_LINKS.linkedin,
-      notion: data.socialLinks?.notion || DEFAULT_SOCIAL_LINKS.notion,
+      github: data.socialLinks?.github || DEFAULT_PROFILE_CONFIG.socialLinks.github,
+      website: data.socialLinks?.website || DEFAULT_PROFILE_CONFIG.socialLinks.website,
+      linkedin: data.socialLinks?.linkedin || DEFAULT_PROFILE_CONFIG.socialLinks.linkedin,
+      notion: data.socialLinks?.notion || DEFAULT_PROFILE_CONFIG.socialLinks.notion,
     },
   }
 }
@@ -139,15 +121,15 @@ function normalizePosts(items: any[]): ProfilePost[] {
 
 function createDefaultProfile(): MemberResponse {
   return normalizeProfile({
-    nickname: DEFAULT_DEVELOPER_PROFILE.nickname,
-    handle: DEFAULT_DEVELOPER_PROFILE.handle,
-    bio: DEFAULT_DEVELOPER_PROFILE.bio,
-    role: DEFAULT_DEVELOPER_PROFILE.role,
-    company: DEFAULT_DEVELOPER_PROFILE.company,
-    location: DEFAULT_DEVELOPER_PROFILE.location,
-    primaryStack: DEFAULT_PRIMARY_STACK,
-    interests: DEFAULT_INTERESTS,
-    socialLinks: DEFAULT_SOCIAL_LINKS,
+    nickname: DEFAULT_PROFILE_CONFIG.profile.nickname,
+    handle: DEFAULT_PROFILE_CONFIG.profile.handle,
+    bio: DEFAULT_PROFILE_CONFIG.profile.bio,
+    role: DEFAULT_PROFILE_CONFIG.profile.role,
+    company: DEFAULT_PROFILE_CONFIG.profile.company,
+    location: DEFAULT_PROFILE_CONFIG.profile.location,
+    primaryStack: DEFAULT_PROFILE_CONFIG.primaryStack,
+    interests: DEFAULT_PROFILE_CONFIG.interests,
+    socialLinks: DEFAULT_PROFILE_CONFIG.socialLinks,
   })
 }
 
