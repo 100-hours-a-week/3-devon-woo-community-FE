@@ -244,15 +244,6 @@ export default function PostCreatePage() {
                 onChange={e => setTitle(e.target.value)}
                 rows={1}
               />
-              <div className="editor-actions">
-                <button
-                  type="button"
-                  className="preview-toggle-btn"
-                  onClick={() => setShowPreviewRail(prev => !prev)}
-                >
-                  {showPreviewRail ? '미리보기 숨기기' : '미리보기 열기'}
-                </button>
-              </div>
             </div>
 
             <div className="editor-container">
@@ -260,6 +251,8 @@ export default function PostCreatePage() {
                 value={content}
                 onChange={handleEditorChange}
                 onUploadImage={handleImageUpload}
+                isPreviewVisible={showPreviewRail}
+                onTogglePreview={() => setShowPreviewRail(prev => !prev)}
               />
             </div>
           </div>
@@ -267,7 +260,9 @@ export default function PostCreatePage() {
           {showPreviewRail && (
             <aside className="editor-preview-rail">
               <div className="preview-rail-body">
-                <ToastMarkdownViewer content={content || ' '} />
+                <div className="preview-rail-scale">
+                  <ToastMarkdownViewer content={content || ' '} />
+                </div>
               </div>
             </aside>
           )}

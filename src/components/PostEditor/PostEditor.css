@@ -97,7 +97,37 @@
 }
 
 .toast-editor-container {
+  position: relative;
   padding: 0;
+}
+
+.toolbar-preview-toggle {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-button);
+  background: rgba(255, 255, 255, 0.9);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 5;
+  transition: var(--transition-bg), var(--transition-color), var(--transition-border);
+}
+
+.toolbar-preview-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.toolbar-preview-toggle.active {
+  color: var(--color-white);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
 }
 
 .editor-toolbar-row {

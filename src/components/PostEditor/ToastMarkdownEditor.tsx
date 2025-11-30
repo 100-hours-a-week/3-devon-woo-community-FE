@@ -9,12 +9,16 @@ interface ToastMarkdownEditorProps {
   value: string
   onChange: (value: string) => void
   onUploadImage: (file: File) => Promise<string>
+  isPreviewVisible: boolean
+  onTogglePreview: () => void
 }
 
 export default function ToastMarkdownEditor({
   value,
   onChange,
   onUploadImage,
+  isPreviewVisible,
+  onTogglePreview,
 }: ToastMarkdownEditorProps) {
   const editorRef = useRef<Editor>(null)
 
@@ -77,6 +81,24 @@ export default function ToastMarkdownEditor({
 
   return (
     <div className="toast-editor-container">
+      <button
+        type="button"
+        className={`toolbar-preview-toggle ${isPreviewVisible ? 'active' : ''}`}
+        aria-pressed={isPreviewVisible}
+        onClick={onTogglePreview}
+        title="미리보기 토글"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path
+            d="M1 9s3.5-5 8-5 8 5 8 5-3.5 5-8 5-8-5-8-5z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </button>
       <Editor
         ref={editorRef}
         initialValue={value || ' '}

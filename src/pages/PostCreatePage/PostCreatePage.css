@@ -10,30 +10,27 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-3);
 }
 
 .editor-shell {
   width: 100%;
-  max-width: 1320px;
+  max-width: 1100px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .editor-wrapper {
-  flex: 1 1 880px;
+  flex: 0 0 800px;
   width: 100%;
-  padding: var(--space-6) 0 var(--space-16);
-  margin: 0 auto;
+  max-width: 800px;
+  padding: var(--space-5) 0 var(--space-12);
 }
 
 .editor-header {
   margin-bottom: var(--space-4);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
 }
 
 .title-input {
@@ -64,30 +61,38 @@
 }
 
 .editor-preview-rail {
-  width: 220px;
-  padding: var(--space-6) 0 var(--space-16);
+  width: 200px;
+  flex: 0 0 200px;
+  padding: var(--space-5) 0 var(--space-12);
 }
 
 .preview-rail-body {
   position: sticky;
-  top: 110px;
+  top: 100px;
   max-height: 75vh;
-  overflow: auto;
+  overflow: hidden;
 }
 
-.preview-rail-body .toastui-editor-defaultUI,
-.preview-rail-body .toastui-editor {
+.preview-rail-scale {
+  width: 200px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview-rail-scale .toastui-editor-defaultUI {
+  width: 800px;
+  transform: scale(0.25);
+  transform-origin: top left;
   border: none;
   background: transparent;
 }
 
-.preview-rail-body .toastui-editor-contents {
-  font-size: var(--font-size-small);
-  line-height: 1.5;
-  opacity: 0.85;
+.preview-rail-scale .toastui-editor-contents {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
 }
 
-.preview-rail-body .toastui-editor-contents img {
+.preview-rail-scale .toastui-editor-contents img {
   max-width: 100%;
 }
 
@@ -99,8 +104,8 @@
 }
 
 .editor-container .toastui-editor-contents {
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
+  font-size: 18px;
+  line-height: 1.8;
   color: var(--text-primary);
 }
 
@@ -111,12 +116,13 @@
 @media (max-width: 1024px) {
   .editor-shell {
     flex-direction: column;
-    gap: var(--space-4);
+    max-width: 800px;
   }
 
   .editor-preview-rail {
     width: 100%;
-    padding: 0 0 var(--space-6);
+    flex: none;
+    padding-bottom: var(--space-8);
   }
 
   .preview-rail-body {
@@ -124,9 +130,13 @@
     max-height: none;
   }
 
-  .preview-rail-body .toastui-editor-contents {
-    font-size: var(--font-size-small);
-    opacity: 1;
+  .preview-rail-scale {
+    width: 100%;
+  }
+
+  .preview-rail-scale .toastui-editor-defaultUI {
+    transform: none;
+    width: 100%;
   }
 }
 
@@ -135,32 +145,7 @@
     padding: 0 var(--space-3);
   }
 
-  .editor-wrapper {
-    padding: var(--space-5) 0 var(--space-10);
-  }
-
   .title-input {
     font-size: 32px;
   }
-}
-
-.editor-actions {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.preview-toggle-btn {
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-button);
-  padding: 6px 14px;
-  background: transparent;
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-bg), var(--transition-color);
-}
-
-.preview-toggle-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-primary);
 }
