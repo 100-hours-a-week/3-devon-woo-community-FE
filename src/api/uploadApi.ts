@@ -1,33 +1,30 @@
 import httpClient from './httpClient'
 import type { ApiResponse } from '@/types/common'
 
-export type ImageUploadProvider = 'cloudinary' | 's3'
-
-export interface CreatePresignedUploadParams {
-  fileName: string
-  fileType: string
-  provider: ImageUploadProvider
+export interface ImageSignatureData {
+  apiKey: string
+  cloudName: string
+  timestamp: number
+  signature: string
+  uploadPreset: string
+  folder?: string
 }
 
-export interface PresignedUploadPayload {
-  provider: ImageUploadProvider
-  uploadUrl: string
-  fileUrl: string
-  /**
-   * Cloudinary/Form-data style uploads require key/value fields.
-   */
-  fields?: Record<string, string>
-  /**
-   * S3 PUT uploads often include custom headers (ACL, etc).
-   */
-  headers?: Record<string, string>
+export interface ImageSignatureParams {
+  type?: string
 }
 
 export const uploadApi = {
-  createPresignedUpload: async (
-    params: CreatePresignedUploadParams
-  ): Promise<ApiResponse<PresignedUploadPayload>> => {
-    return httpClient.post('/api/v1/uploads/presign', params)
+  getImageSignature: async (
+    params?: ImageSignatureParams
+  ): Promise<ApiResponse<ImageSignatureData>> => {
+    const searchParams = new URLSearchParams()
+    if (params?.type) {
+      searchParams.set('type', params.type)
+    }
+    const query = searchParams.toString()
+    const endpoint = query ? `/api/v1/images/sign?${query}` : '/api/v1/images/sign'
+    return httpClient.get<ApiResponse<ImageSignatureData>>(endpoint)
   },
 }
 

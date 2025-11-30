@@ -4,21 +4,16 @@ import type { Editor as ToastEditor } from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
 import '@toast-ui/editor/dist/i18n/ko-kr'
 import './PostEditor.css'
-import type { ImageUploadProvider } from '@/api/uploadApi'
 
 interface ToastMarkdownEditorProps {
   value: string
   onChange: (value: string) => void
-  imageProvider: ImageUploadProvider
-  onImageProviderChange: (provider: ImageUploadProvider) => void
-  onUploadImage: (file: File, provider: ImageUploadProvider) => Promise<string>
+  onUploadImage: (file: File) => Promise<string>
 }
 
 export default function ToastMarkdownEditor({
   value,
   onChange,
-  imageProvider,
-  onImageProviderChange,
   onUploadImage,
 }: ToastMarkdownEditorProps) {
   const editorRef = useRef<Editor>(null)
@@ -48,7 +43,7 @@ export default function ToastMarkdownEditor({
           blob instanceof File
             ? blob
             : new File([blob], 'image-upload', { type: blob.type || 'application/octet-stream' })
-        const uploadedUrl = await onUploadImage(file, imageProvider)
+        const uploadedUrl = await onUploadImage(file)
         const altText = file.name || 'image'
         callback(uploadedUrl, altText)
       } catch (error) {
@@ -56,30 +51,19 @@ export default function ToastMarkdownEditor({
         alert('이미지 업로드에 실패했습니다.')
       }
     },
-    [imageProvider, onUploadImage]
+    [onUploadImage]
   )
 
   return (
     <div className="toast-editor-container">
-      <div className="upload-destination">
-        <label htmlFor="upload-provider">이미지 업로드 대상</label>
-        <select
-          id="upload-provider"
-          value={imageProvider}
-          onChange={e => onImageProviderChange(e.target.value as ImageUploadProvider)}
-        >
-          <option value="cloudinary">Cloudinary</option>
-          <option value="s3">AWS S3</option>
-        </select>
-      </div>
       <Editor
         ref={editorRef}
         initialValue={value || ' '}
-        previewStyle="vertical"
-        height="700px"
+        previewStyle="tab"
+        height="720px"
         initialEditType="markdown"
         useCommandShortcut={true}
-        hideModeSwitch={false}
+        hideModeSwitch={true}
         usageStatistics={false}
         language="ko-KR"
         placeholder="내용을 입력하세요 (Markdown & WYSIWYG 모두 지원)"

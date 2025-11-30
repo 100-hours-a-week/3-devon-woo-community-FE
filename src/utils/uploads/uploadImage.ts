@@ -1,79 +1,55 @@
-import uploadApi, {
-  type CreatePresignedUploadParams,
-  type ImageUploadProvider,
-  type PresignedUploadPayload,
-} from '@/api/uploadApi'
+import uploadApi from '@/api/uploadApi'
 
 export interface UploadImageOptions {
-  provider: ImageUploadProvider
+  type?: string
 }
 
-const buildPresignParams = (
-  file: File,
-  provider: ImageUploadProvider
-): CreatePresignedUploadParams => ({
-  fileName: file.name,
-  fileType: file.type || 'application/octet-stream',
-  provider,
-})
+interface CloudinaryUploadResponse {
+  secure_url?: string
+  url?: string
+  error?: {
+    message?: string
+  }
+}
 
-const uploadWithFormData = async (payload: PresignedUploadPayload, file: File) => {
-  const formData = new FormData()
+export async function uploadImage(file: File, options: UploadImageOptions = {}): Promise<string> {
+  const { type = 'post' } = options
+  const signatureResponse = await uploadApi.getImageSignature({ type })
 
-  if (payload.fields) {
-    Object.entries(payload.fields).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
+  if (!signatureResponse.success || !signatureResponse.data) {
+    throw new Error(signatureResponse.message ?? '이미지 업로드 서명을 가져오지 못했습니다.')
   }
 
-  formData.append('file', file)
+  const signature = signatureResponse.data
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${signature.cloudName}/auto/upload`
 
-  const response = await fetch(payload.uploadUrl, {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('api_key', signature.apiKey)
+  formData.append('timestamp', signature.timestamp.toString())
+  formData.append('signature', signature.signature)
+  formData.append('upload_preset', signature.uploadPreset)
+  if (signature.folder) {
+    formData.append('folder', signature.folder)
+  }
+
+  const response = await fetch(uploadUrl, {
     method: 'POST',
     body: formData,
   })
 
-  if (!response.ok) {
-    throw new Error('이미지 업로드에 실패했습니다 (폼 업로드).')
-  }
-}
-
-const uploadWithPut = async (payload: PresignedUploadPayload, file: File) => {
-  const headers = new Headers(payload.headers)
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', file.type || 'application/octet-stream')
-  }
-
-  const response = await fetch(payload.uploadUrl, {
-    method: 'PUT',
-    headers,
-    body: file,
-  })
+  const result = (await response.json()) as CloudinaryUploadResponse
 
   if (!response.ok) {
-    throw new Error('이미지 업로드에 실패했습니다 (PUT 업로드).')
-  }
-}
-
-export async function uploadImage(file: File, options: UploadImageOptions): Promise<string> {
-  const { provider } = options
-  const presignResponse = await uploadApi.createPresignedUpload(
-    buildPresignParams(file, provider)
-  )
-
-  if (!presignResponse.success || !presignResponse.data) {
-    throw new Error(presignResponse.message ?? '업로드 URL을 가져오지 못했습니다.')
+    throw new Error(result.error?.message ?? '이미지 업로드에 실패했습니다.')
   }
 
-  const payload = presignResponse.data
-
-  if (payload.fields) {
-    await uploadWithFormData(payload, file)
-  } else {
-    await uploadWithPut(payload, file)
+  const url = result.secure_url || result.url
+  if (!url) {
+    throw new Error('업로드된 이미지 URL을 확인할 수 없습니다.')
   }
 
-  return payload.fileUrl
+  return url
 }
 
 export default uploadImage

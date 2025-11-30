@@ -6,7 +6,7 @@ import { USE_MOCK } from '@/config/env'
 import ComposeHeader from '@/components/PostEditor/ComposeHeader'
 import PublishModal from '@/components/PostEditor/PublishModal'
 import ToastMarkdownEditor from '@/components/PostEditor/ToastMarkdownEditor'
-import type { ImageUploadProvider } from '@/api/uploadApi'
+import ToastMarkdownViewer from '@/components/PostEditor/ToastMarkdownViewer'
 import { uploadImage } from '@/utils/uploads/uploadImage'
 import './PostCreatePage.css'
 
@@ -25,7 +25,6 @@ export default function PostCreatePage() {
   const [visibility, setVisibility] = useState('public')
   const [commentSetting, setCommentSetting] = useState('allow')
   const [isPublishing, setIsPublishing] = useState(false)
-  const [imageProvider, setImageProvider] = useState<ImageUploadProvider>('cloudinary')
 
   const isEditMode = !!postId
   const canPublish = !!title.trim() && !!content.trim()
@@ -34,12 +33,7 @@ export default function PostCreatePage() {
     setContent(value)
   }
 
-  const handleImageUpload = useCallback(
-    (file: File, provider: ImageUploadProvider) => {
-      return uploadImage(file, { provider })
-    },
-    []
-  )
+  const handleImageUpload = useCallback((file: File) => uploadImage(file, { type: 'post' }), [])
 
   useEffect(() => {
     if (isEditMode) {
@@ -238,27 +232,36 @@ export default function PostCreatePage() {
       />
 
       <div className="main-container">
-        <div className="editor-wrapper">
-          <div className="editor-header">
-            <textarea
-              ref={titleTextareaRef}
-              className="title-input"
-              placeholder="제목을 입력하세요"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              rows={1}
-            />
+        <div className="editor-shell">
+          <div className="editor-wrapper">
+            <div className="editor-header">
+              <textarea
+                ref={titleTextareaRef}
+                className="title-input"
+                placeholder="제목을 입력하세요"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                rows={1}
+              />
+            </div>
+
+            <div className="editor-container">
+              <ToastMarkdownEditor
+                value={content}
+                onChange={handleEditorChange}
+                onUploadImage={handleImageUpload}
+              />
+            </div>
           </div>
 
-          <div className="editor-container">
-            <ToastMarkdownEditor
-              value={content}
-              onChange={handleEditorChange}
-              imageProvider={imageProvider}
-              onImageProviderChange={setImageProvider}
-              onUploadImage={handleImageUpload}
-            />
-          </div>
+          <aside className="editor-preview-rail">
+            <div className="preview-rail-header">
+              <span>라이브 미리보기</span>
+            </div>
+            <div className="preview-rail-body">
+              <ToastMarkdownViewer content={content || ' '} />
+            </div>
+          </aside>
         </div>
       </div>
 
