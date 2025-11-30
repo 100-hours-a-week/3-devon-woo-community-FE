@@ -1,6 +1,9 @@
 # tech-blog
 
-React + Vite + TypeScript starter to replace the existing setup in this folder.
+https://github.com/user-attachments/assets/32695646-487e-4083-a134-323ec0145b43
+
+
+TechBlog는 순수 자바스크립트로 구현된 SPA(싱글 페이지 애플리케이션) 프론트엔드입니다. React 스타일의 컴포넌트를 기반으로 라우터, 전역 헤더, DTO 중심의 API 호출, 재사용 가능한 UI 조각을 구성하여 마치 React 환경에서 동작하는 것처럼 설계되어 있습니다.
 
 ## Available scripts
 
