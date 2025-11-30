@@ -1,4 +1,7 @@
 .post-create-page {
+  --editor-width: 810px;
+  --preview-width: 270px;
+  --preview-scale: 0.333;
   min-height: 100vh;
   background: var(--bg-primary);
   display: flex;
@@ -15,17 +18,16 @@
 
 .editor-shell {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-4);
 }
 
 .editor-wrapper {
-  flex: 0 0 800px;
-  width: 100%;
-  max-width: 800px;
+  flex: 0 0 var(--editor-width);
+  width: var(--editor-width);
   padding: var(--space-5) 0 var(--space-12);
 }
 
@@ -61,8 +63,8 @@
 }
 
 .editor-preview-rail {
-  width: 200px;
-  flex: 0 0 200px;
+  width: var(--preview-width);
+  flex: 0 0 var(--preview-width);
   padding: var(--space-5) 0 var(--space-12);
 }
 
@@ -74,22 +76,22 @@
 }
 
 .preview-rail-scale {
-  width: 200px;
-  height: 100%;
+  width: var(--editor-width);
+  height: auto;
   overflow: hidden;
+  transform-origin: top left;
+  transform: scale(var(--preview-scale));
 }
 
 .preview-rail-scale .toastui-editor-defaultUI {
-  width: 800px;
-  transform: scale(0.25);
-  transform-origin: top left;
+  width: var(--editor-width);
   border: none;
   background: transparent;
+  padding: 0;
 }
 
 .preview-rail-scale .toastui-editor-contents {
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
+  padding: 0;
 }
 
 .preview-rail-scale .toastui-editor-contents img {
@@ -103,10 +105,18 @@
   box-shadow: none;
 }
 
-.editor-container .toastui-editor-contents {
-  font-size: 18px;
-  line-height: 1.8;
+.editor-container .toastui-editor-defaultUI .toastui-editor-contents {
+  font-size: 20px !important;
+  line-height: 1.85 !important;
   color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents {
+  font-size: 20px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
 }
 
 .editor-container .toastui-editor-contents pre code {
