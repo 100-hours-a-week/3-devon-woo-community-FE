@@ -1,0 +1,84 @@
+.commentWrite {
+  margin-bottom: 40px;
+}
+
+.commentAvatar {
+  display: none;
+}
+
+.commentInputWrapper {
+  width: 100%;
+}
+
+.commentTextarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background-color: #ffffff;
+  height: 100px;
+  line-height: 1.6;
+}
+
+.commentTextarea::placeholder {
+  color: #999;
+}
+
+.commentTextarea:focus {
+  border-color: #111;
+}
+
+.commentTextarea:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.commentActionsBottom {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.charCount {
+  font-size: 13px;
+  color: #999;
+}
+
+.charCount.overLimit {
+  color: #d32f2f;
+}
+
+.commentSubmitBtn {
+  padding: 10px 20px;
+  background-color: #111;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.commentSubmitBtn:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.commentSubmitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .commentTextarea {
+    height: 80px;
+    font-size: 14px;
+  }
+}

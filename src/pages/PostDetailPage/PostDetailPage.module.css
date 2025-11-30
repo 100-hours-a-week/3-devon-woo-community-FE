@@ -1,0 +1,301 @@
+.postDetailPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.postDetailPage main {
+  flex: 1;
+}
+
+.postDetailMain {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  width: 100%;
+}
+
+.postDetail {
+  margin-bottom: 80px;
+}
+
+.postHeader {
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.postCategory {
+  font-size: 14px;
+  color: #667eea;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.postTitle {
+  font-size: 42px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.3;
+  margin-bottom: 24px;
+}
+
+.postMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.postDivider {
+  color: #ddd;
+}
+
+.postActions {
+  display: flex;
+  gap: 16px;
+}
+
+.likeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #e5e5e5;
+  background-color: #ffffff;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  font-size: 14px;
+}
+
+.likeBtn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.likeBtn.liked {
+  border-color: #667eea;
+  background-color: #667eea;
+  color: white;
+}
+
+.likeBtn.liked svg path {
+  fill: white;
+}
+
+.postThumbnail {
+  width: 100%;
+  margin-bottom: 40px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.postThumbnail img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.postContent {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.postContent p {
+  margin-bottom: 24px;
+}
+
+.postContent h1 {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 48px 0 24px;
+  color: #000;
+}
+
+.postContent h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 48px 0 24px;
+  color: #000;
+}
+
+.postContent h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 36px 0 20px;
+  color: #000;
+}
+
+.postContent ol,
+.postContent ul {
+  margin: 24px 0;
+  padding-left: 28px;
+}
+
+.postContent li {
+  margin-bottom: 12px;
+}
+
+.postContent pre {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+  margin: 24px 0;
+}
+
+.postContent code {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.postContent img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 32px 0;
+  display: block;
+}
+
+.postContent blockquote {
+  border-left: 4px solid #667eea;
+  padding-left: 20px;
+  margin: 24px 0;
+  color: #666;
+  font-style: italic;
+}
+
+.recommendedPosts {
+  margin-bottom: 80px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #000;
+}
+
+.recommendedList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.recommendedItem {
+  background-color: #fafafa;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recommendedItem:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.recommendedItemCategory {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.recommendedItemTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.recommendedItemMeta {
+  font-size: 12px;
+  color: #999;
+}
+
+.scrollTopBtn {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 48px;
+  height: 48px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.scrollTopBtn.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.scrollTopBtn:hover {
+  background-color: #000;
+  transform: translateY(-2px);
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #999;
+}
+
+@media (max-width: 1024px) {
+  .recommendedList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .postDetailMain {
+    padding: 40px 20px;
+  }
+
+  .postTitle {
+    font-size: 32px;
+  }
+
+  .postContent {
+    font-size: 16px;
+  }
+
+  .postContent h2 {
+    font-size: 26px;
+  }
+
+  .postContent h3 {
+    font-size: 20px;
+  }
+
+  .recommendedList {
+    grid-template-columns: 1fr;
+  }
+
+  .scrollTopBtn {
+    bottom: 20px;
+    right: 20px;
+  }
+}

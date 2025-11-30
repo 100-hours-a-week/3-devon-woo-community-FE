@@ -1,0 +1,229 @@
+import { useState } from 'react'
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirm,
+  validateNickname,
+} from '@/utils/validators'
+import { parseCommaSeparatedList } from '@/utils/formatters'
+import { useAuth } from './AuthContext'
+
+interface UseSignupFormOptions {
+  onSuccess?: () => void
+  onError?: (error: Error) => void
+}
+
+interface UseSignupFormResult {
+  step: number
+  isSubmitting: boolean
+  selectedImageFile: File | null
+  email: string
+  password: string
+  passwordConfirm: string
+  nickname: string
+  emailError: string
+  passwordError: string
+  passwordConfirmError: string
+  nicknameError: string
+  handle: string
+  role: string
+  company: string
+  location: string
+  bio: string
+  primaryStackText: string
+  interestsText: string
+  socialLinks: {
+    github: string
+    website: string
+    linkedin: string
+    notion: string
+  }
+  setStep: (step: number) => void
+  setSelectedImageFile: (file: File | null) => void
+  setEmail: (email: string) => void
+  setPassword: (password: string) => void
+  setPasswordConfirm: (passwordConfirm: string) => void
+  setNickname: (nickname: string) => void
+  setEmailError: (error: string) => void
+  setPasswordError: (error: string) => void
+  setPasswordConfirmError: (error: string) => void
+  setNicknameError: (error: string) => void
+  setHandle: (handle: string) => void
+  setRole: (role: string) => void
+  setCompany: (company: string) => void
+  setLocation: (location: string) => void
+  setBio: (bio: string) => void
+  setPrimaryStackText: (text: string) => void
+  setInterestsText: (text: string) => void
+  setSocialLinks: (links: {
+    github: string
+    website: string
+    linkedin: string
+    notion: string
+  }) => void
+  isAccountFormValid: () => boolean
+  handleAccountSubmit: (e: React.FormEvent) => void
+  completeSignup: (skipProfile: boolean) => Promise<void>
+  handleProfileSubmit: (e: React.FormEvent) => void
+  error: Error | null
+}
+
+export function useSignupForm(
+  { onSuccess, onError }: UseSignupFormOptions = {}
+): UseSignupFormResult {
+  const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+  const [error, setError] = useState<Error | null>(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [nickname, setNickname] = useState('')
+
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordConfirmError, setPasswordConfirmError] = useState('')
+  const [nicknameError, setNicknameError] = useState('')
+
+  const [handle, setHandle] = useState('')
+  const [role, setRole] = useState('')
+  const [company, setCompany] = useState('')
+  const [location, setLocation] = useState('')
+  const [bio, setBio] = useState('')
+  const [primaryStackText, setPrimaryStackText] = useState('')
+  const [interestsText, setInterestsText] = useState('')
+  const [socialLinks, setSocialLinks] = useState({
+    github: '',
+    website: '',
+    linkedin: '',
+    notion: '',
+  })
+
+  const { signup } = useAuth()
+
+  const isAccountFormValid = (): boolean => {
+    return !!(
+      email.trim() &&
+      password.trim() &&
+      passwordConfirm.trim() &&
+      nickname.trim() &&
+      !emailError &&
+      !passwordError &&
+      !passwordConfirmError &&
+      !nicknameError
+    )
+  }
+
+  const handleAccountSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const emailErr = validateEmail(email).error
+    const passwordErr = validatePassword(password).error
+    const passwordConfirmErr = validatePasswordConfirm(password, passwordConfirm).error
+    const nicknameErr = validateNickname(nickname).error
+
+    setEmailError(emailErr)
+    setPasswordError(passwordErr)
+    setPasswordConfirmError(passwordConfirmErr)
+    setNicknameError(nicknameErr)
+
+    if (!emailErr && !passwordErr && !passwordConfirmErr && !nicknameErr) {
+      setStep(2)
+    }
+  }
+
+  const completeSignup = async (skipProfile: boolean) => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const profilePayload = skipProfile
+        ? {}
+        : {
+            handle: handle.trim(),
+            bio: bio.trim(),
+            role: role.trim(),
+            company: company.trim(),
+            location: location.trim(),
+            primaryStack: parseCommaSeparatedList(primaryStackText),
+            interests: parseCommaSeparatedList(interestsText),
+            socialLinks: {
+              github: socialLinks.github.trim(),
+              website: socialLinks.website.trim(),
+              linkedin: socialLinks.linkedin.trim(),
+              notion: socialLinks.notion.trim(),
+            },
+          }
+
+      await signup({
+        email: email.trim(),
+        password: password.trim(),
+        passwordConfirm: passwordConfirm.trim(),
+        nickname: nickname.trim(),
+        ...profilePayload,
+      })
+
+      onSuccess?.()
+    } catch (err) {
+      const errorObj =
+        err instanceof Error ? err : new Error('회원가입에 실패했습니다.')
+      setError(errorObj)
+      onError?.(errorObj)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void completeSignup(false)
+  }
+
+  return {
+    step,
+    isSubmitting,
+    selectedImageFile,
+    email,
+    password,
+    passwordConfirm,
+    nickname,
+    emailError,
+    passwordError,
+    passwordConfirmError,
+    nicknameError,
+    handle,
+    role,
+    company,
+    location,
+    bio,
+    primaryStackText,
+    interestsText,
+    socialLinks,
+    setStep,
+    setSelectedImageFile,
+    setEmail,
+    setPassword,
+    setPasswordConfirm,
+    setNickname,
+    setEmailError,
+    setPasswordError,
+    setPasswordConfirmError,
+    setNicknameError,
+    setHandle,
+    setRole,
+    setCompany,
+    setLocation,
+    setBio,
+    setPrimaryStackText,
+    setInterestsText,
+    setSocialLinks,
+    isAccountFormValid,
+    handleAccountSubmit,
+    completeSignup,
+    handleProfileSubmit,
+    error,
+  }
+}
+

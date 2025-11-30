@@ -1,0 +1,179 @@
+.post-create-page {
+  --editor-width: 810px;
+  --preview-width: 270px;
+  --preview-scale: 0.333;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 var(--space-3);
+}
+
+.title-container {
+  width: 100%;
+  max-width: var(--editor-width);
+  padding: var(--space-5) 0 0;
+}
+
+.editor-shell {
+  width: 100%;
+  max-width: calc(var(--editor-width) + var(--preview-width) + var(--space-4));
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.editor-wrapper {
+  flex: 0 0 var(--editor-width);
+  width: var(--editor-width);
+  padding: 0 0 var(--space-12);
+}
+
+.editor-header {
+  margin-bottom: var(--space-4);
+}
+
+.title-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  font-family: inherit;
+  padding: 0;
+  resize: none;
+  overflow: hidden;
+}
+
+.title-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.title-input:focus {
+  outline: none;
+}
+
+.editor-container {
+  position: relative;
+  min-height: 500px;
+}
+
+.editor-preview-rail {
+  width: var(--preview-width);
+  flex: 0 0 var(--preview-width);
+  padding: 0 0 var(--space-12);
+}
+
+.preview-rail-body {
+  position: sticky;
+  top: 100px;
+  max-height: 75vh;
+  overflow: hidden;
+}
+
+.preview-rail-scale {
+  width: var(--editor-width);
+  height: auto;
+  overflow: hidden;
+  transform-origin: top left;
+  transform: scale(var(--preview-scale));
+}
+
+.preview-rail-scale .toastui-editor-defaultUI {
+  width: var(--editor-width);
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.preview-rail-scale .toastui-editor-contents {
+  padding: 0;
+}
+
+.preview-rail-scale .toastui-editor-contents img {
+  max-width: 100%;
+}
+
+.editor-container .toastui-editor-defaultUI {
+  border: none;
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.editor-container .toastui-editor-defaultUI .toastui-editor-md-container .toastui-editor .ProseMirror,
+.editor-container .toastui-editor-defaultUI .toastui-editor-md-container .toastui-editor .ProseMirror * {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+.editor-container .toastui-editor-defaultUI .toastui-editor-contents,
+.editor-container .toastui-editor-defaultUI .toastui-editor-contents * {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents,
+.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents * {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+.editor-container .toastui-editor-contents pre code {
+  font-family: var(--font-family-mono);
+}
+
+@media (max-width: 1024px) {
+  .editor-shell {
+    flex-direction: column;
+    max-width: 800px;
+  }
+
+  .editor-preview-rail {
+    width: 100%;
+    flex: none;
+    padding-bottom: var(--space-8);
+  }
+
+  .preview-rail-body {
+    position: static;
+    max-height: none;
+  }
+
+  .preview-rail-scale {
+    width: 100%;
+  }
+
+  .preview-rail-scale .toastui-editor-defaultUI {
+    transform: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    padding: 0 var(--space-3);
+  }
+
+  .title-input {
+    font-size: 32px;
+  }
+}

@@ -1,0 +1,131 @@
+.newsletter {
+  background-color: #fafafa;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e5e5;
+}
+
+.newsletterTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 12px 0;
+}
+
+.newsletterDescription {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+}
+
+.newsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.newsletterInputWrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.newsletterInput {
+  flex: 1;
+  padding: 10px 14px;
+  background-color: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.newsletterInput:focus {
+  border-color: #111;
+}
+
+.newsletterInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.newsletterInput::placeholder {
+  color: #999;
+}
+
+.newsletterButton {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  background-color: #111;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.newsletterButton:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.newsletterButton:active:not(:disabled) {
+  background-color: #000;
+}
+
+.newsletterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.newsletterError {
+  font-size: 13px;
+  color: #d32f2f;
+  margin: 0;
+}
+
+.newsletterSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0;
+}
+
+.newsletterSuccess svg {
+  display: block;
+}
+
+.newsletterSuccessText {
+  font-size: 14px;
+  color: #000;
+  font-weight: 500;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .newsletter {
+    padding: 20px;
+  }
+
+  .newsletterTitle {
+    font-size: 16px;
+  }
+
+  .newsletterDescription {
+    font-size: 13px;
+  }
+
+  .newsletterInputWrapper {
+    flex-direction: column;
+  }
+
+  .newsletterInput,
+  .newsletterButton {
+    width: 100%;
+  }
+}

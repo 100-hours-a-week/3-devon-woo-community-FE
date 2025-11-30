@@ -1,0 +1,65 @@
+import { useState } from 'react'
+import { useAuth } from './AuthContext'
+
+interface UseLoginFormOptions {
+  onSuccess?: () => void
+  onError?: (message: string) => void
+}
+
+interface UseLoginFormResult {
+  email: string
+  password: string
+  error: string
+  isLoading: boolean
+  setEmail: (email: string) => void
+  setPassword: (password: string) => void
+  setError: (error: string) => void
+  handleSubmit: (e: React.FormEvent) => Promise<void>
+  handleInputChange: () => void
+}
+
+export function useLoginForm({ onSuccess, onError }: UseLoginFormOptions = {}): UseLoginFormResult {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const { login } = useAuth()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setIsLoading(true)
+
+    try {
+      await login({ email, password })
+      onSuccess?.()
+    } catch (err) {
+      const fallbackMessage = '이메일 또는 비밀번호를 다시 확인해주세요.'
+      const errorMessage =
+        err instanceof Error && err.message
+          ? err.message
+          : fallbackMessage
+
+      setError(errorMessage)
+      onError?.(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = () => {
+    if (error) setError('')
+  }
+
+  return {
+    email,
+    password,
+    error,
+    isLoading,
+    setEmail,
+    setPassword,
+    setError,
+    handleSubmit,
+    handleInputChange,
+  }
+}

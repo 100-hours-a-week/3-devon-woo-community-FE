@@ -1,0 +1,205 @@
+.profilePage {
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+.mainContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.postsSection {
+  flex: 1;
+  min-width: 0;
+  max-width: 800px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 32px;
+}
+
+.postsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 16px;
+}
+
+.postsHeader h2 {
+  font-size: 20px;
+  color: #111;
+  margin: 0;
+}
+
+.sortOptions {
+  display: flex;
+  gap: 12px;
+}
+
+.sortBtn {
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: #777;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sortBtn.active {
+  color: #111;
+  font-weight: 600;
+}
+
+.postsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.postCard {
+  padding: 20px 0;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+}
+
+.postCard:last-child {
+  border-bottom: none;
+}
+
+.postCardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.postCardDate {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.postCardExcerpt {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 24px;
+}
+
+.paginationBtn,
+.paginationNumber {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e0e0e0;
+  background: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
+}
+
+.paginationNumber.active {
+  border-color: #111;
+  color: #111;
+  font-weight: 600;
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationNumbers {
+  display: flex;
+  gap: 6px;
+}
+
+.scrollTopBtn {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  background-color: #fff;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.scrollTopBtn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.loadingSpinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid #e5e5e5;
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.emptyState {
+  padding: 40px 0;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .mainContainer {
+    flex-direction: column;
+  }
+
+  .postsSection {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .mainContainer {
+    padding: 24px 16px 60px;
+  }
+
+  .postsSection {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,56 @@
+.oauthSection {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #dfe3e8;
+}
+
+.oauthButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.oauthBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid #dfe3e8;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.oauthBtn:hover {
+  border-color: #0a66c2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.oauthBtn.google:hover {
+  color: #db4437;
+  border-color: #db4437;
+}
+
+.oauthBtn.github:hover {
+  color: #333;
+  border-color: #333;
+}
+
+.oauthBtn.kakao:hover {
+  color: #fee500;
+  background-color: #fee500;
+  border-color: #fee500;
+}
+
+.oauthBtn.kakao:hover svg {
+  color: #3c1e1e;
+}
+
+.oauthBtn.naver:hover {
+  color: #03c75a;
+  border-color: #03c75a;
+}
