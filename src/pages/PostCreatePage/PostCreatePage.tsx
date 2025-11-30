@@ -4,20 +4,19 @@ import { postApi } from '@/api'
 import type { PostCreateRequest } from '@/types'
 import { USE_MOCK } from '@/config/env'
 import ComposeHeader from '@/components/PostEditor/ComposeHeader'
-import EditorToolbar from '@/components/PostEditor/EditorToolbar'
-import MarkdownPreview from '@/components/PostEditor/MarkdownPreview'
 import PublishModal from '@/components/PostEditor/PublishModal'
+import ToastMarkdownEditor from '@/components/PostEditor/ToastMarkdownEditor'
+import type { ImageUploadProvider } from '@/api/uploadApi'
+import { uploadImage } from '@/utils/uploads/uploadImage'
 import './PostCreatePage.css'
 
 export default function PostCreatePage() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
   const titleTextareaRef = useRef<HTMLTextAreaElement>(null)
-  const contentTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [autosaveStatusText, setAutosaveStatusText] = useState('모든 변경사항 저장됨')
   const [autosaveStatusTime, setAutosaveStatusTime] = useState('')
   const [showPublishModal, setShowPublishModal] = useState(false)
@@ -26,10 +25,21 @@ export default function PostCreatePage() {
   const [visibility, setVisibility] = useState('public')
   const [commentSetting, setCommentSetting] = useState('allow')
   const [isPublishing, setIsPublishing] = useState(false)
+  const [imageProvider, setImageProvider] = useState<ImageUploadProvider>('cloudinary')
 
   const isEditMode = !!postId
   const canPublish = !!title.trim() && !!content.trim()
   const canTempSave = !!(title.trim() || content.trim())
+  const handleEditorChange = (value: string) => {
+    setContent(value)
+  }
+
+  const handleImageUpload = useCallback(
+    (file: File, provider: ImageUploadProvider) => {
+      return uploadImage(file, { provider })
+    },
+    []
+  )
 
   useEffect(() => {
     if (isEditMode) {
@@ -107,104 +117,6 @@ export default function PostCreatePage() {
     setAutosaveStatusText('임시 저장됨')
     setAutosaveStatusTime(timeStr)
     alert('임시 저장되었습니다.')
-  }
-
-  const applyFormat = (format: string) => {
-    const textarea = contentTextareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = content.substring(start, end)
-    const beforeText = content.substring(0, start)
-    const afterText = content.substring(end)
-
-    let newText = ''
-    let cursorOffset = 0
-
-    switch (format) {
-      case 'bold':
-        newText = `**${selectedText || '굵게'}**`
-        cursorOffset = selectedText ? newText.length : 2
-        break
-      case 'italic':
-        newText = `*${selectedText || '기울임'}*`
-        cursorOffset = selectedText ? newText.length : 1
-        break
-      case 'strikethrough':
-        newText = `~~${selectedText || '취소선'}~~`
-        cursorOffset = selectedText ? newText.length : 2
-        break
-      case 'h1':
-        newText = `\n# ${selectedText || '제목 1'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 3
-        break
-      case 'h2':
-        newText = `\n## ${selectedText || '제목 2'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 4
-        break
-      case 'h3':
-        newText = `\n### ${selectedText || '제목 3'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 5
-        break
-      case 'h4':
-        newText = `\n#### ${selectedText || '제목 4'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 6
-        break
-      case 'quote':
-        newText = `\n> ${selectedText || '인용문'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 3
-        break
-      case 'code':
-        newText = `\n\`\`\`\n${selectedText || '코드'}\n\`\`\`\n`
-        cursorOffset = selectedText ? newText.length - 5 : 5
-        break
-      case 'link':
-        newText = `[${selectedText || '링크 텍스트'}](https://example.com)`
-        cursorOffset = selectedText ? newText.length - 23 : 6
-        break
-      case 'ul':
-        newText = `\n- ${selectedText || '목록 항목'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 3
-        break
-      case 'ol':
-        newText = `\n1. ${selectedText || '목록 항목'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 4
-        break
-      case 'checkbox':
-        newText = `\n- [ ] ${selectedText || '체크리스트 항목'}\n`
-        cursorOffset = selectedText ? newText.length - 1 : 7
-        break
-      case 'divider':
-        newText = '\n---\n'
-        cursorOffset = newText.length
-        break
-      default:
-        return
-    }
-
-    const updatedContent = beforeText + newText + afterText
-    setContent(updatedContent)
-
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = start + cursorOffset
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-    }, 0)
-  }
-
-  const handleImageClick = () => {
-    const fileInput = document.createElement('input')
-    fileInput.type = 'file'
-    fileInput.accept = 'image/*'
-    fileInput.onchange = async (e: Event) => {
-      const target = e.target as HTMLInputElement
-      const file = target.files?.[0]
-      if (file) {
-        alert('이미지 업로드 기능은 아직 구현되지 않았습니다.')
-      }
-    }
-    fileInput.click()
   }
 
   const handleThumbnailSelect = () => {
@@ -300,10 +212,6 @@ export default function PostCreatePage() {
   }, [title, adjustTextareaHeight])
 
   useEffect(() => {
-    adjustTextareaHeight(contentTextareaRef.current)
-  }, [content, adjustTextareaHeight])
-
-  useEffect(() => {
     if (showPublishModal) {
       document.body.classList.add('publish-modal-active')
     } else {
@@ -314,34 +222,6 @@ export default function PostCreatePage() {
       document.body.classList.remove('publish-modal-active')
     }
   }, [showPublishModal])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !isPreviewMode) {
-        switch (e.key.toLowerCase()) {
-          case 'b':
-            e.preventDefault()
-            applyFormat('bold')
-            break
-          case 'i':
-            e.preventDefault()
-            applyFormat('italic')
-            break
-          case 'k':
-            e.preventDefault()
-            applyFormat('link')
-            break
-          case 's':
-            e.preventDefault()
-            handleTempSave()
-            break
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content, isPreviewMode])
 
   return (
     <div className="post-create-page">
@@ -358,13 +238,6 @@ export default function PostCreatePage() {
       />
 
       <div className="main-container">
-        <EditorToolbar
-          isPreviewMode={isPreviewMode}
-          onFormat={applyFormat}
-          onTogglePreview={() => setIsPreviewMode(!isPreviewMode)}
-          onImageClick={handleImageClick}
-        />
-
         <div className="editor-wrapper">
           <div className="editor-header">
             <textarea
@@ -378,17 +251,13 @@ export default function PostCreatePage() {
           </div>
 
           <div className="editor-container">
-            <div className={`editor-pane ${!isPreviewMode ? 'active' : ''}`}>
-              <textarea
-                ref={contentTextareaRef}
-                className="content-textarea"
-                placeholder="내용을 입력하세요 (Markdown 지원)"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-              />
-            </div>
-
-            <MarkdownPreview content={content} isActive={isPreviewMode} />
+            <ToastMarkdownEditor
+              value={content}
+              onChange={handleEditorChange}
+              imageProvider={imageProvider}
+              onImageProviderChange={setImageProvider}
+              onUploadImage={handleImageUpload}
+            />
           </div>
         </div>
       </div>

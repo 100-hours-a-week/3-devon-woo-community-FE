@@ -96,6 +96,33 @@
   cursor: not-allowed;
 }
 
+.toast-editor-container {
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.upload-destination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+}
+
+.upload-destination select {
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-button);
+  padding: 4px 12px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
 .editor-toolbar-row {
   border-bottom: 1px solid var(--border-secondary);
   background: var(--bg-primary);

@@ -59,7 +59,7 @@ export function useProfileEdit({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-  const [profileImage, setProfileImage] = useState(DEFAULT_PROFILE_CONFIG.image)
+  const [profileImage, setProfileImage] = useState<string>(DEFAULT_PROFILE_CONFIG.image)
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const [nickname, setNickname] = useState('')
   const [handle, setHandle] = useState('')
@@ -203,7 +203,7 @@ export function useProfileEdit({
     const newErrors: Record<string, string> = {}
 
     if (!nickname.trim()) {
-      newErrors.nickname = '…$ÑD Ö%t¸8î.'
+      newErrors.nickname = '$D %t8.'
     }
 
     const githubValidation = validateUrl(githubUrl)
@@ -229,7 +229,7 @@ export function useProfileEdit({
 
   const handleSave = async () => {
     if (!validateForm()) {
-      setError(new Error('Ö%D Uxt¸8î.'))
+      setError(new Error('%D Uxt8.'))
       return
     }
 
@@ -283,7 +283,7 @@ export function useProfileEdit({
       onSaveSuccess?.()
     } catch (err) {
       console.error('Failed to save profile:', err)
-      const errorObj = err instanceof Error ? err : new Error('\D  •– ‰(àµ»‰.')
+      const errorObj = err instanceof Error ? err : new Error('\D   (.')
       setError(errorObj)
       onSaveError?.(errorObj)
     } finally {
@@ -297,7 +297,7 @@ export function useProfileEdit({
   const previewProfile: MemberResponse = {
     memberId: memberId || 1,
     email: '',
-    nickname: nickname || '¨©ê',
+    nickname: nickname || '',
     profileImage,
     handle: handle || '',
     bio: bio || '',

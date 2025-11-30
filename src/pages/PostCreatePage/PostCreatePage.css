@@ -47,40 +47,21 @@
   min-height: 500px;
 }
 
-.editor-pane,
-.preview-pane {
-  display: none;
+.editor-container .toastui-editor-defaultUI {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-secondary);
+  background-color: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
 }
 
-.editor-pane.active,
-.preview-pane.active {
-  display: block;
-}
-
-.content-textarea {
-  width: 100%;
-  min-height: 400px;
-  height: auto;
-  border: none;
-  border-radius: 0;
-  padding: var(--space-4) 0;
+.editor-container .toastui-editor-contents {
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
-  font-family: inherit;
   color: var(--text-primary);
-  resize: none;
-  overflow: hidden;
-  background: transparent;
 }
 
-.content-textarea:focus {
-  border: none;
-  box-shadow: none;
-  outline: none;
-}
-
-.content-textarea::placeholder {
-  color: var(--text-placeholder);
+.editor-container .toastui-editor-contents pre code {
+  font-family: var(--font-family-mono);
 }
 
 @media (max-width: 1024px) {
@@ -96,10 +77,5 @@
 
   .title-input {
     font-size: 32px;
-  }
-
-  .content-textarea {
-    font-size: var(--font-size-medium);
-    padding: var(--space-3) 0;
   }
 }

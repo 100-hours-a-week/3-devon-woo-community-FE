@@ -1,6 +1,4 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import Header from '@/components/Header'
 import CommentList from '@/components/CommentList'
 import Footer from '@/components/Footer'
@@ -8,6 +6,7 @@ import ScrollToTopButton from '@/components/ScrollToTopButton'
 import { useAuth } from '@/features/auth'
 import { usePostDetail, useCommentInteractions } from '@/features/post'
 import { formatDateLong } from '@/utils/formatters'
+import ToastMarkdownViewer from '@/components/PostEditor/ToastMarkdownViewer'
 import styles from './PostDetailPage.module.css'
 
 export default function PostDetailPage() {
@@ -125,9 +124,7 @@ export default function PostDetailPage() {
             </div>
           )}
 
-          <div className={styles.postContent}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
-          </div>
+          <ToastMarkdownViewer content={post.content} className={styles.postContent} />
         </article>
 
         {recommendedPosts.length > 0 && (

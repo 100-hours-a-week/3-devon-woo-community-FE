@@ -13,7 +13,7 @@
 | `LoadingSpinner/LoadingSpinner.tsx` | Simple spinner overlay. | Allow size/color props and align with design tokens. |
 | `NewsletterSubscribe/NewsletterSubscribe.tsx` | Newsletter signup panel with internal validation / success state. | Reuse `validateEmail` from `utils/validators`, and expose callbacks for analytics. |
 | `Pagination/Pagination.tsx` | Renders page numbers + next/prev buttons. | Add keyboard accessibility and allow custom labels for i18n. |
-| `PostEditor/*` (`ComposeHeader`, `EditorToolbar`, `MarkdownPreview`, `PublishModal`) | Building blocks for editor experience (header actions, toolbar, preview pane, publish modal). | Styles live in a shared CSS file; consider migrating to CSS Modules and exposing a single `PostEditor` composite for easier consumption. |
+| `PostEditor/*` (`ComposeHeader`, `ToastMarkdownEditor`, `ToastMarkdownViewer`, `PublishModal`) | Building blocks for editor experience (header actions, Toast UI editor/viewer, publish modal). | Styles live in a shared CSS file; consider migrating to CSS Modules and exposing a single `PostEditor` composite for easier consumption. |
 | `PostItem/PostItem.tsx` | Row item in the blog list with gradient thumbnail and fallback excerpt. | Replace hard-coded `generateExcerpt` text with data-driven summary and extract category text to config. |
 | `ProfileCard/ProfileCard.tsx` | Shows member profile, social links, edit action. | Accept skeleton/loading props so ProfilePage can reuse while data is fetching. |
 | `ProfileImageUploader/ProfileImageUploader.tsx` | Dropzone-style uploader with preview + clear actions. | Move `FileReader` logic into a hook so multiple uploaders can share progress/error UI. |
