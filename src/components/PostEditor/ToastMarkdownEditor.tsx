@@ -38,17 +38,38 @@ export default function ToastMarkdownEditor({
 
   const handleAddImageBlob = useCallback(
     async (blob: Blob | File, callback: (url: string, altText: string) => void) => {
+      const editorInstance = editorRef.current?.getInstance() as ToastEditor | undefined
+      let placeholderUrl: string | null = null
       try {
         const file =
           blob instanceof File
             ? blob
             : new File([blob], 'image-upload', { type: blob.type || 'application/octet-stream' })
-        const uploadedUrl = await onUploadImage(file)
         const altText = file.name || 'image'
-        callback(uploadedUrl, altText)
+        placeholderUrl = URL.createObjectURL(file)
+
+        callback(placeholderUrl, altText)
+
+        const uploadedUrl = await onUploadImage(file)
+        if (editorInstance && placeholderUrl) {
+          const markdown = editorInstance.getMarkdown()
+          if (markdown.includes(placeholderUrl)) {
+            editorInstance.setMarkdown(markdown.replaceAll(placeholderUrl, uploadedUrl), false)
+          }
+        }
       } catch (error) {
+        if (editorInstance && placeholderUrl) {
+          const markdown = editorInstance.getMarkdown()
+          if (markdown.includes(placeholderUrl)) {
+            editorInstance.setMarkdown(markdown.replaceAll(placeholderUrl, ''), false)
+          }
+        }
         console.error('이미지 업로드 실패:', error)
         alert('이미지 업로드에 실패했습니다.')
+      } finally {
+        if (placeholderUrl) {
+          URL.revokeObjectURL(placeholderUrl)
+        }
       }
     },
     [onUploadImage]

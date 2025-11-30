@@ -25,6 +25,7 @@ export default function PostCreatePage() {
   const [visibility, setVisibility] = useState('public')
   const [commentSetting, setCommentSetting] = useState('allow')
   const [isPublishing, setIsPublishing] = useState(false)
+  const [showPreviewRail, setShowPreviewRail] = useState(true)
 
   const isEditMode = !!postId
   const canPublish = !!title.trim() && !!content.trim()
@@ -243,6 +244,15 @@ export default function PostCreatePage() {
                 onChange={e => setTitle(e.target.value)}
                 rows={1}
               />
+              <div className="editor-actions">
+                <button
+                  type="button"
+                  className="preview-toggle-btn"
+                  onClick={() => setShowPreviewRail(prev => !prev)}
+                >
+                  {showPreviewRail ? '미리보기 숨기기' : '미리보기 열기'}
+                </button>
+              </div>
             </div>
 
             <div className="editor-container">
@@ -254,14 +264,13 @@ export default function PostCreatePage() {
             </div>
           </div>
 
-          <aside className="editor-preview-rail">
-            <div className="preview-rail-header">
-              <span>라이브 미리보기</span>
-            </div>
-            <div className="preview-rail-body">
-              <ToastMarkdownViewer content={content || ' '} />
-            </div>
-          </aside>
+          {showPreviewRail && (
+            <aside className="editor-preview-rail">
+              <div className="preview-rail-body">
+                <ToastMarkdownViewer content={content || ' '} />
+              </div>
+            </aside>
+          )}
         </div>
       </div>
 
