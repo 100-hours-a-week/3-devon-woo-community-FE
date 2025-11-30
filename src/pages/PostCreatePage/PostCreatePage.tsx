@@ -233,19 +233,21 @@ export default function PostCreatePage() {
       />
 
       <div className="main-container">
+        <div className="title-container">
+          <div className="editor-header">
+            <textarea
+              ref={titleTextareaRef}
+              className="title-input"
+              placeholder="제목을 입력하세요"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              rows={1}
+            />
+          </div>
+        </div>
+
         <div className="editor-shell">
           <div className="editor-wrapper">
-            <div className="editor-header">
-              <textarea
-                ref={titleTextareaRef}
-                className="title-input"
-                placeholder="제목을 입력하세요"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                rows={1}
-              />
-            </div>
-
             <div className="editor-container">
               <ToastMarkdownEditor
                 value={content}

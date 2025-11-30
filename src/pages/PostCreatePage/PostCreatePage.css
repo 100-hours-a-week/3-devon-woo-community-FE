@@ -12,23 +12,31 @@
   flex: 1;
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: 0 var(--space-3);
+}
+
+.title-container {
+  width: 100%;
+  max-width: var(--editor-width);
+  padding: var(--space-5) 0 0;
 }
 
 .editor-shell {
   width: 100%;
-  max-width: 1400px;
+  max-width: calc(var(--editor-width) + var(--preview-width) + var(--space-4));
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   gap: var(--space-4);
+  position: relative;
 }
 
 .editor-wrapper {
   flex: 0 0 var(--editor-width);
   width: var(--editor-width);
-  padding: var(--space-5) 0 var(--space-12);
+  padding: 0 0 var(--space-12);
 }
 
 .editor-header {
@@ -65,7 +73,7 @@
 .editor-preview-rail {
   width: var(--preview-width);
   flex: 0 0 var(--preview-width);
-  padding: var(--space-5) 0 var(--space-12);
+  padding: 0 0 var(--space-12);
 }
 
 .preview-rail-body {
@@ -105,15 +113,25 @@
   box-shadow: none;
 }
 
-.editor-container .toastui-editor-defaultUI .toastui-editor-contents {
-  font-size: 20px !important;
+.editor-container .toastui-editor-defaultUI .toastui-editor-md-container .toastui-editor .ProseMirror,
+.editor-container .toastui-editor-defaultUI .toastui-editor-md-container .toastui-editor .ProseMirror * {
+  font-size: 17px !important;
   line-height: 1.85 !important;
   color: var(--text-primary);
   font-family: var(--font-family-sans);
 }
 
-.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents {
-  font-size: 20px !important;
+.editor-container .toastui-editor-defaultUI .toastui-editor-contents,
+.editor-container .toastui-editor-defaultUI .toastui-editor-contents * {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents,
+.preview-rail-scale .toastui-editor-defaultUI .toastui-editor-contents * {
+  font-size: 17px !important;
   line-height: 1.85 !important;
   color: var(--text-primary);
   font-family: var(--font-family-sans);
