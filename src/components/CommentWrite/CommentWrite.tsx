@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import ProfileImage from '@/components/ProfileImage'
 import styles from './CommentWrite.module.css'
 
 interface CommentWriteProps {
   onSubmit: (text: string) => Promise<void>
-  userProfileImage?: string
+  userProfileImage?: string | null
+  userName?: string
 }
 
 const MAX_LENGTH = 500
 
 export default function CommentWrite({
   onSubmit,
-  userProfileImage = 'https://via.placeholder.com/48/CCCCCC/666?text=U',
+  userProfileImage,
+  userName = 'User',
 }: CommentWriteProps) {
   const [commentText, setCommentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,7 +53,7 @@ export default function CommentWrite({
   return (
     <div className={styles.commentWrite}>
       <div className={styles.commentAvatar}>
-        <img src={userProfileImage} alt="프로필" />
+        <ProfileImage imageUrl={userProfileImage} name={userName} alt="프로필" />
       </div>
       <div className={styles.commentInputWrapper}>
         <textarea
