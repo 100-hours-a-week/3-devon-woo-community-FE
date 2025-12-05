@@ -153,7 +153,8 @@ export default function PostDetailPage() {
           onLike={handleCommentLike}
           onReply={handleCommentReply}
           onCommentSubmit={handleCommentSubmit}
-          userProfileImage={user?.profileImage || 'https://via.placeholder.com/48/CCCCCC/666?text=U'}
+          userProfileImage={user?.profileImage}
+          currentUserName={user?.nickname}
           currentUserId={user?.memberId}
           onEdit={handleCommentEdit}
           getLikeState={getCommentLikeState}

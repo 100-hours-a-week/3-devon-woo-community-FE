@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { PostSummaryResponse } from '@/types/post'
 import { formatCount } from '@/utils'
 import styles from './BlogCard.module.css'
+import Icon from './icons/Icon'
 
 interface BlogCardProps {
   post: PostSummaryResponse
@@ -48,32 +49,15 @@ export default function BlogCard({ post }: BlogCardProps) {
         <div className={styles.footer}>
           <div className={styles.stats}>
             <span className={styles.stat}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 3C4.5 3 1.73 5.61 1 8c.73 2.39 3.5 5 7 5s6.27-2.61 7-5c-.73-2.39-3.5-5-7-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-2a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
-                  fill="currentColor"
-                />
-              </svg>
+              <Icon name="eye" />
               {formatCount(post.viewCount)}
             </span>
             <span className={styles.stat}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M2 5.5a3.5 3.5 0 0 1 5.898-2.549 5.508 5.508 0 0 1 6.65 6.65 3.5 3.5 0 1 1-6.65 2.398 5.508 5.508 0 0 1-5.898-6.5zM8 12.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z"
-                  fill="currentColor"
-                />
-              </svg>
+              <Icon name="heart" />
               {formatCount(post.likeCount)}
             </span>
             <span className={styles.stat}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M3 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6l-3 3V3a1 1 0 0 1 1-1z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-              </svg>
+              <Icon name="comment" />
               {formatCount(post.commentCount)}
             </span>
           </div>

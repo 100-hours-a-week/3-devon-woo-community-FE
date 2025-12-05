@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth'
+import ProfileImage from '@/components/ProfileImage'
 import styles from './Header.module.css'
 
 interface HeaderProps {
@@ -25,10 +26,6 @@ export default function Header({ variant = 'full' }: HeaderProps) {
   const handleLogout = () => {
     logout()
     navigate('/login')
-  }
-
-  const getDefaultAvatar = (name: string) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=667eea&color=fff&size=128`
   }
 
   return (
@@ -86,9 +83,10 @@ export default function Header({ variant = 'full' }: HeaderProps) {
                 className={styles.profileBtn}
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               >
-                <img
-                  src={user?.profileImage || getDefaultAvatar(user?.nickname || 'User')}
-                  alt={user?.nickname}
+                <ProfileImage
+                  imageUrl={user?.profileImage}
+                  name={user?.nickname || 'User'}
+                  alt={user?.nickname || 'User'}
                   className={styles.profileImage}
                 />
               </button>

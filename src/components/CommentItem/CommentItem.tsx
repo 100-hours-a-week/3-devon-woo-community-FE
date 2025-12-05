@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import type { CommentResponse } from '@/types'
+import ProfileImage from '@/components/ProfileImage'
 import CommentReportModal from './CommentReportModal'
 import styles from './CommentItem.module.css'
 
@@ -88,15 +89,12 @@ export default function CommentItem({
   }
 
   const author = comment.member?.nickname || 'Anonymous'
-  const avatar =
-    comment.member?.profileImage ||
-    `https://via.placeholder.com/48/CCCCCC/666?text=${author.charAt(0)}`
 
   return (
     <>
       <div className={styles.commentItem}>
         <div className={styles.commentAvatar}>
-          <img src={avatar} alt={author} />
+          <ProfileImage imageUrl={comment.member?.profileImage} name={author} alt={author} />
         </div>
         <div className={styles.commentContentWrapper}>
           <div className={styles.commentHeader}>

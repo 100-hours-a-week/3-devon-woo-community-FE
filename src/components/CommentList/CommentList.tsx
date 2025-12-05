@@ -14,6 +14,7 @@ interface CommentListProps {
   onReply?: (commentId: number) => void
   onCommentSubmit?: (text: string) => Promise<void>
   userProfileImage?: string
+  currentUserName?: string
   currentUserId?: number
   onEdit?: (commentId: number) => void
   getLikeState?: (commentId: number) => { isLiked: boolean; likeCount: number }
@@ -28,6 +29,7 @@ export default function CommentList({
   onReply,
   onCommentSubmit,
   userProfileImage,
+  currentUserName,
   currentUserId,
   onEdit,
   getLikeState,
@@ -69,7 +71,11 @@ export default function CommentList({
       </div>
 
       {onCommentSubmit && (
-        <CommentWrite onSubmit={onCommentSubmit} userProfileImage={userProfileImage} />
+        <CommentWrite
+          onSubmit={onCommentSubmit}
+          userProfileImage={userProfileImage}
+          userName={currentUserName}
+        />
       )}
 
       <div className={styles.commentsList}>

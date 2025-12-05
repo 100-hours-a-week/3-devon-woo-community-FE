@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { MemberResponse } from '@/types'
+import ProfileImage from '@/components/ProfileImage'
 import styles from './ProfileCard.module.css'
 
 interface ProfileCardProps {
@@ -19,8 +20,9 @@ export default function ProfileCard({ profile, isOwner = false }: ProfileCardPro
       <div className={styles.profileCardBody}>
         <div className={styles.profileCardMain}>
           <div className={styles.profileAvatar}>
-            <img
-              src={profile.profileImage || 'https://via.placeholder.com/160?text=Profile'}
+            <ProfileImage
+              imageUrl={profile.profileImage}
+              name={profile.nickname || '사용자'}
               alt={profile.nickname || '프로필'}
             />
           </div>
