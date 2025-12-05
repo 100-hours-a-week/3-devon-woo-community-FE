@@ -28,7 +28,7 @@ export default function PostCreatePage() {
   const [commentSetting, setCommentSetting] = useState('allow')
   const [isPublishing, setIsPublishing] = useState(false)
   const [showPreviewRail, setShowPreviewRail] = useState(true)
-  const [reviewItems, setReviewItems] = useState<string[]>([])
+  const [reviewItems, setReviewItems] = useState<Array<{ id: string; content: string }>>([])
   const [isReviewing, setIsReviewing] = useState(false)
   const [showAIConfirm, setShowAIConfirm] = useState(false)
   const [aiGeneratedText, setAIGeneratedText] = useState('')
@@ -96,6 +96,7 @@ export default function PostCreatePage() {
     setIsReviewing(true)
 
     let buffer = ''
+    const idArray: string[] = []
 
     try {
       await aiApi.reviewStream(
@@ -103,7 +104,23 @@ export default function PostCreatePage() {
         (chunk: string) => {
           buffer += chunk
           const items = buffer.split('<<<REVIEW_ITEM>>>').filter(s => s.trim())
-          setReviewItems(items)
+
+          setReviewItems(prev => {
+            return items.map((content, idx) => {
+              if (idx < prev.length) {
+                return { ...prev[idx], content }
+              }
+
+              if (!idArray[idx]) {
+                idArray[idx] = `review-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 11)}`
+              }
+
+              return {
+                id: idArray[idx],
+                content
+              }
+            })
+          })
         }
       )
     } catch (error) {
@@ -114,8 +131,8 @@ export default function PostCreatePage() {
     }
   }, [content])
 
-  const handleCloseReviewItem = useCallback((index: number) => {
-    setReviewItems(prev => prev.filter((_, i) => i !== index))
+  const handleCloseReviewItem = useCallback((id: string) => {
+    setReviewItems(prev => prev.filter(item => item.id !== id))
   }, [])
 
   useEffect(() => {
@@ -379,7 +396,7 @@ export default function PostCreatePage() {
       />
 
       <ReviewResultPopup
-        isVisible={reviewItems.length > 0}
+        isVisible={isReviewing || reviewItems.length > 0}
         reviewItems={reviewItems}
         isStreaming={isReviewing}
         onCloseItem={handleCloseReviewItem}
