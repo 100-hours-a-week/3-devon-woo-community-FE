@@ -337,14 +337,12 @@ export default function PostCreatePage() {
                 value={content}
                 onChange={handleEditorChange}
                 onUploadImage={handleImageUpload}
-                isPreviewVisible={showPreviewRail}
-                onTogglePreview={() => setShowPreviewRail(prev => !prev)}
                 onAIGenerate={handleAIGenerate}
               />
             </div>
           </div>
 
-          {showPreviewRail && (
+          {/* {showPreviewRail && (
             <aside className="editor-preview-rail">
               <div className="preview-rail-body">
                 <div className="preview-rail-scale">
@@ -352,7 +350,7 @@ export default function PostCreatePage() {
                 </div>
               </div>
             </aside>
-          )}
+          )} */}
         </div>
       </div>
 

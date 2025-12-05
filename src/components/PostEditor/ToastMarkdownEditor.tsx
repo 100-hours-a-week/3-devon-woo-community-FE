@@ -9,8 +9,8 @@ interface ToastMarkdownEditorProps {
   value: string
   onChange: (value: string) => void
   onUploadImage: (file: File) => Promise<string>
-  isPreviewVisible: boolean
-  onTogglePreview: () => void
+  isPreviewVisible?: boolean
+  onTogglePreview?: () => void
   onAIGenerate?: (promptText: string, startPos: number, endPos: number) => void
 }
 
@@ -113,7 +113,7 @@ export default function ToastMarkdownEditor({
 
   return (
     <div className="toast-editor-container">
-      <button
+      {/* <button
         type="button"
         className={`toolbar-preview-toggle ${isPreviewVisible ? 'active' : ''}`}
         aria-pressed={isPreviewVisible}
@@ -130,7 +130,7 @@ export default function ToastMarkdownEditor({
           />
           <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5" />
         </svg>
-      </button>
+      </button> */}
       <Editor
         ref={editorRef}
         initialValue={value || ' '}

@@ -79,7 +79,16 @@ export const aiApi = {
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        onMessage(chunk)
+        const lines = chunk.split('\n')
+
+        lines.forEach(line => {
+          if (line.startsWith('data:')) {
+            const data = line.substring(5)
+            if (data.trim()) {
+              onMessage(data)
+            }
+          }
+        })
       }
     } catch (error) {
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
