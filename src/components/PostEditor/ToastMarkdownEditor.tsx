@@ -11,6 +11,7 @@ interface ToastMarkdownEditorProps {
   onUploadImage: (file: File) => Promise<string>
   isPreviewVisible: boolean
   onTogglePreview: () => void
+  onAIGenerate?: (promptText: string, startPos: number, endPos: number) => void
 }
 
 export default function ToastMarkdownEditor({
@@ -19,6 +20,7 @@ export default function ToastMarkdownEditor({
   onUploadImage,
   isPreviewVisible,
   onTogglePreview,
+  onAIGenerate,
 }: ToastMarkdownEditorProps) {
   const editorRef = useRef<Editor>(null)
 
@@ -78,6 +80,36 @@ export default function ToastMarkdownEditor({
     },
     [onUploadImage]
   )
+
+  useEffect(() => {
+    const editorInstance = editorRef.current?.getInstance() as ToastEditor | undefined
+    if (!editorInstance || !onAIGenerate) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        const markdown = editorInstance.getMarkdown()
+        const atMatch = markdown.match(/@([^\s@]+)$/)
+
+        if (atMatch) {
+          event.preventDefault()
+
+          const promptText = atMatch[1]
+          const endPos = markdown.length
+          const startPos = endPos - atMatch[0].length
+
+          onAIGenerate(promptText, startPos, endPos)
+        }
+      }
+    }
+
+    const editorEl = editorInstance.getEditorElements().mdEditor
+    if (editorEl) {
+      editorEl.addEventListener('keydown', handleKeyDown)
+      return () => {
+        editorEl.removeEventListener('keydown', handleKeyDown)
+      }
+    }
+  }, [onAIGenerate])
 
   return (
     <div className="toast-editor-container">

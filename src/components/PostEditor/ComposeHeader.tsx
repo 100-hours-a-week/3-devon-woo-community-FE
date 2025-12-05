@@ -8,8 +8,10 @@ interface ComposeHeaderProps {
   onBack: () => void
   onTempSave: () => void
   onPublish: () => void
+  onReview: () => void
   canTempSave: boolean
   canPublish: boolean
+  canReview: boolean
 }
 
 export default function ComposeHeader({
@@ -20,8 +22,10 @@ export default function ComposeHeader({
   onBack,
   onTempSave,
   onPublish,
+  onReview,
   canTempSave,
   canPublish,
+  canReview,
 }: ComposeHeaderProps) {
   return (
     <header className="compose-header">
@@ -67,6 +71,9 @@ export default function ComposeHeader({
               />
             </svg>
             임시 저장
+          </button>
+          <button className="btn-secondary" onClick={onReview} disabled={!canReview}>
+            게시글 평가
           </button>
           <button className="btn-primary" onClick={onPublish} disabled={!canPublish}>
             출간하기
