@@ -9,6 +9,7 @@ import ToastMarkdownEditor from '@/components/PostEditor/ToastMarkdownEditor'
 import ToastMarkdownViewer from '@/components/PostEditor/ToastMarkdownViewer'
 import AIConfirmDialog from '@/components/PostEditor/AIConfirmDialog'
 import ReviewResultPopup from '@/components/PostEditor/ReviewResultPopup'
+import FeedbackMenu from '@/components/PostEditor/FeedbackMenu'
 import { uploadImage } from '@/utils/uploads/uploadImage'
 import './PostCreatePage.css'
 
@@ -133,6 +134,10 @@ export default function PostCreatePage() {
 
   const handleCloseReviewItem = useCallback((id: string) => {
     setReviewItems(prev => prev.filter(item => item.id !== id))
+  }, [])
+
+  const handleClearAllReviews = useCallback(() => {
+    setReviewItems([])
   }, [])
 
   useEffect(() => {
@@ -327,10 +332,8 @@ export default function PostCreatePage() {
         onBack={handleBack}
         onTempSave={handleTempSave}
         onPublish={() => setShowPublishModal(true)}
-        onReview={handleReview}
         canTempSave={canTempSave}
         canPublish={canPublish}
-        canReview={canReview}
       />
 
       <div className="main-container">
@@ -393,6 +396,14 @@ export default function PostCreatePage() {
         generatedText={aiGeneratedText}
         onAccept={handleAIAccept}
         onReject={handleAIReject}
+      />
+
+      <FeedbackMenu
+        onGetFeedback={handleReview}
+        onClearAll={handleClearAllReviews}
+        canGetFeedback={canReview}
+        hasFeedback={reviewItems.length > 0}
+        isLoading={isReviewing}
       />
 
       <ReviewResultPopup
