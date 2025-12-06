@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { postApi } from '@/api'
+import { postApi, aiApi } from '@/api'
 import type { PostCreateRequest } from '@/types'
 import { USE_MOCK } from '@/config/env'
 import ComposeHeader from '@/components/PostEditor/ComposeHeader'
 import PublishModal from '@/components/PostEditor/PublishModal'
 import ToastMarkdownEditor from '@/components/PostEditor/ToastMarkdownEditor'
 import ToastMarkdownViewer from '@/components/PostEditor/ToastMarkdownViewer'
+import AIConfirmDialog from '@/components/PostEditor/AIConfirmDialog'
+import ReviewResultPopup from '@/components/PostEditor/ReviewResultPopup'
+import FeedbackMenu from '@/components/PostEditor/FeedbackMenu'
 import { uploadImage } from '@/utils/uploads/uploadImage'
 import './PostCreatePage.css'
 
@@ -26,15 +29,116 @@ export default function PostCreatePage() {
   const [commentSetting, setCommentSetting] = useState('allow')
   const [isPublishing, setIsPublishing] = useState(false)
   const [showPreviewRail, setShowPreviewRail] = useState(true)
+  const [reviewItems, setReviewItems] = useState<Array<{ id: string; content: string }>>([])
+  const [isReviewing, setIsReviewing] = useState(false)
+  const [showAIConfirm, setShowAIConfirm] = useState(false)
+  const [aiGeneratedText, setAIGeneratedText] = useState('')
+  const [aiPromptToReplace, setAIPromptToReplace] = useState<{start: number, end: number} | null>(null)
 
   const isEditMode = !!postId
   const canPublish = !!title.trim() && !!content.trim()
   const canTempSave = !!(title.trim() || content.trim())
+  const canReview = !!content.trim()
   const handleEditorChange = (value: string) => {
     setContent(value)
   }
 
   const handleImageUpload = useCallback((file: File) => uploadImage(file, { type: 'post' }), [])
+
+  const handleAIGenerate = useCallback(async (promptText: string, startPos: number, endPos: number) => {
+    try {
+      const beforePrompt = content.substring(0, startPos)
+      const afterPrompt = content.substring(endPos)
+
+      const contentWithPlaceholder = beforePrompt + '{게시글 작성}' + afterPrompt
+
+      const result = await aiApi.generate({
+        content: contentWithPlaceholder,
+        instruction: promptText
+      })
+
+      setAIGeneratedText(result)
+      setAIPromptToReplace({ start: startPos, end: endPos })
+      setShowAIConfirm(true)
+    } catch (error) {
+      console.error('AI 생성 실패:', error)
+      alert('AI 생성에 실패했습니다.')
+    }
+  }, [content])
+
+  const handleAIAccept = useCallback(() => {
+    if (!aiPromptToReplace) return
+
+    const before = content.substring(0, aiPromptToReplace.start)
+    const after = content.substring(aiPromptToReplace.end)
+
+    setContent(before + aiGeneratedText + after)
+    setShowAIConfirm(false)
+    setAIGeneratedText('')
+    setAIPromptToReplace(null)
+  }, [aiPromptToReplace, aiGeneratedText, content])
+
+  const handleAIReject = useCallback(() => {
+    if (!aiPromptToReplace) return
+
+    const before = content.substring(0, aiPromptToReplace.start)
+    const after = content.substring(aiPromptToReplace.end)
+
+    setContent(before + '@' + after)
+    setShowAIConfirm(false)
+    setAIGeneratedText('')
+    setAIPromptToReplace(null)
+  }, [aiPromptToReplace, content])
+
+  const handleReview = useCallback(async () => {
+    if (!content.trim()) return
+
+    setReviewItems([])
+    setIsReviewing(true)
+
+    let buffer = ''
+    const idArray: string[] = []
+
+    try {
+      await aiApi.reviewStream(
+        { text: content },
+        (chunk: string) => {
+          buffer += chunk
+          const items = buffer.split('<<<REVIEW_ITEM>>>').filter(s => s.trim())
+
+          setReviewItems(prev => {
+            return items.map((content, idx) => {
+              if (idx < prev.length) {
+                return { ...prev[idx], content }
+              }
+
+              if (!idArray[idx]) {
+                idArray[idx] = `review-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 11)}`
+              }
+
+              return {
+                id: idArray[idx],
+                content
+              }
+            })
+          })
+        }
+      )
+    } catch (error) {
+      console.error('리뷰 요청 실패:', error)
+      alert('리뷰 요청에 실패했습니다.')
+    } finally {
+      setIsReviewing(false)
+    }
+  }, [content])
+
+  const handleCloseReviewItem = useCallback((id: string) => {
+    setReviewItems(prev => prev.filter(item => item.id !== id))
+  }, [])
+
+  const handleClearAllReviews = useCallback(() => {
+    setReviewItems([])
+  }, [])
 
   useEffect(() => {
     if (isEditMode) {
@@ -253,13 +357,12 @@ export default function PostCreatePage() {
                 value={content}
                 onChange={handleEditorChange}
                 onUploadImage={handleImageUpload}
-                isPreviewVisible={showPreviewRail}
-                onTogglePreview={() => setShowPreviewRail(prev => !prev)}
+                onAIGenerate={handleAIGenerate}
               />
             </div>
           </div>
 
-          {showPreviewRail && (
+          {/* {showPreviewRail && (
             <aside className="editor-preview-rail">
               <div className="preview-rail-body">
                 <div className="preview-rail-scale">
@@ -267,7 +370,7 @@ export default function PostCreatePage() {
                 </div>
               </div>
             </aside>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -286,6 +389,28 @@ export default function PostCreatePage() {
         onThumbnailSelect={handleThumbnailSelect}
         onThumbnailRemove={handleThumbnailRemove}
         onPublish={handlePublishFromModal}
+      />
+
+      <AIConfirmDialog
+        isOpen={showAIConfirm}
+        generatedText={aiGeneratedText}
+        onAccept={handleAIAccept}
+        onReject={handleAIReject}
+      />
+
+      <FeedbackMenu
+        onGetFeedback={handleReview}
+        onClearAll={handleClearAllReviews}
+        canGetFeedback={canReview}
+        hasFeedback={reviewItems.length > 0}
+        isLoading={isReviewing}
+      />
+
+      <ReviewResultPopup
+        isVisible={isReviewing || reviewItems.length > 0}
+        reviewItems={reviewItems}
+        isStreaming={isReviewing}
+        onCloseItem={handleCloseReviewItem}
       />
     </div>
   )

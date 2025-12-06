@@ -5,6 +5,8 @@ https://github.com/user-attachments/assets/32695646-487e-4083-a134-323ec0145b43
 개발자 커뮤니티형 **Tech Blog / Community** 서비스의 프론트엔드 코드베이스입니다.  
 React + TypeScript + Vite 기반의 SPA로, 게시글 목록/상세/작성, 댓글, 프로필, OAuth 로그인 등 기능을 제공합니다.
 
+백엔드 레포지토리: https://github.com/100-hours-a-week/3-devon-woo-community-BE
+
 ---
 
 ## 주요 기능
@@ -35,6 +37,17 @@ React + TypeScript + Vite 기반의 SPA로, 게시글 목록/상세/작성, 댓�
 - **에디터/마크다운**: @toast-ui/editor, @toast-ui/react-editor
 - **스타일**: CSS Modules + 전역 스타일(`src/styles`)
 - **품질 도구**: ESLint, Prettier, TypeScript ESLint 플러그인들
+
+---
+
+## 디자인 & 스타일링
+
+- 전역 스타일
+  - `src/styles/global.css` – 기본 레이아웃, 타이포그래피, 공통 레이아웃 스타일
+  - `src/styles/theme.css` – 컬러 팔레트, 간격, 그림자 등 디자인 토큰 정의
+- 컴포넌트 스타일
+  - 페이지/컴포넌트별 CSS Modules로 스타일을 캡슐화
+  - 디자인 변경 시 **theme.css의 토큰을 우선 수정**하고, 필요 시 개별 모듈을 조정하는 방식으로 유지보수
 
 ---
 
