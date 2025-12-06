@@ -199,6 +199,23 @@
   padding: 0;
 }
 
+.toast-editor-container .toastui-editor-defaultUI,
+.toast-editor-container .toastui-editor-md-container,
+.toast-editor-container .toastui-editor-md-code,
+.toast-editor-container .ProseMirror {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.toast-editor-container .toastui-editor-md-container .placeholder {
+  color: #9ca3af;
+}
+
+.toast-editor-container .toastui-editor-contents {
+  color: #111827;
+}
+
 .toolbar-preview-toggle {
   position: absolute;
   top: 12px;

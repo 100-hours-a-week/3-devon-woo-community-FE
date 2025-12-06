@@ -168,7 +168,7 @@ export default function ToastMarkdownEditor({
           hideModeSwitch={true}
           usageStatistics={false}
           language="ko-KR"
-          placeholder="내용을 입력하세요 (Markdown & WYSIWYG 모두 지원)"
+          placeholder="내용을 입력하세요..."
           onChange={handleChange}
           hooks={{
             addImageBlobHook: handleAddImageBlob,
