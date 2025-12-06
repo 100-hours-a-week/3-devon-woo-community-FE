@@ -1,6 +1,10 @@
 # Community TechBlog Frontend
 
-https://github.com/user-attachments/assets/32695646-487e-4083-a134-323ec0145b43
+
+
+https://github.com/user-attachments/assets/cb6d4710-5c76-43dd-8875-45aeba368fd5
+
+
 
 개발자 커뮤니티형 **Tech Blog / Community** 서비스의 프론트엔드 코드베이스입니다.  
 React + TypeScript + Vite 기반의 SPA로, 게시글 목록/상세/작성, 댓글, 프로필, OAuth 로그인 등 기능을 제공합니다.
